@@ -18,58 +18,77 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
-const APP_PATH = APP_CONFIG.app_path;
-const PREFIX = '/api/';
-const VERSION = 'v1';
-const ENDPOINT = '/users';
+const { api_base } = require('../libs/endpoints_config');
+
+const BASE = api_base('/users');
+
 const ENDPOINTS = {
     users: {
-        endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
-        get_users: {
-            description: 'Gets all user records',
+        user_records: {
             get: {
-                description: 'Gets user record(s)',
-                params: 'id, all records returned if no id is included, token or api_key'
-            }
-        },
-        get_user: {
-          description: 'Gets single user record',
-          endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
-          params: 'id '
-        },
-        create_user: {
-            description: 'Creates user record',
+                description: 'Gets all user records',
+                endpoint: BASE,
+                params: 'token or api_key'
+            },
             post: {
                 description: 'Creates user record',
+                endpoint: BASE,
                 params: 'token or api_key',
                 body: 'du_id, email, first_name, last_name'
-            }
-        },
-        update_user: {
-            description: 'Updates user record',
+            },
             put: {
                 description: 'Updates user record',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
+                endpoint: `${BASE}/:user_id`,
                 params: 'token or api_key',
                 body: 'id, du_id, email, first_name, last_name'
-            }
-        },
-        delete_user: {
-            description: 'Deletes user',
+            },
             delete: {
                 description: 'Deletes user record',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
+                endpoint: `${BASE}/:user_id`,
+                params: 'id, token or api_key'
+            }
+        },
+        user_record: {
+            get: {
+                description: 'Gets single user record',
+                endpoint: `${BASE}/:user_id`,
                 params: 'id, token or api_key'
             }
         },
         user_status: {
-            description: '',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/status/:id/:is_active`,
-            params: 'id, token, is_active'
+            put: {
+                description: 'Activates or deactivates a user',
+                endpoint: `${BASE}/status/:id/:is_active`,
+                params: 'id, token, is_active'
+            }
         }
     }
 };
+
+/*
+ * DEPRECATED aliases. References to the canonical nodes above — never copies.
+ * They exist only because public/app/user.module.js is owned elsewhere and
+ * still reads the old paths. Delete an entry once its reader has moved.
+ *
+ *   users.endpoint                      → user_records.get.endpoint
+ *       public/app/user.module.js (35, 765, 771)
+ *   users.get_user.endpoint             → user_record.get.endpoint
+ *       public/app/user.module.js (61)
+ *   users.update_user.put               → user_records.put
+ *       public/app/user.module.js (704)
+ *   users.delete_user.delete            → user_records.delete
+ *       public/app/user.module.js (900, 906)
+ *   users.user_status.endpoint          → user_status.put.endpoint
+ *       public/app/user.module.js (1066)
+ *
+ * `get_users` and `create_user` are gone outright: they carried no `endpoint`
+ * key at all, so nothing could ever have resolved a URL through them.
+ */
+ENDPOINTS.users.endpoint = ENDPOINTS.users.user_records.get.endpoint;
+ENDPOINTS.users.get_user = { endpoint: ENDPOINTS.users.user_record.get.endpoint };
+ENDPOINTS.users.update_user = { put: ENDPOINTS.users.user_records.put };
+ENDPOINTS.users.delete_user = { delete: ENDPOINTS.users.user_records.delete };
+ENDPOINTS.users.user_status.endpoint = ENDPOINTS.users.user_status.put.endpoint;
 
 module.exports = () => {
     return ENDPOINTS;

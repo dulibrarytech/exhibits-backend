@@ -16,53 +16,51 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
-const APP_PATH = APP_CONFIG.app_path;
-const PREFIX = '/api/';
-const VERSION = 'v1';
-const ENDPOINT = '/media/library';
+const { APP_PATH, api_base } = require('../libs/endpoints_config');
+
+const BASE = api_base('/media/library');
 const IIIF_PATH = `${APP_PATH}/iiif`;
 const ENDPOINTS = {
     media_records: {
         get: {
             description: 'Retrieves all media records',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
+            endpoint: BASE,
             params: 'token or api_key, gets all media records'
         },
         post: {
             description: 'Creates media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
+            endpoint: BASE,
             params: 'token or api_key',
             body: 'media data'
         },
         put: {
             description: 'Updates media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
+            endpoint: `${BASE}/record/:media_id`,
             params: 'token or api_key, media_id',
             body: 'media data'
         },
         delete: {
             description: 'Deletes media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
+            endpoint: `${BASE}/record/:media_id`,
             params: 'token or api_key, media_id'
         }
     },
     media_record: {
         get: {
             description: 'Retrieves a single media record by UUID',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
+            endpoint: `${BASE}/record/:media_id`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
     upload: {
         get: {
             description: 'Serves a staged (not-yet-saved) uploaded thumbnail by its storage-relative path',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/upload/thumbnail`,
+            endpoint: `${BASE}/upload/thumbnail`,
             params: 'token or api_key (query), path (relative thumbnail path, query)'
         },
         delete: {
             description: 'Deletes an unprocessed (staged, not-yet-saved) uploaded file and its thumbnail from staging storage',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/upload`,
+            endpoint: `${BASE}/upload`,
             params: 'token or api_key',
             body: 'storage_path (required), thumbnail_path (optional)'
         }
@@ -70,82 +68,82 @@ const ENDPOINTS = {
     media_file: {
         get: {
             description: 'Retrieves media file by UUID from hash-bucketed storage',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/file/:media_id`,
+            endpoint: `${BASE}/file/:media_id`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
     media_thumbnail: {
         get: {
             description: 'Retrieves media thumbnail by UUID from hash-bucketed storage',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/thumbnail/:media_id`,
+            endpoint: `${BASE}/thumbnail/:media_id`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
     media_duplicate_check: {
         get: {
             description: 'Checks if a media record already exists with the given identifier',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/duplicate-check`,
+            endpoint: `${BASE}/duplicate-check`,
             params: 'token or api_key, field (repo_uuid or kaltura_entry_id), value'
         }
     },
     repo_media_search: {
         get: {
             description: 'Searches digital repository records',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/search`,
+            endpoint: `${BASE}/repo/search`,
             params: 'token or api_key, search term'
         }
     },
     repo_thumbnail: {
         get: {
             description: 'Gets digital repository thumbnail',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/thumbnail`,
+            endpoint: `${BASE}/repo/thumbnail`,
             params: 'token or api_key, uuid'
         }
     },
     repo_subjects: {
         get: {
             description: 'Gets digital repository subjects grouped by type',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/subjects`,
+            endpoint: `${BASE}/repo/subjects`,
             params: 'token or api_key, optional type query parameter (topical, geographic, genre_form)'
         }
     },
     repo_resource_types: {
         get: {
             description: 'Gets digital repository resource types',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/resource-types`,
+            endpoint: `${BASE}/repo/resource-types`,
             params: 'token or api_key, optional type query parameter'
         }
     },
     kaltura_media: {
         get: {
             description: 'Gets Kaltura media metadata by entry ID',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id`,
+            endpoint: `${BASE}/kaltura/:entry_id`,
             params: 'token or api_key, entry_id (path parameter)'
         }
     },
     kaltura_config: {
         get: {
             description: 'Gets Kaltura player configuration (partner_id, uiconf_id)',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/config/player`,
+            endpoint: `${BASE}/kaltura/config/player`,
             params: 'token or api_key'
         }
     },
     kaltura_category: {
         post: {
             description: 'Assigns Kaltura media entry to exhibits category by entry ID',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
+            endpoint: `${BASE}/kaltura/:entry_id/category`,
             params: 'token or api_key, entry_id (path parameter)'
         },
         delete: {
             description: 'Removes Kaltura media entry from exhibits category by entry ID',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
+            endpoint: `${BASE}/kaltura/:entry_id/category`,
             params: 'token or api_key, entry_id (path parameter)'
         }
     },
     media_file_replace: {
         post: {
             description: 'Replaces the stored file behind an uploaded media record, preserving its metadata',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id/file`,
+            endpoint: `${BASE}/record/:media_id/file`,
             params: 'token or api_key, media_id (UUID)',
             body: 'multipart/form-data with a single "file" field'
         }
@@ -153,7 +151,7 @@ const ENDPOINTS = {
     media_exhibits: {
         put: {
             description: 'Adds or removes an exhibit UUID from a media record exhibits array',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id/exhibits`,
+            endpoint: `${BASE}/record/:media_id/exhibits`,
             params: 'token or api_key, media_id (UUID)',
             body: '{ exhibit_uuid, action: "add" | "remove" }'
         }

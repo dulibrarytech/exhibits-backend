@@ -18,28 +18,60 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
-const APP_PATH = APP_CONFIG.app_path;
-const PREFIX = '/api/';
-const VERSION = 'v1';
-const ENDPOINT = '/authenticate/';
+const { APP_PATH, api_base } = require('../libs/endpoints_config');
+
+const AUTH_BASE = `${APP_PATH}/auth`;
+
 const ENDPOINTS = {
     auth: {
+        auth_landing: {
+            get: {
+                description: 'Renders the sign-in landing page',
+                endpoint: AUTH_BASE
+            }
+        },
+        auth_login: {
+            get: {
+                description: 'Redirects the browser to the DU SSO login URL',
+                endpoint: `${AUTH_BASE}/login`
+            }
+        },
+        /* `/auth/sso`, not `/sso`: the registry used to carry `${APP_PATH}/sso`,
+         * which never matched the route auth/routes.js registers. Pinned by
+         * test/integration/auth_routes_integration.test.js. */
         sso: {
-            endpoint: APP_PATH + '/sso',
-            description: 'Accepts DU authproxy payload after SSO authentication has occurred',
             post: {
-                description: 'Authenticates admin user',
+                description: 'Accepts DU authproxy payload after SSO authentication has occurred',
+                endpoint: `${AUTH_BASE}/sso`,
                 body: 'sso payload - employeeID, HTTP_HOST'
             }
         },
-        authentication: {
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
-            description: 'Authenticates application admin users',
+        auth_permissions: {
+            post: {
+                description: 'Checks the signed-in user permissions',
+                endpoint: `${AUTH_BASE}/permissions`,
+                params: 'token'
+            }
+        },
+        auth_roles: {
             get: {
-                description: 'Authenticates admin user',
-                params: 'token or api_key',
-                body: 'username, password'
+                description: 'Gets all assignable roles',
+                endpoint: `${AUTH_BASE}/roles`,
+                params: 'token'
+            }
+        },
+        auth_role: {
+            get: {
+                description: 'Gets the signed-in user role',
+                endpoint: `${AUTH_BASE}/role`,
+                params: 'token'
+            }
+        },
+        authentication: {
+            get: {
+                description: 'Authenticates application admin users',
+                endpoint: api_base('/authenticate'),
+                params: 'token or api_key'
             }
         }
     }

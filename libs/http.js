@@ -60,13 +60,16 @@ const send_error = (res, status, message, extra = undefined) => {
  * @param {*} data - Payload (null when there is none)
  * @param {string} [message='OK'] - Staff-facing message
  * @param {number} [status=200] - HTTP status code
+ * @param {Object} [extra] - Additional envelope fields (e.g. pagination
+ *   counters that predate the envelope and are still read by the client)
  * @returns {Object} The response
  */
-const send_ok = (res, data, message = 'OK', status = 200) => {
+const send_ok = (res, data, message = 'OK', status = 200, extra = undefined) => {
     return res.status(status).json({
         success: true,
         message,
-        data: data === undefined ? null : data
+        data: data === undefined ? null : data,
+        ...(extra && typeof extra === 'object' ? extra : {})
     });
 };
 

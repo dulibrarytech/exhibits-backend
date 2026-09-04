@@ -142,18 +142,18 @@
 /* ── Info, length menu, and search styling ── */
 
 .dt-info {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     color: #6c757d;
     padding-top: 15px;
 }
 
 .dt-length {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     color: #6c757d;
 }
 
 .dt-search {
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     color: #6c757d;
 }
 

@@ -214,7 +214,7 @@ describe('Items Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(201);
 
-                expect(response.body.status).toBe(201);
+                expect(response.body.success).toBe(true);
                 expect(response.body.message).toBe('Item record created');
                 expect(response.body.data).toBe(TEST_ITEM_ID);
                 expect(mockItemsModel.create_item_record).toHaveBeenCalledWith(TEST_EXHIBIT_ID, itemData);
@@ -281,7 +281,7 @@ describe('Items Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(response.body.data).toHaveLength(2);
             });
 
@@ -325,7 +325,7 @@ describe('Items Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(response.body.data.uuid).toBe(TEST_ITEM_ID);
             });
 
@@ -348,7 +348,7 @@ describe('Items Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(mockItemsModel.get_item_edit_record).toHaveBeenCalledWith(
                     TEST_USER_UID,
                     TEST_EXHIBIT_ID,
@@ -402,7 +402,7 @@ describe('Items Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(201);
 
-                expect(response.body.status).toBe(201);
+                expect(response.body.success).toBe(true);
                 expect(response.body.message).toBe('Item record updated');
             });
 
@@ -789,7 +789,9 @@ describe('Items Integration Tests', () => {
                 params: { exhibit_id: TEST_EXHIBIT_ID },
                 body: [{ type: 'item', uuid: TEST_ITEM_ID, order: 1 }]
             });
-            const make_res = () => ({ status: jest.fn().mockReturnThis(), send: jest.fn() });
+            /* `json` as well as `send`: every controller body now leaves through
+               libs/http's envelope, which uses res.json (Phase 3 item 19). */
+            const make_res = () => ({ status: jest.fn().mockReturnThis(), send: jest.fn(), json: jest.fn() });
 
             test('published exhibit: re-indexes only the reordered components, never suppresses or full-reindexes', async () => {
                 mockExhibitsModel.get_exhibit_record.mockResolvedValue({ data: { is_published: 1 } });
@@ -940,7 +942,7 @@ describe('Items Integration Tests', () => {
                 .send(itemData)
                 .expect(201);
 
-            expect(response.body.status).toBe(201);
+            expect(response.body.success).toBe(true);
         });
 
         test('should handle concurrent requests', async () => {

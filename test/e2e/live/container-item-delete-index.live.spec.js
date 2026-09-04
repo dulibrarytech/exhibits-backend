@@ -29,8 +29,10 @@ async function indexed_item_uuids(request, container_uuid, headers) {
     const res = await request.get(`/api/v1/indexer/${container_uuid}`, { headers });
     expect(res.status(), 'container doc is indexed').toBe(200);
     const body = await res.json();
-    /* The record route returns the task result directly: { found, source }. */
-    const source = body.source || (body.data && body.data.source) || {};
+    /* The record route wraps the task result — { found, source } — in the shared
+       {success, message, data} envelope (Phase 3 item 19). The bare-body read is
+       kept as a fallback so this spec also runs against an older server. */
+    const source = (body.data && body.data.source) || body.source || {};
     return (source.items || []).map((item) => item.uuid);
 }
 

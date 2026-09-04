@@ -378,14 +378,7 @@ exports.check_duplicate = async function (req, res) {
             return send_error(res, 200, result?.message || 'Duplicate check failed');
         }
 
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: {
-                exists: result.exists,
-                record: result.record
-            }
-        });
+        return send_ok(res, {exists: result.exists, record: result.record}, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (check_duplicate)] ' + error.message);
@@ -464,11 +457,7 @@ exports.create_media_record = async function (req, res) {
         }
 
         // Success response - return 201 Created
-        res.status(201).json({
-            success: true,
-            message: result.message || 'Media record created successfully.',
-            data: result.id
-        });
+        send_ok(res, result.id, result.message || 'Media record created successfully.', 201);
 
         // Assign Kaltura entry to exhibits category after successful import (fire-and-forget)
         if (data.ingest_method === 'kaltura' && data.kaltura_entry_id) {
@@ -513,19 +502,11 @@ exports.get_media_records = async function (req, res) {
             const result = await MEDIA_MODEL.get_media_records_browse(options);
 
             if (!result || !result.success) {
-                res.status(404).json({
-                    success: false,
-                    message: 'No media records found.',
-                    data: null,
-                    total: 0
-                });
+                send_error(res, 404, 'No media records found.', {total: 0});
                 return;
             }
 
-            res.status(200).json({
-                success: true,
-                message: result.message,
-                data: result.records,
+            send_ok(res, result.records, result.message, 200, {
                 total: result.total,
                 page: result.page,
                 limit: result.limit
@@ -541,11 +522,7 @@ exports.get_media_records = async function (req, res) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.records
-        });
+        send_ok(res, result.records, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (get_media_records)] Unable to get media records: ' + error.message);
@@ -576,11 +553,7 @@ exports.get_media_record = async function (req, res) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.record
-        });
+        send_ok(res, result.record, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (get_media_record)] Unable to get media record ' + req.params.media_id + ': ' + error.message);
@@ -633,11 +606,7 @@ exports.update_media_record = async function (req, res) {
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.record
-        });
+        send_ok(res, result.record, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (update_media_record)] Unable to update media record ' + req.params.media_id + ': ' + error.message);
@@ -680,19 +649,11 @@ exports.replace_media_file = async function (req, res) {
             const message = result?.message || 'Failed to replace media file.';
             const status = message === 'Media record not found' ? 404 : 400;
 
-            res.status(status).json({
-                success: false,
-                message: message,
-                data: null
-            });
+            send_error(res, status, message);
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.record
-        });
+        send_ok(res, result.record, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (replace_media_file)] Unable to replace media file ' + req.params.media_id + ': ' + error.message);
@@ -903,19 +864,21 @@ exports.update_media_exhibits = async function (req, res) {
             return send_error(res, 400, result?.message || `Failed to ${action} exhibit association`);
         }
 
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: {
-                exhibits: result.exhibits
-            }
-        });
+        return send_ok(res, {exhibits: result.exhibits}, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (update_media_exhibits)] ' + error.message);
         return send_error(res, 500, 'Unable to update media exhibits');
     }
 };
+
+/*
+ * Every repository-search failure answers with the same empty payload the
+ * success path shapes, so the picker's `data.records` / `data.total` reads
+ * are safe on all six branches. Built fresh per call so no caller can mutate
+ * a shared object (DRY review 2026-09-03, Phase 3 item 19).
+ */
+const empty_search_payload = () => ({data: {records: [], total: 0}});
 
 /**
  * Searches the digital repository for records matching the search term
@@ -940,14 +903,7 @@ exports.search_repository = async function (req, res) {
         // Validate search term is provided
         if (!term) {
             LOGGER.module().warn('WARNING: [/media-library/controller (search_repository)] Missing search term');
-            return res.status(400).json({
-                success: false,
-                message: 'Search term is required. Use ?q=your_search_term',
-                data: {
-                    records: [],
-                    total: 0
-                }
-            });
+            return send_error(res, 400, 'Search term is required. Use ?q=your_search_term', empty_search_payload());
         }
 
         // Extract pagination options
@@ -958,26 +914,12 @@ exports.search_repository = async function (req, res) {
 
         // Validate size parameter
         if (options.size < 1 || options.size > 100) {
-            return res.status(400).json({
-                success: false,
-                message: 'Size must be between 1 and 100',
-                data: {
-                    records: [],
-                    total: 0
-                }
-            });
+            return send_error(res, 400, 'Size must be between 1 and 100', empty_search_payload());
         }
 
         // Validate from parameter
         if (options.from < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'From offset cannot be negative',
-                data: {
-                    records: [],
-                    total: 0
-                }
-            });
+            return send_error(res, 400, 'From offset cannot be negative', empty_search_payload());
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (search_repository)] Searching for: ${term}`);
@@ -987,37 +929,16 @@ exports.search_repository = async function (req, res) {
 
         if (!result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (search_repository)] Search failed: ${result.message}`);
-            return res.status(200).json({
-                success: false,
-                message: result.message,
-                data: {
-                    records: [],
-                    total: 0
-                }
-            });
+            return send_error(res, 200, result.message, empty_search_payload());
         }
 
         // Return successful response with 200 status
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: {
-                records: result.records,
-                total: result.total
-            }
-        });
+        return send_ok(res, {records: result.records, total: result.total}, result.message);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (search_repository)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error during search',
-            data: {
-                records: [],
-                total: 0
-            }
-        });
+        return send_error(res, 500, 'Internal server error during search', empty_search_payload());
     }
 };
 
@@ -1118,26 +1039,17 @@ const handle_repo_aggregate = async (res, {method, label, payload_key, empty_pay
         if (!result || !result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Failed: ${result?.message}`);
 
-            return res.status(200).json({
-                success: false,
-                message: result?.message || `Failed to retrieve ${label}`,
-                ...empty_data
-            });
+            return send_error(res, 200, result?.message || `Failed to retrieve ${label}`, empty_data);
         }
 
-        return res.status(200).json({
-            success: true,
-            ...project(result)
-        });
+        const projected = project(result);
+
+        return send_ok(res, projected.data, projected.message);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (${method})] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: `Internal server error retrieving ${label}`,
-            ...empty_data
-        });
+        return send_error(res, 500, `Internal server error retrieving ${label}`, empty_data);
     }
 };
 
@@ -1263,18 +1175,10 @@ const handle_kaltura_entry_action = async (req, res, options) => {
 
             const status_code = result?.status || 500;
 
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || failure_message,
-                data: null
-            });
+            return send_error(res, status_code, result?.message || failure_message);
         }
 
-        return res.status(success_status).json({
-            success: true,
-            message: result.message,
-            data: result[data_key]
-        });
+        return send_ok(res, result[data_key], result.message, success_status);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (${method})] ${error.message}`);
@@ -1329,14 +1233,7 @@ exports.get_kaltura_config = async function (req, res) {
             return send_error(res, 200, 'Kaltura player configuration is incomplete');
         }
 
-        return res.status(200).json({
-            success: true,
-            message: 'Kaltura player configuration retrieved',
-            data: {
-                partner_id: partner_id,
-                uiconf_id: uiconf_id
-            }
-        });
+        return send_ok(res, {partner_id: partner_id, uiconf_id: uiconf_id}, 'Kaltura player configuration retrieved');
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_config)] ${error.message}`);
@@ -1496,14 +1393,13 @@ exports.get_iiif_manifest = async function (req, res) {
             // genuine error is never reported as a 200 success.
             const status_code = result?.status || 500;
 
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to retrieve manifest',
-                data: null
-            });
+            return send_error(res, status_code, result?.message || 'Failed to retrieve manifest');
         }
 
-        // Serve manifest with IIIF-compliant content type and CORS headers
+        /* Serve manifest with IIIF-compliant content type and CORS headers.
+           This body stays OUTSIDE the {success, message, data} envelope: it is a
+           IIIF Presentation 3.0 document, whose shape is fixed by the spec and
+           read by third-party viewers (Phase 3 item 19). */
         res.set({
             'Content-Type': 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
             ...IIIF_CORS_HEADERS,
@@ -1548,14 +1444,11 @@ exports.get_iiif_info = async function (req, res) {
             // genuine error is never reported as a 200 success.
             const status_code = result?.status || 500;
 
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to retrieve image info',
-                data: null
-            });
+            return send_error(res, status_code, result?.message || 'Failed to retrieve image info');
         }
 
-        // Serve info.json with IIIF-compliant content type and CORS headers
+        /* Serve info.json with IIIF-compliant content type and CORS headers.
+           Spec-fixed body, deliberately un-enveloped (see get_iiif_manifest). */
         res.set({
             'Content-Type': 'application/ld+json;profile="http://iiif.io/api/image/3/context.json"',
             ...IIIF_CORS_HEADERS,
@@ -1615,11 +1508,7 @@ exports.get_iiif_image = async function (req, res) {
             // genuine error is never reported as a 200 success.
             const status_code = result?.status || 500;
 
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to process image',
-                data: null
-            });
+            return send_error(res, status_code, result?.message || 'Failed to process image');
         }
 
         // CORS + caching headers shared by 200 and 304 responses. The ETag is

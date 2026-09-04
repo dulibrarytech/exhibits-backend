@@ -58,7 +58,13 @@
                        <% if (link.nav_path) { %>data-nav-path="<%= link.nav_path %>"<% } %>
                        <% if (link.modal) { %>data-toggle="modal" data-target="<%= link.modal %>"<% } %>
                        data-keyboard="false">
-                        <i class="menu-icon <%= link.icon %>"></i><span class="nav-label"><%= link.label %></span>
+                        <%# A link carries either `icon` (a FontAwesome class) or
+                            `icon_svg` (inline markup) — see NAV_CONFIGS in
+                            dashboard/controller.js. `icon_svg` exists for the Media
+                            Library glyph, which has no FontAwesome equivalent. It is
+                            rendered unescaped because it is authored markup held in
+                            the controller, never user input. %>
+                        <% if (link.icon_svg) { %><span class="menu-icon menu-icon-svg" aria-hidden="true"><%- link.icon_svg %></span><% } else { %><i class="menu-icon <%= link.icon %>" aria-hidden="true"></i><% } %><span class="nav-label"><%= link.label %></span>
                     </a>
                 </li>
                 <% }); %>

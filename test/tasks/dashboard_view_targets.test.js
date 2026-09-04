@@ -76,3 +76,113 @@ describe('dashboard controller view targets', () => {
         expect(fs.existsSync(path.join(VIEWS_DIR, 'timeline-items', 'dashboard-timeline-items-delete-form.ejs'))).toBe(true);
     });
 });
+
+/*
+ * Guard: every sidebar nav icon must be a FontAwesome class.
+ *
+ * FontAwesome is the dashboard's only icon font. Bootstrap Icons and Themify
+ * were removed on 2026-09-04 after a sweep of `views/` and `public/app`
+ * reported zero usages — but NAV_CONFIGS lives in this controller, in neither
+ * of those trees, and it held 14 of them. Every sidebar icon vanished. The
+ * sweep was the bug; this test is the guard that makes the sweep unnecessary.
+ *
+ * The two shapes differ because the template does:
+ *   links:  <i class="menu-icon <%= link.icon %>">        -> needs "fa fa-x"
+ *   back:   <i class="menu-icon fa <%= nav.back.icon %>"> -> needs "fa-x" only
+ */
+describe('dashboard nav icons use the one icon font', () => {
+
+    const nav_configs = () => {
+        const seen = new Map();
+        for (const page of CONTROLLER.PAGES) {
+            if (page.nav && !seen.has(page.nav)) {
+                seen.set(page.nav, page.handler);
+            }
+        }
+        return [...seen.entries()];
+    };
+
+    test('every link icon carries the full FontAwesome class, or inline SVG', () => {
+        const offenders = [];
+
+        for (const [nav, handler] of nav_configs()) {
+            for (const link of nav.links || []) {
+                /* A link declares exactly one of `icon` or `icon_svg`. */
+                if (typeof link.icon_svg === 'string') {
+                    continue;
+                }
+                if (typeof link.icon !== 'string' || !/^fa fa-[a-z0-9-]+/.test(link.icon)) {
+                    offenders.push(`${handler} -> ${link.label}: ${JSON.stringify(link.icon)}`);
+                }
+            }
+        }
+
+        expect(offenders).toEqual([]);
+    });
+
+    test('an inline SVG icon is self-contained and inherits colour', () => {
+        const offenders = [];
+
+        for (const [nav, handler] of nav_configs()) {
+            for (const link of nav.links || []) {
+                if (typeof link.icon_svg !== 'string') {
+                    continue;
+                }
+                const label = `${handler} -> ${link.label}`;
+
+                if (link.icon !== undefined) {
+                    offenders.push(`${label}: declares both icon and icon_svg`);
+                }
+                if (!/^<svg[\s>]/.test(link.icon_svg.trim()) || !link.icon_svg.includes('</svg>')) {
+                    offenders.push(`${label}: icon_svg is not a complete <svg> element`);
+                }
+                /* currentColor is what makes it match the font icons' colour
+                   and hover state; a hard-coded fill would not. */
+                if (!link.icon_svg.includes('currentColor')) {
+                    offenders.push(`${label}: icon_svg does not use currentColor`);
+                }
+                /* Sized in CSS (.menu-icon-svg svg) so it tracks the nav's
+                   font-size; an inline width/height would defeat that. */
+                if (/\sstyle=/.test(link.icon_svg)) {
+                    offenders.push(`${label}: icon_svg carries inline styles`);
+                }
+            }
+        }
+
+        expect(offenders).toEqual([]);
+    });
+
+    test('every back icon is a bare fa-* class (the template supplies the fa prefix)', () => {
+        const offenders = [];
+
+        for (const [nav, handler] of nav_configs()) {
+            if (!nav.back || nav.back.icon === undefined) {
+                continue;
+            }
+            if (typeof nav.back.icon !== 'string' || !/^fa-[a-z0-9-]+$/.test(nav.back.icon)) {
+                offenders.push(`${handler} -> back: ${JSON.stringify(nav.back.icon)}`);
+            }
+        }
+
+        expect(offenders).toEqual([]);
+    });
+
+    test('no nav icon references a removed icon font', () => {
+        const removed = /(^|\s)(bi|ti)-|(^|\s)bi\s/;
+        const offenders = [];
+
+        for (const [nav, handler] of nav_configs()) {
+            const icons = (nav.links || []).map((l) => l.icon).filter((i) => typeof i === 'string');
+            if (nav.back && nav.back.icon) {
+                icons.push(nav.back.icon);
+            }
+            for (const icon of icons) {
+                if (typeof icon === 'string' && removed.test(icon)) {
+                    offenders.push(`${handler}: ${icon}`);
+                }
+            }
+        }
+
+        expect(offenders).toEqual([]);
+    });
+});

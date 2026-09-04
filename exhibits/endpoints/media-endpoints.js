@@ -1,26 +1,28 @@
 'use strict';
 
-const { APP_PATH, PREFIX, VERSION, ENDPOINT } = require('./endpoints_config');
+const { APP_PATH, api_base } = require('../../libs/endpoints_config');
+
+const BASE = api_base('/exhibits');
 
 module.exports = {
     exhibit_media: {
         get: {
             description: 'Gets exhibit media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
+            endpoint: `${BASE}/:exhibit_id/media/:media`
         },
         delete: {
             description: 'Deletes exhibit media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
+            endpoint: `${BASE}/:exhibit_id/media/:media`
         }
     },
     item_media: {
         get: {
             description: 'Gets item media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
+            endpoint: `${BASE}/:exhibit_id/media/items/:media`
         },
         delete: {
             description: 'Deletes item media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:item_id/:media`
+            endpoint: `${BASE}/:exhibit_id/media/items/:item_id/:media`
         }
     },
     media: {

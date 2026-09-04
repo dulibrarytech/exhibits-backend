@@ -25,6 +25,7 @@ const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TOKEN = require('../libs/tokens');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
+const { send_error, send_ok } = require('../libs/http');
 const APP_PATH = APP_CONFIG.app_path;
 
 /*
@@ -59,7 +60,7 @@ exports.create_shared_exhibit_preview_url = async function (req, res) {
         const uuid = typeof req.query.uuid === 'string' ? req.query.uuid.trim() : '';
 
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({ message: 'Bad request.' });
+            return send_error(res, 400, 'Bad request.');
         }
 
         const is_authorized = await AUTHORIZE.check_permission({
@@ -74,7 +75,7 @@ exports.create_shared_exhibit_preview_url = async function (req, res) {
             LOGGER.module().warn(
                 `WARNING: [/exhibits/share_controller (create_shared_exhibit_preview_url)] unauthorized share attempt for exhibit ${uuid} by ${req.decoded?.sub || 'unknown'}`
             );
-            return res.status(403).json({ message: 'Unauthorized request' });
+            return send_error(res, 403, 'Unauthorized request');
         }
 
         const preview_exists = await EXHIBITS_MODEL.check_preview(uuid);
@@ -87,14 +88,14 @@ exports.create_shared_exhibit_preview_url = async function (req, res) {
                 LOGGER.module().error(
                     `ERROR: [/exhibits/share_controller (create_shared_exhibit_preview_url)] unable to build preview for exhibit ${uuid}`
                 );
-                return res.status(500).json({ message: 'Unable to build exhibit preview.' });
+                return send_error(res, 500, 'Unable to build exhibit preview.');
             }
         }
 
         const t = TOKEN.create_shared(uuid);
 
         if (!t) {
-            return res.status(500).json({ message: 'Unable to create shared exhibit preview URL.' });
+            return send_error(res, 500, 'Unable to create shared exhibit preview URL.');
         }
 
         const shared_url = `${req.protocol}://${req.hostname}${APP_PATH}/shared?uuid=${uuid}&t=${t}`;
@@ -103,13 +104,13 @@ exports.create_shared_exhibit_preview_url = async function (req, res) {
             `INFO: [/exhibits/share_controller (create_shared_exhibit_preview_url)] share URL minted for exhibit ${uuid} by ${req.decoded?.sub || 'unknown'}`
         );
 
-        res.status(201).json({ shared_url: shared_url });
+        send_ok(res, { shared_url: shared_url }, 'Shared exhibit preview URL created', 201);
 
     } catch (error) {
         LOGGER.module().error(
             `ERROR: [/exhibits/share_controller (create_shared_exhibit_preview_url)] ${error.message}`
         );
-        res.status(500).json({ message: 'Unable to create shared exhibit preview URL.' });
+        send_error(res, 500, 'Unable to create shared exhibit preview URL.');
     }
 };
 
@@ -125,20 +126,20 @@ exports.share_exhibit_preview = async function (req, res) {
         const uuid = typeof req.query.uuid === 'string' ? req.query.uuid.trim() : '';
 
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({ message: 'Bad request.' });
+            return send_error(res, 400, 'Bad request.');
         }
 
         if (!req.decoded || req.decoded.sub !== uuid) {
             LOGGER.module().warn(
                 `WARNING: [/exhibits/share_controller (share_exhibit_preview)] share token for ${req.decoded?.sub || 'unknown'} presented for exhibit ${uuid}`
             );
-            return res.status(403).json({ message: INVALID_SHARE_MESSAGE });
+            return send_error(res, 403, INVALID_SHARE_MESSAGE);
         }
 
         const preview_exists = await EXHIBITS_MODEL.check_preview(uuid);
 
         if (preview_exists !== true) {
-            return res.status(404).json({ message: 'Exhibit preview is not available.' });
+            return send_error(res, 404, 'Exhibit preview is not available.');
         }
 
         res.render('share', {
@@ -149,6 +150,6 @@ exports.share_exhibit_preview = async function (req, res) {
         LOGGER.module().error(
             `ERROR: [/exhibits/share_controller (share_exhibit_preview)] ${error.message}`
         );
-        res.status(500).json({ message: 'Unable to share exhibit preview.' });
+        send_error(res, 500, 'Unable to share exhibit preview.');
     }
 };

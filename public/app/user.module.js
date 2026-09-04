@@ -80,7 +80,8 @@ const userModule = (function () {
             });
 
             if (response.status === 200) {
-                return response.data[0];
+                /* Role rows ride in the envelope's `data` (Phase 3 item 19). */
+                return response.data?.data?.[0];
             }
 
         } catch (error) {
@@ -1298,20 +1299,24 @@ const userModule = (function () {
 
             // Handle successful response
             if (response.status === 200) {
+
+                /* The roles list rides in the envelope's `data` (Phase 3 item 19). */
+                const roles = response.data?.data;
+
                 // Validate response data exists
-                if (!response.data) {
+                if (!roles) {
                     console.warn('No roles data in response');
                     return [];
                 }
 
                 // Validate response data is an array
-                if (!Array.isArray(response.data)) {
+                if (!Array.isArray(roles)) {
                     console.error('Invalid roles data format - expected array');
                     domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid server response format.');
                     return null;
                 }
 
-                return response.data;
+                return roles;
             }
 
             // Handle authentication failures

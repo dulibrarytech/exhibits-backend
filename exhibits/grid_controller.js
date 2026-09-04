@@ -22,11 +22,14 @@ const GRIDS_MODEL = require('../exhibits/grid_model');
 const LOGGER = require('../libs/log4');
 
 /*
- * 'detailed' is this controller's wire format: structured LOGGER metadata on
- * every branch, an id character-class check, and a 400 body of
- * {message: 'Invalid request: <label> is required'}. It is the shared
- * helper's default. See exhibits/controller_helper.js.
+ * 'detailed' is this controller's message wording: structured LOGGER metadata
+ * on every branch, an id character-class check, and a 400 message of
+ * 'Invalid request: <label> is required'. It is the shared helper's default.
+ * Every body leaves as the {success, message, data} envelope. See
+ * exhibits/controller_helper.js.
  */
+const { send_model_result } = require('../exhibits/controller_helper');
+const { send_error, send_ok } = require('../libs/http');
 const {
     validate_id,
     validate_body,
@@ -63,7 +66,7 @@ exports.create_grid_record = with_handler(async function (req, res) {
         status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'create_grid_record',
@@ -99,7 +102,7 @@ exports.update_grid_record = with_handler(async function (req, res) {
         status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'update_grid_record',
@@ -125,7 +128,7 @@ exports.get_grid_record = with_handler(async function (req, res) {
         status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'get_grid_record',
@@ -161,7 +164,7 @@ exports.create_grid_item_record = with_handler(async function (req, res) {
         status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'create_grid_item_record',
@@ -188,7 +191,7 @@ exports.get_grid_item_records = with_handler(async function (req, res) {
         record_count: result.data?.length || 0
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'get_grid_item_records',
@@ -215,9 +218,7 @@ exports.get_grid_item_record = with_handler(async function (req, res) {
             LOGGER.module().error('get_grid_item_record: Missing uid for edit type', {
                 exhibit_id, grid_id, item_id, type
             });
-            return res.status(400).send({
-                message: 'Invalid request: uid is required for edit type'
-            });
+            return send_error(res, 400, 'Invalid request: uid is required for edit type');
         }
 
         if (!validate_id(res, uid, 'uid', 'get_grid_item_record')) return;
@@ -230,7 +231,7 @@ exports.get_grid_item_record = with_handler(async function (req, res) {
             exhibit_id, grid_id, item_id, uid, status: result.status
         });
 
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
     }
 
     // Handle details type request (media library JOIN without record locking)
@@ -243,7 +244,7 @@ exports.get_grid_item_record = with_handler(async function (req, res) {
             exhibit_id, grid_id, item_id, status: result.status
         });
 
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
     }
 
     // Validate type parameter if provided
@@ -251,9 +252,7 @@ exports.get_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().error('get_grid_item_record: Invalid type parameter', {
             type, exhibit_id, grid_id, item_id
         });
-        return res.status(400).send({
-            message: 'Invalid type parameter. Allowed values: "edit", "details"'
-        });
+        return send_error(res, 400, 'Invalid type parameter. Allowed values: "edit", "details"');
     }
 
     // Handle standard request
@@ -265,7 +264,7 @@ exports.get_grid_item_record = with_handler(async function (req, res) {
         exhibit_id, grid_id, item_id, status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'get_grid_item_record',
@@ -307,7 +306,7 @@ exports.update_grid_item_record = with_handler(async function (req, res) {
         exhibit_id, grid_id, item_id, status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'update_grid_item_record',
@@ -332,9 +331,7 @@ exports.delete_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().error('delete_grid_item_record: Invalid record_type', {
             record_type, valid_types: valid_record_types
         });
-        return res.status(400).send({
-            message: `Invalid record_type. Allowed values: ${valid_record_types.join(', ')}`
-        });
+        return send_error(res, 400, `Invalid record_type. Allowed values: ${valid_record_types.join(', ')}`);
     }
 
     const is_authorized = await check_authorization(
@@ -353,7 +350,7 @@ exports.delete_grid_item_record = with_handler(async function (req, res) {
         exhibit_id, grid_id, item_id, record_type, status: result.status
     });
 
-    return res.status(result.status).send(result);
+    return send_model_result(res, result);
 
 }, {
     context: 'delete_grid_item_record',
@@ -390,16 +387,16 @@ exports.publish_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().error(`publish_grid_item_record: ${result?.message}`, {
             exhibit_id, grid_id, grid_item_id, result
         });
-        return res.status(422).send({
-            message: result?.message || 'Unable to publish grid item'
-        });
+        return send_error(res, 422, result?.message || 'Unable to publish grid item');
     }
 
     LOGGER.module().info('publish_grid_item_record: Grid item record published successfully', {
         exhibit_id, grid_id, grid_item_id, status: 200
     });
 
-    return res.status(200).send(result);
+    /* The model answers `true` or `{status: true, message}` — never a payload —
+       so the envelope carries the message and a null `data`. */
+    return send_ok(res, null, result?.message || 'Grid item record published');
 
 }, {
     context: 'publish_grid_item_record',
@@ -435,9 +432,7 @@ exports.suppress_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().error('suppress_grid_item_record: Invalid response from database model', {
             exhibit_id, grid_id, grid_item_id, result
         });
-        return res.status(500).send({
-            message: 'Invalid response from database model'
-        });
+        return send_error(res, 500, 'Invalid response from database model');
     }
 
     // A truthy object with status:false is still a failure — the !result
@@ -446,16 +441,14 @@ exports.suppress_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().error(`suppress_grid_item_record: ${result.message}`, {
             exhibit_id, grid_id, grid_item_id, result
         });
-        return res.status(422).send({
-            message: result.message || 'Unable to suppress grid item'
-        });
+        return send_error(res, 422, result.message || 'Unable to suppress grid item');
     }
 
     LOGGER.module().info('suppress_grid_item_record: Grid item record suppressed successfully', {
         exhibit_id, grid_id, grid_item_id, status: 200
     });
 
-    return res.status(200).send(result);
+    return send_ok(res, null, result?.message || 'Grid item record suppressed');
 
 }, {
     context: 'suppress_grid_item_record',
@@ -485,9 +478,7 @@ exports.unlock_grid_item_record = with_handler(async function (req, res) {
     // Validate force parameter
     if (force !== undefined && force !== 'true' && force !== 'false') {
         LOGGER.module().error('unlock_grid_item_record: Invalid force parameter', {force});
-        return res.status(400).send({
-            message: 'Invalid force parameter. Allowed values: "true" or "false"'
-        });
+        return send_error(res, 400, 'Invalid force parameter. Allowed values: "true" or "false"');
     }
 
     // Prepare options
@@ -512,17 +503,13 @@ exports.unlock_grid_item_record = with_handler(async function (req, res) {
         LOGGER.module().info('unlock_grid_item_record: Grid item record unlocked successfully', {
             exhibit_id, grid_id, item_id, uid, force: options.force
         });
-        return res.status(200).send({
-            message: 'Grid item record unlocked'
-        });
+        return send_ok(res, null, 'Grid item record unlocked');
     }
 
     LOGGER.module().error('unlock_grid_item_record: Failed to unlock grid item record', {
         exhibit_id, grid_id, item_id, uid, force: options.force, result
     });
-    return res.status(400).send({
-        message: 'Unable to unlock grid item record'
-    });
+    return send_error(res, 400, 'Unable to unlock grid item record');
 
 }, {
     context: 'unlock_grid_item_record',

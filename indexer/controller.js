@@ -23,6 +23,40 @@ const SERVICE = require('../indexer/service');
 const LOGGER = require('../libs/log4');
 const GATE = require('../auth/permission_gate');
 const {is_valid_uuid, is_valid_record_type} = require('../indexer/indexer_helper');
+const {send_error, send_ok} = require('../libs/http');
+
+/*
+ * The indexer's model and service answer with `{status, message?, data?}` — a
+ * shape that predates the shared envelope and carries the HTTP status inside
+ * the body. Project it onto `{success, message, data}` here, at the edge, and
+ * apply the status to the response instead (DRY review 2026-09-03, Phase 3
+ * item 19).
+ *
+ * `success` is derived from the HTTP status, so a soft failure the service
+ * reports as 200 still reads as a success — exactly what the wire said before,
+ * and what the management view already branches on.
+ *
+ * `create_index` reports its outcome as a bare string in `data`; every other
+ * call carries a structured payload. A string payload is therefore promoted to
+ * the message so `data` only ever holds data.
+ *
+ * @param {Object} res - Express response object
+ * @param {Object} result - Service/model envelope `{status, message?, data?}`
+ * @param {string} fallback_message - Message when the envelope carries none
+ * @returns {Object} The Express response
+ */
+const send_service_result = (res, result, fallback_message) => {
+
+    const is_string_payload = typeof result.data === 'string';
+    const payload = (is_string_payload || result.data === undefined) ? null : result.data;
+    const message = result.message || (is_string_payload ? result.data : fallback_message);
+
+    if (result.status >= 400) {
+        return send_error(res, result.status, message);
+    }
+
+    return send_ok(res, payload, message, result.status);
+};
 
 /*
  * Route middleware: requires the `manage_index` permission.
@@ -65,7 +99,7 @@ exports.create_index = async (req, res) => {
             });
         }
 
-        return res.status(result.status).json(result);
+        return send_service_result(res, result, 'Index created');
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (create_index)]', {
@@ -75,10 +109,7 @@ exports.create_index = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to create index'
-            });
+            return send_error(res, 500, 'Unable to create index');
         }
     }
 };
@@ -105,7 +136,7 @@ exports.get_index_status = async (req, res) => {
             }
         }
 
-        return res.status(result.status).json(result);
+        return send_service_result(res, result, 'Index status retrieved');
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (get_index_status)]', {
@@ -114,10 +145,7 @@ exports.get_index_status = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to retrieve index status'
-            });
+            return send_error(res, 500, 'Unable to retrieve index status');
         }
     }
 };
@@ -135,11 +163,7 @@ exports.index_exhibit = async (req, res) => {
 
         // Validate UUID
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid exhibit UUID is required',
-                code: 'INVALID_UUID'
-            });
+            return send_error(res, 400, 'Valid exhibit UUID is required', {code: 'INVALID_UUID'});
         }
 
         const result = await MODEL.index_exhibit(uuid);
@@ -149,7 +173,7 @@ exports.index_exhibit = async (req, res) => {
             throw new Error('Invalid response from model');
         }
 
-        return res.status(result.status).json(result);
+        return send_service_result(res, result, 'Exhibit indexed');
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (index_exhibit)]', {
@@ -160,10 +184,7 @@ exports.index_exhibit = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to index exhibit'
-            });
+            return send_error(res, 500, 'Unable to index exhibit');
         }
     }
 };
@@ -181,11 +202,7 @@ exports.get_indexed_record = async (req, res) => {
 
         // Validate UUID
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid record UUID is required',
-                code: 'INVALID_UUID'
-            });
+            return send_error(res, 400, 'Valid record UUID is required', {code: 'INVALID_UUID'});
         }
 
         const response = await MODEL.get_indexed_record(uuid);
@@ -197,14 +214,11 @@ exports.get_indexed_record = async (req, res) => {
 
         // Check if record was found
         if (response.status === 404) {
-            return res.status(404).json({
-                success: false,
-                message: 'Record not found',
-                code: 'RECORD_NOT_FOUND'
-            });
+            return send_error(res, 404, 'Record not found', {code: 'RECORD_NOT_FOUND'});
         }
 
-        return res.status(response.status).json(response.data);
+        /* Was a bare model payload; now enveloped like every other response. */
+        return send_ok(res, response.data === undefined ? null : response.data, response.message || 'Indexed record retrieved', response.status);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (get_indexed_record)]', {
@@ -215,10 +229,7 @@ exports.get_indexed_record = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to retrieve indexed record'
-            });
+            return send_error(res, 500, 'Unable to retrieve indexed record');
         }
     }
 };
@@ -236,11 +247,7 @@ exports.delete_record = async (req, res) => {
 
         // Validate UUID
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid record UUID is required',
-                code: 'INVALID_UUID'
-            });
+            return send_error(res, 400, 'Valid record UUID is required', {code: 'INVALID_UUID'});
         }
 
         const result = await MODEL.delete_record(uuid);
@@ -250,7 +257,7 @@ exports.delete_record = async (req, res) => {
             throw new Error('Invalid response from model');
         }
 
-        return res.status(result.status).json(result);
+        return send_service_result(res, result, 'Record deleted from the index');
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (delete_record)]', {
@@ -261,10 +268,7 @@ exports.delete_record = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to delete record'
-            });
+            return send_error(res, 500, 'Unable to delete record');
         }
     }
 };
@@ -282,29 +286,17 @@ exports.index_record = async (req, res) => {
 
         // Validate UUID
         if (!is_valid_uuid(uuid)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid record UUID is required',
-                code: 'INVALID_UUID'
-            });
+            return send_error(res, 400, 'Valid record UUID is required', {code: 'INVALID_UUID'});
         }
 
         // Validate type parameter
         if (!type || typeof type !== 'string' || type.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Record type is required',
-                code: 'MISSING_TYPE'
-            });
+            return send_error(res, 400, 'Record type is required', {code: 'MISSING_TYPE'});
         }
 
         // Validate against allowed types
         if (!is_valid_record_type(type)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid record type',
-                code: 'INVALID_TYPE'
-            });
+            return send_error(res, 400, 'Invalid record type', {code: 'INVALID_TYPE'});
         }
 
         const result = await MODEL.index_record(uuid, type.toLowerCase());
@@ -314,7 +306,7 @@ exports.index_record = async (req, res) => {
             throw new Error('Invalid response from model');
         }
 
-        return res.status(result.status).json(result);
+        return send_service_result(res, result, 'Record indexed');
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/controller (index_record)]', {
@@ -326,10 +318,7 @@ exports.index_record = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to index record'
-            });
+            return send_error(res, 500, 'Unable to index record');
         }
     }
 };

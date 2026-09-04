@@ -1,8 +1,7 @@
 /**
  * Integration Tests for Auth Model
  *
- * Runs the REAL auth/model.js with the task classes and endpoint registries
- * mocked. Covers the status contracts the auth controller consumes
+ * Runs the REAL auth/model.js with the task classes mocked. Covers the status contracts the auth controller consumes
  * (check_auth_user, get_auth_user_data, get_roles, get_user_role) — the
  * layer that was previously only ever mocked in auth_routes_integration.
  *
@@ -19,12 +18,6 @@ jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 jest.mock('../../config/db_config', () => () => jest.fn());
 
 jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({ user_records: 'tbl_users', roles_records: 'tbl_user_roles' }));
-
-/* Endpoint registries read APP_PATH/config at require time — stub them. */
-jest.mock('../../exhibits/endpoints/index', () => () => ({ exhibits: 'EXHIBITS_ENDPOINTS' }));
-jest.mock('../../users/endpoints', () => () => ({ users: 'USERS_ENDPOINTS' }));
-jest.mock('../../indexer/endpoints', () => () => ({ indexer: 'INDEXER_ENDPOINTS' }));
-jest.mock('../../media-library/endpoints', () => () => ({ media_library: 'MEDIA_ENDPOINTS' }));
 
 const mockAuthTasks = mock_model(['check_auth_user', 'get_auth_user_data']);
 
@@ -109,7 +102,11 @@ describe('Auth Model', () => {
             expect((await AUTH_MODEL.get_auth_user_data(7)).status).toBe(500);
         });
 
-        test('returns 200 with the profile plus every endpoint registry', async () => {
+        /* The endpoint registry used to ride along in this payload as a
+         * second delivery channel next to the generated client bundle. It
+         * was removed; the response must now carry the profile ONLY, so a
+         * reintroduced copy fails here. */
+        test('returns 200 with the profile and no endpoint registry', async () => {
             const profile = { id: 7, du_id: '871234567', email: 'a@du.edu', first_name: 'A', last_name: 'B' };
             mockAuthTasks.get_auth_user_data.mockResolvedValue(profile);
 
@@ -117,12 +114,8 @@ describe('Auth Model', () => {
 
             expect(result.status).toBe(200);
             expect(result.data.user_data).toBe(profile);
-            expect(result.data.endpoints).toEqual({
-                exhibits: { exhibits: 'EXHIBITS_ENDPOINTS' },
-                users: { users: 'USERS_ENDPOINTS' },
-                indexer: { indexer: 'INDEXER_ENDPOINTS' },
-                media_library: { media_library: 'MEDIA_ENDPOINTS' }
-            });
+            expect(result.data.endpoints).toBeUndefined();
+            expect(Object.keys(result.data)).toEqual(['user_data']);
         });
 
         test('returns 500 when the task throws', async () => {

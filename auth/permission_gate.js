@@ -34,9 +34,9 @@ const { send_error } = require('../libs/http');
  * that module would vanish under the mock. This module requires
  * `./authorize` at load, so the mock is what it calls.
  *
- * Two envelope styles are preserved verbatim from the sites they replace:
- *   'data'    -> { success: false, message, data: null }  (media-library, indexer)
- *   'message' -> { message }                             (users)
+ * The 403 body was originally selectable, because users/ answered `{message}`
+ * while media-library and indexer answered `{success, message, data}`. Phase 3
+ * item 19 unified every module on the latter, so there is one shape here now.
  */
 
 const UNAUTHORIZED_MESSAGE = 'Unauthorized request';
@@ -70,19 +70,14 @@ const build_auth_options = (req, permissions, options = {}) => {
 };
 
 /**
- * Sends the 403 in the envelope style the calling module speaks
+ * Sends the 403
+ *
+ * Every module now speaks the one `{success, message, data}` envelope
+ * (Phase 3 item 19), so this no longer branches on a caller-supplied style.
  * @param {Object} res - Express response
- * @param {string} [envelope='data'] - 'data' or 'message'
  * @returns {Object} The response
  */
-const send_unauthorized = (res, envelope = 'data') => {
-
-    if (envelope === 'message') {
-        return res.status(403).json({
-            message: UNAUTHORIZED_MESSAGE
-        });
-    }
-
+const send_unauthorized = (res) => {
     return send_error(res, 403, UNAUTHORIZED_MESSAGE);
 };
 
@@ -95,7 +90,6 @@ const send_unauthorized = (res, envelope = 'data') => {
  * @param {Object} res - Express response
  * @param {Array<string>} permissions - Required permissions
  * @param {Object} [options] - build_auth_options options, plus:
- * @param {string} [options.envelope='data'] - 403 envelope style
  * @param {string} [options.deny_log] - Warning logged when denied
  * @returns {Promise<boolean>} True when authorized; false after the 403 was sent
  */
@@ -111,7 +105,7 @@ const authorize_request = async (req, res, permissions, options = {}) => {
         LOGGER.module().warn(options.deny_log);
     }
 
-    send_unauthorized(res, options.envelope);
+    send_unauthorized(res);
     return false;
 };
 
@@ -123,7 +117,6 @@ const authorize_request = async (req, res, permissions, options = {}) => {
  * @param {Object} [options] - build_auth_options options, plus:
  * @param {string} [options.parent_param] - req.params key to read parent_id from
  * @param {string} [options.child_param] - req.params key to read child_id from
- * @param {string} [options.envelope='data'] - 403 envelope style
  * @param {string} [options.context] - Log label for a thrown check
  * @returns {Function} Express middleware
  */
@@ -149,7 +142,7 @@ const require_permission = (permissions, options = {}) => {
 
         } catch (error) {
             LOGGER.module().error(`ERROR: [${context}] ${error.message}`);
-            return send_unauthorized(res, rest.envelope);
+            return send_unauthorized(res);
         }
     };
 };

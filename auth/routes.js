@@ -18,39 +18,41 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../auth/controller');
 const ENDPOINTS = require('../auth/endpoints');
 const TOKENS = require('../libs/tokens');
 const SSO_GUARD = require('../auth/sso_guard');
 const {rate_limits} = require('../config/rate_limits_loader');
 const { async_handler } = require('../libs/http');
-const APP_PATH = APP_CONFIG.app_path;
 
 module.exports = function (app) {
 
-    app.route(`${APP_PATH}/auth`)
+    /* Every path comes from auth/endpoints.js so the registry cannot drift
+     * from what is actually registered (it had, for /auth/sso). */
+    const endpoints = ENDPOINTS().auth;
+
+    app.route(endpoints.auth_landing.get.endpoint)
         .get(CONTROLLER.get_auth_landing);
 
-    app.route(`${APP_PATH}/auth/login`)
+    app.route(endpoints.auth_login.get.endpoint)
         .get(rate_limits.auth_operations, CONTROLLER.initiate_login);
 
     // SSO_GUARD runs first — it authenticates the request PATH
     // (shared-secret header injected by the local proxy and/or a source-IP
     // allowlist) so the body-only auth cannot be replayed by an arbitrary
     // client. Fails closed in production when unconfigured. See auth/sso_guard.js.
-    app.route(`${APP_PATH}/auth/sso`)
+    app.route(endpoints.sso.post.endpoint)
         .post(SSO_GUARD, rate_limits.auth_identity_operations, async_handler(CONTROLLER.sso));
 
-    app.route(`${APP_PATH}/auth/permissions`)
+    app.route(endpoints.auth_permissions.post.endpoint)
         .post(TOKENS.verify, async_handler(CONTROLLER.check_permissions));
 
-    app.route(`${APP_PATH}/auth/roles`)
+    app.route(endpoints.auth_roles.get.endpoint)
         .get(TOKENS.verify, async_handler(CONTROLLER.get_roles));
 
-    app.route(`${APP_PATH}/auth/role`)
+    app.route(endpoints.auth_role.get.endpoint)
         .get(TOKENS.verify, async_handler(CONTROLLER.get_user_role));
 
-    app.route(ENDPOINTS().auth.authentication.endpoint)
+    app.route(endpoints.authentication.get.endpoint)
         .get(TOKENS.verify, async_handler(CONTROLLER.get_auth_user_data));
 };

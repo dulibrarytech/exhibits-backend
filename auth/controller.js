@@ -25,6 +25,7 @@ const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
 const AUTHORIZE = require('./authorize');
 const { is_valid_uuid } = require('../libs/uuid');
+const { send_error, send_ok } = require('../libs/http');
 const APP_PATH = APP_CONFIG.app_path;
 
 exports.get_auth_landing = function (req, res) {
@@ -55,6 +56,10 @@ exports.initiate_login = function (req, res) {
         LOGGER.module().error(
             `ERROR: [/auth/controller (initiate_login)] unable to redirect to SSO: ${error.message}`
         );
+        /* Deliberately NOT the JSON envelope: this endpoint answers a
+           top-level browser navigation from the landing page's Authenticate
+           button, so its siblings render HTML and nothing parses this body
+           (Phase 3 item 19). */
         res.status(500).send('Unable to start authentication.');
     }
 };
@@ -64,7 +69,7 @@ exports.sso = async function (req, res) {
     try {
 
         if (!req.body) {
-            return res.status(400).json({ message: 'Invalid request.' });
+            return send_error(res, 400, 'Invalid request.');
         }
 
         const sso_host = req.body.HTTP_HOST;
@@ -72,7 +77,7 @@ exports.sso = async function (req, res) {
 
         // Validate required parameters
         if (!sso_host || !username || typeof username !== 'string') {
-            return res.status(400).json({ message: 'Missing required parameters.' });
+            return send_error(res, 400, 'Missing required parameters.');
         }
 
         // Validate SSO host against whitelist
@@ -80,27 +85,27 @@ exports.sso = async function (req, res) {
             LOGGER.module().warn(
                 `SSO attempt from unauthorized host: ${sso_host}`
             );
-            return res.status(403).json({ message: 'Unauthorized host.' });
+            return send_error(res, 403, 'Unauthorized host.');
         }
 
         // Sanitize username to prevent injection
         const sanitized_username = username.trim();
         if (sanitized_username.length === 0 || sanitized_username.length > 255) {
-            return res.status(400).json({ message: 'Invalid username format.' });
+            return send_error(res, 400, 'Invalid username format.');
         }
 
         // Check user authentication
         const auth_result = await MODEL.check_auth_user(sanitized_username);
 
         if (!auth_result?.auth) {
-            return res.status(401).json({ message: 'Authentication failed.' });
+            return send_error(res, 401, 'Authentication failed.');
         }
 
         // Create token
         const token = TOKEN.create(sanitized_username);
         if (!token) {
             LOGGER.module().error('Failed to create authentication token');
-            return res.status(500).json({ message: 'Authentication failed.' });
+            return send_error(res, 500, 'Authentication failed.');
         }
 
         /*
@@ -114,7 +119,7 @@ exports.sso = async function (req, res) {
             LOGGER.module().error(
                 `Invalid user ID type for user: ${sanitized_username}`
             );
-            return res.status(500).json({ message: 'Authentication failed.' });
+            return send_error(res, 500, 'Authentication failed.');
         }
 
         // Primary auth transport: HttpOnly cookie read by TOKEN.verify /
@@ -136,7 +141,7 @@ exports.sso = async function (req, res) {
         LOGGER.module().error(
             `ERROR: [/auth/controller (sso)] unable to complete authentication: ${error.message}`
         );
-        res.status(500).json({ message: 'Authentication failed.' });
+        send_error(res, 500, 'Authentication failed.');
     }
 };
 
@@ -145,26 +150,20 @@ exports.get_auth_user_data = async function (req, res) {
     try {
 
         if (!req.query || typeof req.query !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Extract and validate user ID
         const user_id = req.query.id;
 
         if (!user_id) {
-            return res.status(400).json({
-                message: 'Missing required parameter: id'
-            });
+            return send_error(res, 400, 'Missing required parameter: id');
         }
 
         // Validate user ID is numeric and positive
         const parsed_id = Number(user_id);
         if (!Number.isInteger(parsed_id) || parsed_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user ID format.'
-            });
+            return send_error(res, 400, 'Invalid user ID format.');
         }
 
         // Fetch user data from model
@@ -172,9 +171,7 @@ exports.get_auth_user_data = async function (req, res) {
 
         // Validate model response
         if (!response || !response.data) {
-            return res.status(404).json({
-                message: 'User not found.'
-            });
+            return send_error(res, 404, 'User not found.');
         }
 
         // Check if user_data is the expected object structure
@@ -182,13 +179,11 @@ exports.get_auth_user_data = async function (req, res) {
             LOGGER.module().error(
                 `ERROR: [/auth/controller (get_auth_user_data)] invalid response from model for user ID: ${parsed_id}`
             );
-            return res.status(500).json({
-                message: 'Invalid user data format.'
-            });
+            return send_error(res, 500, 'Invalid user data format.');
         }
 
         // Return successful response with user data
-        return res.status(200).json(response.data);
+        return send_ok(res, response.data, 'User authentication data retrieved.');
 
     } catch (error) {
         LOGGER.module().error(
@@ -196,9 +191,7 @@ exports.get_auth_user_data = async function (req, res) {
         );
 
         // Return error response
-        res.status(500).json({
-            message: 'An error occurred while retrieving user data.'
-        });
+        send_error(res, 500, 'An error occurred while retrieving user data.');
     }
 };
 
@@ -209,21 +202,17 @@ exports.get_roles = async function (req, res) {
         const response = await MODEL.get_roles();
 
         if (!response || !response.data || !Array.isArray(response.data)) {
-            return res.status(404).json({
-                message: 'No roles found.'
-            });
+            return send_error(res, 404, 'No roles found.');
         }
 
         // Validate roles is an array
         if (!Array.isArray(response.data)) {
             LOGGER.module().error('ERROR: [/auth/controller (get_roles)] invalid response format from model');
-            return res.status(500).json({
-                message: 'Invalid roles data format.'
-            });
+            return send_error(res, 500, 'Invalid roles data format.');
         }
 
         // Return successful response with roles
-        return res.status(200).json(response.data);
+        return send_ok(res, response.data, 'Roles retrieved.');
 
     } catch (error) {
         LOGGER.module().error(
@@ -231,9 +220,7 @@ exports.get_roles = async function (req, res) {
         );
 
         // Return error response
-        res.status(500).json({
-            message: 'An error occurred while retrieving roles.'
-        });
+        send_error(res, 500, 'An error occurred while retrieving roles.');
     }
 };
 
@@ -242,39 +229,31 @@ exports.get_user_role = async function (req, res) {
     try {
 
         if (!req.query || typeof req.query !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Extract and validate user_id
         const user_id = req.query.user_id;
 
         if (!user_id || user_id === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: user_id'
-            });
+            return send_error(res, 400, 'Missing required parameter: user_id');
         }
 
         // Validate user_id is numeric and positive
         const parsed_user_id = Number(user_id);
 
         if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user_id format.'
-            });
+            return send_error(res, 400, 'Invalid user_id format.');
         }
 
         const response = await MODEL.get_user_role(parsed_user_id);
 
         if (!response || !response.data || !Array.isArray(response.data)) {
-            return res.status(404).json({
-                message: 'User role not found.'
-            });
+            return send_error(res, 404, 'User role not found.');
         }
 
         // Return successful response with user role
-        return res.status(200).json(response.data);
+        return send_ok(res, response.data, 'User role retrieved.');
 
     } catch (error) {
         LOGGER.module().error(
@@ -282,9 +261,7 @@ exports.get_user_role = async function (req, res) {
         );
 
         // Return error response
-        res.status(500).json({
-            message: 'An error occurred while retrieving user role.'
-        });
+        send_error(res, 500, 'An error occurred while retrieving user role.');
     }
 };
 
@@ -293,9 +270,7 @@ exports.check_permissions = async function (req, res) {
     try {
 
         if (!req.body || typeof req.body !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request body.'
-            });
+            return send_error(res, 400, 'Invalid request body.');
         }
 
         // Extract and validate required parameters
@@ -303,31 +278,23 @@ exports.check_permissions = async function (req, res) {
 
         // Validate permissions is an array
         if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
-            return res.status(400).json({
-                message: 'Invalid or missing permissions parameter.'
-            });
+            return send_error(res, 400, 'Invalid or missing permissions parameter.');
         }
 
         // Validate record_type is a string
         if (!record_type || typeof record_type !== 'string') {
-            return res.status(400).json({
-                message: 'Invalid or missing record_type parameter.'
-            });
+            return send_error(res, 400, 'Invalid or missing record_type parameter.');
         }
 
         // Validate parent_id is a valid UUID (strict RFC shape, see libs/uuid)
         if (!is_valid_uuid(parent_id)) {
-            return res.status(400).json({
-                message: 'Invalid or missing parent_id parameter.'
-            });
+            return send_error(res, 400, 'Invalid or missing parent_id parameter.');
         }
 
         // Validate child_id is a valid UUID if provided
         if (child_id !== null && child_id !== undefined && child_id !== '') {
             if (!is_valid_uuid(child_id)) {
-                return res.status(400).json({
-                    message: 'Invalid child_id parameter.'
-                });
+                return send_error(res, 400, 'Invalid child_id parameter.');
             }
         }
 
@@ -345,18 +312,14 @@ exports.check_permissions = async function (req, res) {
 
         // Handle authorization result
         if (is_authorized === true) {
-            return res.status(200).json({
-                message: 'Authorized'
-            });
+            return send_ok(res, null, 'Authorized');
         } else if (is_authorized === false) {
             // Log permission denials with actor/permission/resource
             // so privilege-probing is visible.
             LOGGER.module().warn(
                 `WARNING: [/auth/controller (check_permissions)] permission denied for user: ${req.decoded?.sub || 'unknown'} — permissions: ${Array.isArray(permissions) ? permissions.join(',') : permissions}, record_type: ${record_type || 'n/a'}`
             );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return send_error(res, 403, 'Unauthorized request');
         }
 
     } catch (error) {
@@ -365,8 +328,6 @@ exports.check_permissions = async function (req, res) {
         );
 
         // Return error response
-        res.status(500).json({
-            message: 'An error occurred while checking permissions.'
-        });
+        send_error(res, 500, 'An error occurred while checking permissions.');
     }
 };

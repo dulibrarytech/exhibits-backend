@@ -21,10 +21,13 @@
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 
 /*
- * 'plain' is this controller's wire format: a bare 'Bad request.' string body
- * on 400 and a 500 of {message: '<message> <error.message>'}. See
- * exhibits/controller_helper.js.
+ * 'plain' is this controller's message wording: a flat 'Bad request.' on 400
+ * and a 500 message of '<message> <error.message>'. Both now ride the shared
+ * {success, message, data} envelope — the bare string body is gone (Phase 3
+ * item 19). See exhibits/controller_helper.js.
  */
+const { send_model_result, PLAIN_BAD_REQUEST_MESSAGE } = require('../exhibits/controller_helper');
+const { send_error, send_ok } = require('../libs/http');
 const {
     validate_id: validate_param,
     check_authorization,
@@ -50,7 +53,7 @@ exports.create_timeline_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await TIMELINES_MODEL.create_timeline_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'create_timeline_record',
@@ -75,7 +78,7 @@ exports.update_timeline_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await TIMELINES_MODEL.update_timeline_record(is_member_of_exhibit, timeline_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'update_timeline_record',
@@ -91,7 +94,7 @@ exports.get_timeline_record = with_handler(async function (req, res) {
     if (!validate_param(res, timeline_id)) return false;
 
     const result = await TIMELINES_MODEL.get_timeline_record(is_member_of_exhibit, timeline_id);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'get_timeline_record',
@@ -116,7 +119,7 @@ exports.create_timeline_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await TIMELINES_MODEL.create_timeline_item_record(is_member_of_exhibit, timeline_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'create_timeline_item_record',
@@ -132,7 +135,7 @@ exports.get_timeline_item_records = with_handler(async function (req, res) {
     if (!validate_param(res, is_member_of_timeline)) return false;
 
     const result = await TIMELINES_MODEL.get_timeline_item_records(is_member_of_exhibit, is_member_of_timeline);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'get_timeline_item_records',
@@ -152,12 +155,12 @@ exports.get_timeline_item_record = with_handler(async function (req, res) {
 
     if (type === undefined) {
         const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
-        res.status(result.status).send(result);
+        send_model_result(res, result);
     }
 
     if (type === 'details') {
         const result = await TIMELINES_MODEL.get_timeline_item_details_record(is_member_of_exhibit, is_member_of_timeline, item_id);
-        res.status(result.status).send(result);
+        send_model_result(res, result);
         return false;
     }
 
@@ -168,7 +171,7 @@ exports.get_timeline_item_record = with_handler(async function (req, res) {
         if (!validate_param(res, uid)) return false;
 
         const result = await TIMELINES_MODEL.get_timeline_item_edit_record(uid, is_member_of_exhibit, is_member_of_timeline, item_id);
-        res.status(result.status).send(result);
+        send_model_result(res, result);
         return false;
     }
 
@@ -197,7 +200,7 @@ exports.update_timeline_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await TIMELINES_MODEL.update_timeline_item_record(is_member_of_exhibit, timeline_id, item_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'update_timeline_item_record',
@@ -211,7 +214,7 @@ exports.publish_timeline_item_record = with_handler(async function (req, res) {
     const timeline_item_id = req.params.timeline_item_id;
 
     if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
-        res.status(400).send('Bad request.');
+        send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE);
         return false;
     }
 
@@ -225,13 +228,9 @@ exports.publish_timeline_item_record = with_handler(async function (req, res) {
     const result = await TIMELINES_MODEL.publish_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
     if (result.status === true) {
-        res.status(200).send({
-            message: 'timeline item published.'
-        });
+        send_ok(res, null, 'timeline item published.');
     } else {
-        res.status(422).send({
-            message: result?.message || 'Unable to publish timeline item'
-        });
+        send_error(res, 422, result?.message || 'Unable to publish timeline item');
     }
 
 }, {
@@ -246,7 +245,7 @@ exports.suppress_timeline_item_record = with_handler(async function (req, res) {
     const timeline_item_id = req.params.timeline_item_id;
 
     if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
-        res.status(400).send('Bad request.');
+        send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE);
         return false;
     }
 
@@ -260,13 +259,9 @@ exports.suppress_timeline_item_record = with_handler(async function (req, res) {
     const result = await TIMELINES_MODEL.suppress_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
     if (result?.status === true) {
-        res.status(200).send({
-            message: 'Item timeline suppressed.'
-        });
+        send_ok(res, null, 'Item timeline suppressed.');
     } else {
-        res.status(422).send({
-            message: result?.message || 'Unable to suppress timeline item'
-        });
+        send_error(res, 422, result?.message || 'Unable to suppress timeline item');
     }
 
 }, {
@@ -282,7 +277,7 @@ exports.delete_timeline_item_record = with_handler(async function (req, res) {
     const record_type = req.query.type;
 
     if (timeline_item_id === undefined || timeline_item_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
-        res.status(400).send('Bad request.');
+        send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE);
         return false;
     }
 
@@ -294,7 +289,7 @@ exports.delete_timeline_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await TIMELINES_MODEL.delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id, record_type);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'delete_timeline_item_record',
@@ -324,13 +319,9 @@ exports.unlock_timeline_item_record = with_handler(async function (req, res) {
 
     /* helper unlock_record resolves to the unlocked record row, not a boolean */
     if (result && typeof result === 'object') {
-        res.status(200).send({
-            message: 'Timeline item record unlocked.'
-        });
+        send_ok(res, null, 'Timeline item record unlocked.');
     } else {
-        res.status(400).send({
-            message: 'Unable to unlock timeline item record'
-        });
+        send_error(res, 400, 'Unable to unlock timeline item record');
     }
 
 }, {

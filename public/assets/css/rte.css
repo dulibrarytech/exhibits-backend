@@ -11,9 +11,17 @@
  * Size the widget from the editor instead: auto container, min/max on the
  * editable region with internal scrolling.
  */
+/*
+ * quill.snow.css sets `.ql-container { font-family: Helvetica, Arial,
+ * sans-serif }`, so every rich-text field rendered in a different typeface
+ * from the Open Sans label above it and button below it. Inherit instead of
+ * naming a font, so the editor follows the body if that ever changes.
+ * (Font review 2026-09-04.)
+ */
 .rte-container.ql-container {
     height: auto;
     background-color: #ffffff;
+    font-family: inherit;
 }
 
 .rte-container .ql-editor {

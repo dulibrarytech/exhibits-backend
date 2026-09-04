@@ -22,6 +22,7 @@ const MODEL = require('../users/model');
 const LOGGER = require("../libs/log4");
 const AUTHORIZE = require("../auth/authorize");
 const GATE = require('../auth/permission_gate');
+const { send_error, send_ok } = require('../libs/http');
 
 /*
  * Every gate in this controller is a user-management check (`users: true`,
@@ -33,9 +34,11 @@ const GATE = require('../auth/permission_gate');
  * @returns {Promise<boolean>} True when authorized; false after the 403 was sent
  */
 const authorize_users_request = (req, res, permissions, deny_log) => {
+    /* No `envelope` option: this controller now speaks the shared
+       {success, message, data} envelope, which is the gate's default
+       (Phase 3 item 19). */
     return GATE.authorize_request(req, res, permissions, {
         users: true,
-        envelope: 'message',
         deny_log
     });
 };
@@ -64,29 +67,23 @@ exports.get_users = async function (req, res) {
         // Validate model response structure
         if (!response || typeof response !== 'object') {
             LOGGER.module().error('ERROR: [/user/controller (get_users)] invalid response structure from model');
-            return res.status(500).json({
-                message: 'Invalid server response format.'
-            });
+            return send_error(res, 500, 'Invalid server response format.');
         }
 
         // Check if users data exists
         if (!response.data) {
             LOGGER.module().warn('WARNING: [/user/controller (get_users)] no users data returned from model');
-            return res.status(404).json({
-                message: 'No users found.'
-            });
+            return send_error(res, 404, 'No users found.');
         }
 
         // Validate users data is an array
         if (!Array.isArray(response.data)) {
             LOGGER.module().error('ERROR: [/user/controller (get_users)] invalid users data format from model');
-            return res.status(500).json({
-                message: 'Invalid users data format.'
-            });
+            return send_error(res, 500, 'Invalid users data format.');
         }
 
         // Return successful response with users data
-        return res.status(200).json({data: response.data});
+        return send_ok(res, response.data, 'User records retrieved.');
 
     } catch (error) {
         LOGGER.module().error(
@@ -94,9 +91,7 @@ exports.get_users = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while retrieving user records.'
-        });
+        send_error(res, 500, 'An error occurred while retrieving user records.');
     }
 };
 
@@ -110,27 +105,21 @@ exports.get_user = async function (req, res) {
     try {
 
         if (!req.params || typeof req.params !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Extract and validate user_id
         const user_id = req.params.user_id;
 
         if (!user_id || user_id === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: user_id'
-            });
+            return send_error(res, 400, 'Missing required parameter: user_id');
         }
 
         // Validate user_id is numeric and positive
         const parsed_user_id = Number(user_id);
 
         if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user_id format.'
-            });
+            return send_error(res, 400, 'Invalid user_id format.');
         }
 
         /*
@@ -153,16 +142,12 @@ exports.get_user = async function (req, res) {
             LOGGER.module().error(
                 `ERROR: [/user/controller (get_user)] invalid response structure from model for user ID: ${parsed_user_id}`
             );
-            return res.status(500).json({
-                message: 'Invalid server response format.'
-            });
+            return send_error(res, 500, 'Invalid server response format.');
         }
 
         // Check if user was found
         if (!response.data) {
-            return res.status(404).json({
-                message: 'User not found.'
-            });
+            return send_error(res, 404, 'User not found.');
         }
 
         // Validate user_data is an object
@@ -170,13 +155,11 @@ exports.get_user = async function (req, res) {
             LOGGER.module().error(
                 `ERROR: [/user/controller (get_user)] invalid user data format from model for user ID: ${parsed_user_id}`
             );
-            return res.status(500).json({
-                message: 'Invalid user data format.'
-            });
+            return send_error(res, 500, 'Invalid user data format.');
         }
 
         // Return successful response with user data
-        return res.status(200).json({data: response.data});
+        return send_ok(res, response.data, 'User record retrieved.');
 
     } catch (error) {
         LOGGER.module().error(
@@ -184,9 +167,7 @@ exports.get_user = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while retrieving user record.'
-        });
+        send_error(res, 500, 'An error occurred while retrieving user record.');
     }
 };
 
@@ -200,33 +181,25 @@ exports.update_user = async function (req, res) {
     try {
 
         if (!req.params || typeof req.params !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Validate request body exists
         if (!req.body || typeof req.body !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request body.'
-            });
+            return send_error(res, 400, 'Invalid request body.');
         }
 
         // Extract and validate user_id
         const user_id = req.params.user_id;
 
         if (!user_id || user_id === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: user_id'
-            });
+            return send_error(res, 400, 'Missing required parameter: user_id');
         }
 
         // Validate user_id is numeric and positive
         const parsed_user_id = Number(user_id);
         if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user_id format.'
-            });
+            return send_error(res, 400, 'Invalid user_id format.');
         }
 
         const user_data = req.body;
@@ -236,18 +209,14 @@ exports.update_user = async function (req, res) {
         const has_updates = updatable_fields.some(field => user_data[field] !== undefined);
 
         if (!has_updates) {
-            return res.status(400).json({
-                message: 'No valid fields provided for update.'
-            });
+            return send_error(res, 400, 'No valid fields provided for update.');
         }
 
         // Validate email format if provided
         if (user_data.email) {
             const email_pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!email_pattern.test(user_data.email)) {
-                return res.status(400).json({
-                    message: 'Invalid email format.'
-                });
+                return send_error(res, 400, 'Invalid email format.');
             }
         }
 
@@ -255,9 +224,7 @@ exports.update_user = async function (req, res) {
         if (user_data.role_id !== undefined) {
             const role_id = Number(user_data.role_id);
             if (!Number.isInteger(role_id) || role_id <= 0) {
-                return res.status(400).json({
-                    message: 'Invalid role_id format.'
-                });
+                return send_error(res, 400, 'Invalid role_id format.');
             }
         }
 
@@ -331,18 +298,14 @@ exports.update_user = async function (req, res) {
 
         // Validate model response
         if (updated_user === null) {
-            return res.status(404).json({
-                message: 'User not found.'
-            });
+            return send_error(res, 404, 'User not found.');
         }
 
         if (updated_user === false) {
             LOGGER.module().error(
                 `ERROR: [/user/controller (update_user)] update failed for user ID: ${parsed_user_id}`
             );
-            return res.status(500).json({
-                message: 'Failed to update user record.'
-            });
+            return send_error(res, 500, 'Failed to update user record.');
         }
 
         // Validate model returned a valid user object
@@ -350,9 +313,7 @@ exports.update_user = async function (req, res) {
             LOGGER.module().error(
                 'ERROR: [/user/controller (update_user)] invalid response format from model'
             );
-            return res.status(500).json({
-                message: 'Invalid server response.'
-            });
+            return send_error(res, 500, 'Invalid server response.');
         }
 
         // OWASP A09 — audit successful update (actor + affected id).
@@ -361,10 +322,7 @@ exports.update_user = async function (req, res) {
         );
 
         // Return successful response with updated user data
-        return res.status(201).json({
-            message: 'User updated successfully.',
-            data: {id: parsed_user_id}
-        });
+        return send_ok(res, {id: parsed_user_id}, 'User updated successfully.', 201);
 
     } catch (error) {
         LOGGER.module().error(
@@ -372,9 +330,7 @@ exports.update_user = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while updating user record.'
-        });
+        send_error(res, 500, 'An error occurred while updating user record.');
     }
 };
 
@@ -388,9 +344,7 @@ exports.save_user = async function (req, res) {
     try {
 
         if (!req.body || typeof req.body !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request body.'
-            });
+            return send_error(res, 400, 'Invalid request body.');
         }
 
         const user_data = req.body;
@@ -400,17 +354,13 @@ exports.save_user = async function (req, res) {
         const missing_fields = required_fields.filter(field => !user_data[field]);
 
         if (missing_fields.length > 0) {
-            return res.status(400).json({
-                message: `Missing required fields: ${missing_fields.join(', ')}`
-            });
+            return send_error(res, 400, `Missing required fields: ${missing_fields.join(', ')}`);
         }
 
         // Validate email format
         const email_pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email_pattern.test(user_data.email)) {
-            return res.status(400).json({
-                message: 'Invalid email format.'
-            });
+            return send_error(res, 400, 'Invalid email format.');
         }
 
         // Check authorization to add users
@@ -448,16 +398,12 @@ exports.save_user = async function (req, res) {
             LOGGER.module().error(
                 'ERROR: [/user/controller (save_user)] model returned null/undefined response'
             );
-            return res.status(500).json({
-                message: 'Failed to save user record.'
-            });
+            return send_error(res, 500, 'Failed to save user record.');
         }
 
         // Check if save was successful
         if (saved_user.data === false) {
-            return res.status(409).json({
-                message: 'User already exists'
-            });
+            return send_error(res, 409, 'User already exists');
         }
 
         // OWASP A09 — audit successful user administration (actor + affected id,
@@ -467,10 +413,7 @@ exports.save_user = async function (req, res) {
         );
 
         // Return successful response with saved user data
-        return res.status(201).json({
-            message: 'User created successfully.',
-            data: saved_user.data
-        });
+        return send_ok(res, saved_user.data, 'User created successfully.', 201);
 
     } catch (error) {
         LOGGER.module().error(
@@ -478,9 +421,7 @@ exports.save_user = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while saving user record.'
-        });
+        send_error(res, 500, 'An error occurred while saving user record.');
     }
 };
 
@@ -494,26 +435,20 @@ exports.delete_user = async function (req, res) {
     try {
 
         if (!req.params || typeof req.params !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Extract and validate user_id
         const user_id = req.params.user_id;
 
         if (!user_id || user_id === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: user_id'
-            });
+            return send_error(res, 400, 'Missing required parameter: user_id');
         }
 
         // Validate user_id is numeric and positive
         const parsed_user_id = Number(user_id);
         if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user_id format.'
-            });
+            return send_error(res, 400, 'Invalid user_id format.');
         }
 
         // Check authorization to delete users
@@ -530,25 +465,19 @@ exports.delete_user = async function (req, res) {
 
         // Validate model response
         if (delete_result === null) {
-            return res.status(404).json({
-                message: 'User not found.'
-            });
+            return send_error(res, 404, 'User not found.');
         }
 
         if (delete_result === false) {
             LOGGER.module().error(
                 `ERROR: [/user/controller (delete_user)] delete failed for user ID: ${parsed_user_id}`
             );
-            return res.status(500).json({
-                message: 'Failed to delete user record.'
-            });
+            return send_error(res, 500, 'Failed to delete user record.');
         }
 
         // Check for conflict (user cannot be deleted due to dependencies)
         if (delete_result.conflict) {
-            return res.status(409).json({
-                message: delete_result.message || 'User cannot be deleted due to existing dependencies.'
-            });
+            return send_error(res, 409, delete_result.message || 'User cannot be deleted due to existing dependencies.');
         }
 
         // OWASP A09 — audit successful deletion (actor + affected id).
@@ -565,9 +494,7 @@ exports.delete_user = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while deleting user record.'
-        });
+        send_error(res, 500, 'An error occurred while deleting user record.');
     }
 };
 
@@ -581,43 +508,33 @@ exports.update_status = async function (req, res) {
     try {
 
         if (!req.params || typeof req.params !== 'object') {
-            return res.status(400).json({
-                message: 'Invalid request parameters.'
-            });
+            return send_error(res, 400, 'Invalid request parameters.');
         }
 
         // Extract and validate user id
         const user_id = req.params.id;
 
         if (!user_id || user_id === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: id'
-            });
+            return send_error(res, 400, 'Missing required parameter: id');
         }
 
         // Validate user_id is numeric and positive
         const parsed_user_id = Number(user_id);
         if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
-            return res.status(400).json({
-                message: 'Invalid user ID format.'
-            });
+            return send_error(res, 400, 'Invalid user ID format.');
         }
 
         // Extract and validate is_active parameter
         const is_active = req.params.is_active;
 
         if (is_active === undefined || is_active === '') {
-            return res.status(400).json({
-                message: 'Missing required parameter: is_active'
-            });
+            return send_error(res, 400, 'Missing required parameter: is_active');
         }
 
         // Validate is_active is 0 or 1
         const parsed_is_active = Number(is_active);
         if (parsed_is_active !== 0 && parsed_is_active !== 1) {
-            return res.status(400).json({
-                message: 'Invalid is_active value. Must be 0 or 1.'
-            });
+            return send_error(res, 400, 'Invalid is_active value. Must be 0 or 1.');
         }
 
         // Check authorization to update user status
@@ -634,18 +551,14 @@ exports.update_status = async function (req, res) {
 
         // Validate model response
         if (update_result === null) {
-            return res.status(404).json({
-                message: 'User not found.'
-            });
+            return send_error(res, 404, 'User not found.');
         }
 
         if (update_result === false) {
             LOGGER.module().error(
                 `ERROR: [/user/controller (update_status)] status update failed for user ID: ${parsed_user_id}`
             );
-            return res.status(500).json({
-                message: 'Failed to update user status.'
-            });
+            return send_error(res, 500, 'Failed to update user status.');
         }
 
         // Validate model returned a valid result
@@ -653,9 +566,7 @@ exports.update_status = async function (req, res) {
             LOGGER.module().error(
                 'ERROR: [/user/controller (update_status)] invalid response format from model'
             );
-            return res.status(500).json({
-                message: 'Invalid server response.'
-            });
+            return send_error(res, 500, 'Invalid server response.');
         }
 
         // OWASP A09 — audit successful status change (actor + affected id + new state).
@@ -664,10 +575,7 @@ exports.update_status = async function (req, res) {
         );
 
         // Return successful response
-        return res.status(200).json({
-            message: 'User status updated successfully.',
-            data: {id: parsed_user_id, is_active: parsed_is_active}
-        });
+        return send_ok(res, {id: parsed_user_id, is_active: parsed_is_active}, 'User status updated successfully.', 200);
 
     } catch (error) {
         LOGGER.module().error(
@@ -675,8 +583,6 @@ exports.update_status = async function (req, res) {
         );
 
         // Return error response without exposing internal error details
-        res.status(500).json({
-            message: 'An error occurred while updating user status.'
-        });
+        send_error(res, 500, 'An error occurred while updating user status.');
     }
 };

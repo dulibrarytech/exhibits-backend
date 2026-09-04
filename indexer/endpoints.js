@@ -18,43 +18,52 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
-const APP_PATH = APP_CONFIG.app_path;
-const PREFIX = '/api/';
-const VERSION = 'v1';
-const ENDPOINT = '/indexer';
+const { api_base, unprefixed_api_base } = require('../libs/endpoints_config');
+
+const BASE = api_base('/indexer');
+
+/*
+ * DELIBERATE: the per-record indexer routes are mounted WITHOUT APP_PATH, so
+ * they answer on /api/v1/indexer/:uuid rather than
+ * /exhibits-dashboard/api/v1/indexer/:uuid. Only the dashboard path prefix is
+ * proxied publicly (nginx maps /exhibits-dashboard → :8004), which keeps these
+ * routes reachable on the app port only. Nothing in public/app calls them; the
+ * consumers are the live e2e specs (test/e2e/live/exhibit-delete-index.live.spec.js,
+ * test/e2e/live/container-item-delete-index.live.spec.js), which hit
+ * `/api/v1/indexer/${uuid}` directly. `index_utils` (the /manage screen) IS
+ * browser-facing and therefore DOES carry APP_PATH.
+ * Pinned by test/integration/client_endpoints_parity.test.js.
+ */
+const RECORD_BASE = unprefixed_api_base('/indexer');
+
 const ENDPOINTS = {
     indexer: {
         index_records: {
-            description: 'Indexes all exhibit, heading, and item active records',
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
-            endpoints: {
-                post: {
-                    description: 'indexes exhibit index record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:uuid`,
-                    params: 'token or api_key'
-                },
-                get: {
-                    description: 'gets indexed record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:uuid`,
-                    params: 'token or api_key'
-                },
-                delete: {
-                    description: 'Deletes exhibit indexed record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:uuid`,
-                    params: 'token or api_key'
-                }
+            get: {
+                description: 'gets indexed record',
+                endpoint: `${RECORD_BASE}/:uuid`,
+                params: 'token or api_key'
+            },
+            post: {
+                description: 'indexes exhibit index record',
+                endpoint: `${RECORD_BASE}/:uuid`,
+                params: 'token or api_key'
+            },
+            delete: {
+                description: 'Deletes exhibit indexed record',
+                endpoint: `${RECORD_BASE}/:uuid`,
+                params: 'token or api_key'
             }
         },
         index_utils: {
-            post: {
-                description: 'Creates search index',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/manage`,
-                params: 'token or api_key'
-            },
             get: {
                 description: 'Retrieves search index information',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/manage`,
+                endpoint: `${BASE}/manage`,
+                params: 'token or api_key'
+            },
+            post: {
+                description: 'Creates search index',
+                endpoint: `${BASE}/manage`,
                 params: 'token or api_key'
             }
         }

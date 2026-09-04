@@ -812,10 +812,12 @@ async function stubUserRoleApi(page, opts = {}) {
         if (route.request().method() !== 'GET') {
             return route.fallback();
         }
+        /* Wire-format: the shared {success, message, data} envelope — the auth
+           module stopped answering with a bare array in Phase 3 item 19. */
         return route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify([{ role }]),
+            body: JSON.stringify({ success: true, message: 'User role retrieved.', data: [{ role }] }),
         });
     });
 }
@@ -1557,10 +1559,11 @@ async function stubAuthRolesApi(page, opts = {}) {
         if (route.request().method() !== 'GET') {
             return route.fallback();
         }
+        /* Same envelope as /auth/role (Phase 3 item 19). */
         return route.fulfill({
             status: 200,
             contentType: 'application/json',
-            body: JSON.stringify(roles),
+            body: JSON.stringify({ success: true, message: 'Roles retrieved.', data: roles }),
         });
     });
 }

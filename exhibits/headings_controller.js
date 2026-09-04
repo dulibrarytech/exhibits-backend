@@ -28,6 +28,8 @@ const HEADINGS_MODEL = require('../exhibits/headings_model');
  * AUTHORIZE.check_permission still the single decision point behind
  * check_authorization. See exhibits/controller_helper.js.
  */
+const { send_model_result } = require('../exhibits/controller_helper');
+const { send_error, send_ok } = require('../libs/http');
 const {
     validate_id: validate_param,
     check_authorization,
@@ -53,7 +55,7 @@ exports.create_heading_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'create_heading_record',
@@ -71,7 +73,7 @@ exports.get_heading_record = with_handler(async function (req, res) {
 
     if (type === undefined || type === 'details') {
         const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
-        res.status(data.status).send(data);
+        send_model_result(res, data);
         return false;
     }
 
@@ -82,7 +84,7 @@ exports.get_heading_record = with_handler(async function (req, res) {
         if (!validate_param(res, uid)) return false;
 
         const data = await HEADINGS_MODEL.get_heading_edit_record(uid, is_member_of_exhibit, uuid);
-        res.status(data.status).send(data);
+        send_model_result(res, data);
         return false;
     }
 
@@ -109,7 +111,7 @@ exports.update_heading_record = with_handler(async function (req, res) {
     if (!is_authorized) return false;
 
     const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'update_heading_record',
@@ -133,13 +135,9 @@ exports.unlock_heading_record = with_handler(async function (req, res) {
 
     /* helper unlock_record resolves to the unlocked record row, not a boolean */
     if (result && typeof result === 'object') {
-        res.status(200).send({
-            message: 'Heading record unlocked.'
-        });
+        send_ok(res, null, 'Heading record unlocked.');
     } else {
-        res.status(400).send({
-            message: 'Unable to unlock heading record'
-        });
+        send_error(res, 400, 'Unable to unlock heading record');
     }
 
 }, {

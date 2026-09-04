@@ -83,14 +83,14 @@ jest.mock('../../exhibits/endpoints/index', () => () => ({
             post: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id/media-library' },
             delete: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id/media-library/:media_role' }
         },
+        exhibit_records_list: {
+            get: { endpoint: '/api/exhibits/v2/exhibit' }
+        },
         exhibit_records: {
-            endpoint: '/api/exhibits/v2/exhibit',
-            endpoints: {
-                post: { endpoint: '/api/exhibits/v2/exhibit' },
-                get: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' },
-                put: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' },
-                delete: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' }
-            }
+            post: { endpoint: '/api/exhibits/v2/exhibit' },
+            get: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' },
+            put: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' },
+            delete: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id' }
         },
         exhibit_preview: {
             get: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id/preview' }
@@ -105,7 +105,7 @@ jest.mock('../../exhibits/endpoints/index', () => () => ({
             post: { endpoint: '/api/exhibits/v2/exhibit/:exhibit_id/unlock' }
         },
         token_verify: {
-            endpoint: '/api/exhibits/v2/token/verify'
+            get: { endpoint: '/api/exhibits/v2/token/verify' }
         }
     }
 }));
@@ -190,7 +190,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(201);
 
-                expect(response.body.status).toBe(201);
+                expect(response.body.success).toBe(true);
                 expect(response.body.message).toBe('Exhibit record created');
                 expect(mockExhibitsModel.create_exhibit_record).toHaveBeenCalledWith(exhibitData);
             });
@@ -282,7 +282,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(response.body.data).toHaveLength(2);
                 expect(mockExhibitsModel.get_exhibit_records).toHaveBeenCalled();
             });
@@ -348,7 +348,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(response.body.data.uuid).toBe(TEST_UUID);
                 expect(mockExhibitsModel.get_exhibit_record).toHaveBeenCalledWith(TEST_UUID);
             });
@@ -373,7 +373,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(mockExhibitsModel.get_exhibit_edit_record).toHaveBeenCalledWith(
                     TEST_USER_UID,
                     TEST_UUID
@@ -445,7 +445,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(201);
 
-                expect(response.body.status).toBe(201);
+                expect(response.body.success).toBe(true);
                 expect(response.body.message).toBe('Exhibit record updated');
                 expect(mockExhibitsModel.update_exhibit_record).toHaveBeenCalledWith(
                     TEST_UUID,
@@ -504,7 +504,7 @@ describe('Exhibits Integration Tests', () => {
                     .expect('Content-Type', /json/)
                     .expect(200);
 
-                expect(response.body.status).toBe(200);
+                expect(response.body.success).toBe(true);
                 expect(mockExhibitsModel.delete_exhibit_record).toHaveBeenCalledWith(TEST_UUID);
             });
 
@@ -984,7 +984,7 @@ describe('Exhibits Integration Tests', () => {
                 .send(exhibitData)
                 .expect(201);
 
-            expect(response.body.status).toBe(201);
+            expect(response.body.success).toBe(true);
             expect(mockExhibitsModel.create_exhibit_record).toHaveBeenCalledWith(exhibitData);
         });
 

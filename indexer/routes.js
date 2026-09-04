@@ -33,12 +33,12 @@ module.exports = function (app) {
     app.route(ENDPOINTS().indexer.index_utils.get.endpoint)
     .get(rate_limits.read_operations, TOKEN.verify, CONTROLLER.require_manage_index_permission, async_handler(CONTROLLER.get_index_status));
 
-    app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
+    app.route(ENDPOINTS().indexer.index_records.post.endpoint)
     .post(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.index_exhibit));
 
-    app.route(ENDPOINTS().indexer.index_records.endpoints.get.endpoint)
+    app.route(ENDPOINTS().indexer.index_records.get.endpoint)
     .get(rate_limits.read_operations, TOKEN.verify, async_handler(CONTROLLER.get_indexed_record));
 
-    app.route(ENDPOINTS().indexer.index_records.endpoints.delete.endpoint)
+    app.route(ENDPOINTS().indexer.index_records.delete.endpoint)
     .delete(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.delete_record));
 };

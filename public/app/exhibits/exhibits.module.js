@@ -1298,10 +1298,13 @@ const exhibitsModule = (function () {
             return false;
         }
 
+        /* The minted URL rides in the envelope's `data` (Phase 3 item 19). */
+        const minted_url = response?.data?.data?.shared_url;
+
         // Handle successful response
-        if (response?.status === HTTP_CREATED && response.data?.shared_url) {
+        if (response?.status === HTTP_CREATED && minted_url) {
             // Validate the shared URL
-            if (!is_valid_url(response.data.shared_url)) {
+            if (!is_valid_url(minted_url)) {
                 domModule.set_alert('#shared-url', 'danger', 'Invalid shared URL received from server');
                 return false;
             }
@@ -1309,7 +1312,7 @@ const exhibitsModule = (function () {
             // Store the URL for copying
             const copy_target = document.querySelector('#shared-url-copy');
             if (copy_target) {
-                copy_target.textContent = response.data.shared_url;
+                copy_target.textContent = minted_url;
             }
 
             // Display success message with slight delay for UX

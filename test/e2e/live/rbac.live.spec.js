@@ -174,7 +174,7 @@ test.describe('RBAC enforcement (live)', () => {
                 headers: role_headers('administrator')
             });
             expect(minted.status(), 'share link minted').toBe(201);
-            const shared_token = new URL((await minted.json()).shared_url).searchParams.get('t');
+            const shared_token = new URL((await minted.json()).data.shared_url).searchParams.get('t');
             expect(shared_token, 'share URL carries a token').toBeTruthy();
 
             /* The share token must NOT open any session-authenticated API... */
@@ -205,7 +205,7 @@ test.describe('RBAC enforcement (live)', () => {
 
             const minted = await request.post(`${SHARED}?uuid=${exhibit_a}`, { headers: role_headers('administrator') });
             expect(minted.status(), 'editor mints a share link').toBe(201);
-            const t = new URL((await minted.json()).shared_url).searchParams.get('t');
+            const t = new URL((await minted.json()).data.shared_url).searchParams.get('t');
 
             const own = await request.get(`${SHARED}?uuid=${exhibit_a}&t=${t}`);
             expect(own.status(), 'the link renders its own exhibit').toBe(200);

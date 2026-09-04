@@ -180,8 +180,12 @@ const authModule = (function () {
 
             // Handle successful authentication
             if (response.status === 200) {
+
+                /* The user record rides in the envelope's `data` (Phase 3 item 19). */
+                const user_data = response.data?.data;
+
                 // Validate response data exists and has expected structure
-                if (!response.data || typeof response.data !== 'object') {
+                if (!user_data || typeof user_data !== 'object') {
                     console.error('Invalid user data in response');
                     show_error_message('Invalid server response.');
                     return false;
@@ -189,7 +193,7 @@ const authModule = (function () {
 
                 // Save authenticated user data
                 try {
-                    authModule.save_user_auth_data(response.data);
+                    authModule.save_user_auth_data(user_data);
                 } catch (save_error) {
                     console.error('Failed to save user auth data:', save_error.message);
                     show_error_message('Failed to save authentication data.');
@@ -402,14 +406,18 @@ const authModule = (function () {
 
             // Handle successful response
             if (response.status === 200) {
+
+                /* The role rows ride in the envelope's `data` (Phase 3 item 19). */
+                const role_rows = response.data?.data;
+
                 // Validate response data structure
-                if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
+                if (!role_rows || !Array.isArray(role_rows) || role_rows.length === 0) {
                     console.error('Invalid role data structure in response');
                     show_error_message('Invalid server response.');
                     return null;
                 }
 
-                const role_record = response.data[0];
+                const role_record = role_rows[0];
 
                 if (!role_record.role || typeof role_record.role !== 'string') {
                     console.error('Role field missing or invalid in response');
@@ -630,19 +638,11 @@ const authModule = (function () {
                 return false;
             }
 
-            // Save endpoints data
-            try {
-                if (data.endpoints) {
-                    endpointsModule.save_exhibits_endpoints(data);
-                } else {
-                    console.warn('No endpoints data provided in authentication response');
-                }
-            } catch (endpoints_error) {
-                console.error('Failed to save endpoints data:', endpoints_error.message);
-                // Don't fail completely if endpoints save fails, but log it
-                show_error_message('Warning: Failed to cache endpoints data.');
-                // Continue and return true since user data was saved
-            }
+            /* The endpoint registry used to ship twice — once in the
+               build-time template and again inside the /authenticate response,
+               cached here. The template always won, and the runtime copy is
+               gone (DRY review 2026-09-03, Phase 3 item 20), so there is
+               nothing left to cache and no warning to log. */
 
             return true;
 

@@ -24,11 +24,17 @@ function stubAuthenticate(page) {
         if (route.request().method() !== 'GET') {
             return route.fallback();
         }
+        /* Wire-format: the shared {success, message, data} envelope — the auth
+           module stopped answering with the bare payload in Phase 3 item 19. */
         return route.fulfill({
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({
-                user_data: { id: '1', first_name: 'Play', last_name: 'Wright' },
+                success: true,
+                message: 'User authentication data retrieved.',
+                data: {
+                    user_data: { id: '1', first_name: 'Play', last_name: 'Wright' },
+                },
             }),
         });
     });

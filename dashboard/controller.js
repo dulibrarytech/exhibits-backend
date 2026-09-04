@@ -44,10 +44,21 @@ const APP_PATH = CONFIG.app_path;
  * Index Management / Recycle Bin without leaving the area. All admin-gated: revealed
  * by navModule.gate_admin_links for administrators, hidden otherwise.
  */
+/*
+ * Media Library nav glyph. Bootstrap Icons' `collection-play-fill`, kept
+ * verbatim as inline markup when that package was removed on 2026-09-04:
+ * FontAwesome 4.7 has nothing equivalent (no glyph combines a collection
+ * stack with a play affordance), and re-adding a 9.8 MB font for one icon
+ * was not worth it. Rendered by views/partials/nav-dashboard.ejs via the
+ * `icon_svg` link property. `currentColor` so it inherits the nav's colour
+ * and hover state exactly as a font icon would.
+ */
+const MEDIA_LIBRARY_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" focusable="false"><path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zm6.258-6.437a.5.5 0 0 1 .507.013l4 2.5a.5.5 0 0 1 0 .848l-4 2.5A.5.5 0 0 1 6 12V7a.5.5 0 0 1 .258-.437"/></svg>';
+
 const ADMIN_UTILS_LINKS = [
-    { id: 'admin-users-link', label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users', admin_only: true },
-    { id: 'admin-index-management-link', label: 'Index Management', icon: 'bi bi-database-gear', href: APP_PATH + '/index-management', admin_only: true },
-    { id: 'admin-recycle-bin-link', label: 'Recycle Bin', icon: 'bi bi-trash', href: APP_PATH + '/recycle', admin_only: true }
+    { id: 'admin-users-link', label: 'Users', icon: 'fa fa-users', href: APP_PATH + '/users', admin_only: true },
+    { id: 'admin-index-management-link', label: 'Index Management', icon: 'fa fa-database', href: APP_PATH + '/index-management', admin_only: true },
+    { id: 'admin-recycle-bin-link', label: 'Recycle Bin', icon: 'fa fa-trash', href: APP_PATH + '/recycle', admin_only: true }
 ];
 
 /**
@@ -59,8 +70,8 @@ const NAV_CONFIGS = {
 
     exhibits_list: {
         links: [
-            { label: 'Add Exhibit', icon: 'ti-layout', modal: '#add-exhibit-modal' },
-            { label: 'Media Library', icon: 'bi bi-collection-play-fill', href: APP_PATH + '/media/library' },
+            { label: 'Add Exhibit', icon: 'fa fa-columns', modal: '#add-exhibit-modal' },
+            { label: 'Media Library', icon_svg: MEDIA_LIBRARY_ICON_SVG, href: APP_PATH + '/media/library' },
             // Users / Index Management / Recycle Bin are nested under Admin Utils, which
             // opens the Users view by default; the sub-tools appear as its sub-nav on the
             // admin pages (see ADMIN_UTILS_LINKS).
@@ -84,7 +95,7 @@ const NAV_CONFIGS = {
             nav_path: '/exhibits?exhibit_id={exhibit_id}'
         },
         links: [
-            { id: 'exhibit-styles', label: 'Exhibit Styles', icon: 'bi bi-border-style', nav_path: '/styles?exhibit_id={exhibit_id}' },
+            { id: 'exhibit-styles', label: 'Exhibit Styles', icon: 'fa fa-paint-brush', nav_path: '/styles?exhibit_id={exhibit_id}' },
             { id: 'item-list', label: 'Exhibit Items', icon: 'fa fa-list pr-1', nav_path: '/items?exhibit_id={exhibit_id}', wrapper_id: 'item-list-nav' }
         ]
     },
@@ -133,11 +144,11 @@ const NAV_CONFIGS = {
             nav_path: '/exhibits/exhibit/details?exhibit_id={exhibit_id}'
         },
         links: [
-            { id: 'heading-link', label: 'Add Heading', icon: 'ti-layout-menu', nav_path: '/items/heading?exhibit_id={exhibit_id}' },
-            { id: 'standard-media-item-link', label: 'Add Media Item', icon: 'ti-image', nav_path: '/items/standard/media?exhibit_id={exhibit_id}' },
-            { id: 'standard-text-item-link', label: 'Add Text Item', icon: 'ti-align-center', nav_path: '/items/standard/text?exhibit_id={exhibit_id}' },
+            { id: 'heading-link', label: 'Add Heading', icon: 'fa fa-header', nav_path: '/items/heading?exhibit_id={exhibit_id}' },
+            { id: 'standard-media-item-link', label: 'Add Media Item', icon: 'fa fa-picture-o', nav_path: '/items/standard/media?exhibit_id={exhibit_id}' },
+            { id: 'standard-text-item-link', label: 'Add Text Item', icon: 'fa fa-align-center', nav_path: '/items/standard/text?exhibit_id={exhibit_id}' },
             { id: 'item-grid-link', label: 'Add Grid', icon: 'fa fa-th', nav_path: '/items/grid?exhibit_id={exhibit_id}' },
-            { id: 'item-vertical-timeline-link', label: 'Add Vertical Timeline', icon: 'ti-calendar', nav_path: '/items/vertical-timeline?exhibit_id={exhibit_id}' }
+            { id: 'item-vertical-timeline-link', label: 'Add Vertical Timeline', icon: 'fa fa-calendar', nav_path: '/items/vertical-timeline?exhibit_id={exhibit_id}' }
         ]
     },
 
@@ -201,8 +212,8 @@ const NAV_CONFIGS = {
             nav_path: '/items?exhibit_id={exhibit_id}'
         },
         links: [
-            { id: 'grid-media-item-link', label: 'Add Media Grid Item', icon: 'ti-image', nav_path: '/items/grid/item/media?exhibit_id={exhibit_id}&grid_id={grid_id}' },
-            { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'ti-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' }
+            { id: 'grid-media-item-link', label: 'Add Media Grid Item', icon: 'fa fa-picture-o', nav_path: '/items/grid/item/media?exhibit_id={exhibit_id}&grid_id={grid_id}' },
+            { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'fa fa-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' }
         ]
     },
 
@@ -275,8 +286,8 @@ const NAV_CONFIGS = {
             nav_path: '/items?exhibit_id={exhibit_id}'
         },
         links: [
-            { id: 'timeline-media-item-link', label: 'Add Media Timeline Item', icon: 'ti-image', nav_path: '/items/vertical-timeline/item/media?exhibit_id={exhibit_id}&timeline_id={timeline_id}' },
-            { id: 'timeline-text-item-link', label: 'Add Text Timeline Item', icon: 'ti-align-center', nav_path: '/items/vertical-timeline/item/text?exhibit_id={exhibit_id}&timeline_id={timeline_id}' }
+            { id: 'timeline-media-item-link', label: 'Add Media Timeline Item', icon: 'fa fa-picture-o', nav_path: '/items/vertical-timeline/item/media?exhibit_id={exhibit_id}&timeline_id={timeline_id}' },
+            { id: 'timeline-text-item-link', label: 'Add Text Timeline Item', icon: 'fa fa-align-center', nav_path: '/items/vertical-timeline/item/text?exhibit_id={exhibit_id}&timeline_id={timeline_id}' }
         ]
     },
 

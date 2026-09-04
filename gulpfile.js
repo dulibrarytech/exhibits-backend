@@ -22,7 +22,6 @@ gulp.task('clean-views', function () {
 gulp.task('minify-css', function () {
     return gulp.src([
         'public/assets/css/style.css',
-        'public/assets/css/cs-skin-elastic.css',
         'public/assets/css/datatables.overrides.css',
         'public/assets/css/sidebar-overrides.css',
         'public/assets/css/exhibits.common.css',

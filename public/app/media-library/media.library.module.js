@@ -770,7 +770,7 @@ const mediaLibraryModule = (function() {
             }
 
             // Handle both response shapes:
-            // Exhibits module: { status: 200, message: '...', data: [...] }
+            // Exhibits module: { success: true, message: '...', data: [...] }
             // Direct array: [...]
             const payload = response.data;
             const records = Array.isArray(payload) ? payload

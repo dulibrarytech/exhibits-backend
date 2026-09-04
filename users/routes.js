@@ -26,19 +26,19 @@ const { async_handler } = require('../libs/http');
 
 module.exports = function (app) {
 
-    app.route(ENDPOINTS().users.endpoint)
+    app.route(ENDPOINTS().users.user_records.get.endpoint)
         .get(rate_limits.read_operations, TOKEN.verify, async_handler(CONTROLLER.get_users))
         .post(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.save_user));
 
-    app.route(ENDPOINTS().users.update_user.put.endpoint)
+    app.route(ENDPOINTS().users.user_records.put.endpoint)
         .put(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.update_user));
 
-    app.route(ENDPOINTS().users.delete_user.delete.endpoint)
+    app.route(ENDPOINTS().users.user_records.delete.endpoint)
         .delete(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.delete_user));
 
-    app.route(ENDPOINTS().users.get_user.endpoint)
+    app.route(ENDPOINTS().users.user_record.get.endpoint)
         .get(rate_limits.read_operations, TOKEN.verify, async_handler(CONTROLLER.get_user));
 
-    app.route(ENDPOINTS().users.user_status.endpoint)
+    app.route(ENDPOINTS().users.user_status.put.endpoint)
         .put(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.update_status));
 };

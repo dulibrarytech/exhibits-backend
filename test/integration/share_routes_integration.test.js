@@ -93,7 +93,7 @@ describe('Share Routes Integration (real router)', () => {
             const response = await request(app).post(`${SHARE_PATH}?uuid=${EXHIBIT_A}`);
 
             expect(response.status).toBe(201);
-            expect(response.body.shared_url).toContain(`${SHARE_PATH}?uuid=${EXHIBIT_A}&t=${SHARED_TOKEN}`);
+            expect(response.body.data.shared_url).toContain(`${SHARE_PATH}?uuid=${EXHIBIT_A}&t=${SHARED_TOKEN}`);
             expect(TOKEN.create_shared).toHaveBeenCalledWith(EXHIBIT_A);
             expect(AUTHORIZE.check_permission).toHaveBeenCalledWith(expect.objectContaining({
                 permissions: ['update_exhibit', 'update_any_exhibit'],
@@ -137,7 +137,7 @@ describe('Share Routes Integration (real router)', () => {
             const response = await request(app).post(`${SHARE_PATH}?uuid=${EXHIBIT_A}`);
 
             expect(response.status).toBe(500);
-            expect(response.body.shared_url).toBeUndefined();
+            expect(response.body.data).toBeNull();
         });
 
         test('rejects a malformed uuid with 400 before authorizing', async () => {

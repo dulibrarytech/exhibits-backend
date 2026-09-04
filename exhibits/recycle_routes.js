@@ -39,7 +39,7 @@ module.exports = function (app) {
 
     // Empty the recycle bin. Parameterless `/recycle/all` (one segment) — distinct
     // from the three-segment per-record routes below, so there is no path overlap.
-    app.route(endpoints.exhibits.recycled_records.empty.endpoint)
+    app.route(endpoints.exhibits.recycled_records_all.delete.endpoint)
         .delete(
             rate_limits.state_change_operations,
             TOKEN.verify,

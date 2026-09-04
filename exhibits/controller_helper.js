@@ -20,6 +20,7 @@
 
 const LOGGER = require('../libs/log4');
 const AUTHORIZE = require('../auth/authorize');
+const { send_error, send_ok } = require('../libs/http');
 
 /*
  * Single controller helper for the exhibits module (DRY review 2026-09-03,
@@ -35,27 +36,29 @@ const AUTHORIZE = require('../auth/authorize');
  *   exhibits_helper   pure validators; the controller builds     -> {success:false, message, data:null}
  *                     the envelope itself
  *
- * Those 400 bodies are client-visible (the Svelte frontend and the dashboard
- * both read them), so unifying them is deliberately NOT part of this step —
- * it is Phase 3 work, alongside the rest of the wire-format unification. What
- * IS unified here is the code: one implementation, one place to change, with
- * the wire format selected per caller by `format`.
+ * Phase 3 item 19 finished the job on the wire: every response below now
+ * leaves as the shared `{success, message, data}` envelope built by
+ * `libs/http`. The bare-string 'Bad request.' body the 'plain' format used to
+ * send is gone, so those 400s changed Content-Type from text/html to
+ * application/json — the dashboard client and the e2e suites were updated in
+ * the same pass, and the dashboard API has no other consumers.
  *
- * Three response formats, named for what they emit:
+ * What survives per format is the MESSAGE WORDING and the validation
+ * PREDICATES, both of which are behaviour rather than envelope:
  *
- *   'detailed' — grid_helper's shape. Structured LOGGER metadata on every
+ *   'detailed' — grid_helper's wording. Structured LOGGER metadata on every
  *                branch, an ID character-class check, and `validate_model_result`.
  *                The most complete of the four, so it is the default.
- *   'labeled'  — items_helper's shape. One 400 message parameterized by a
+ *   'labeled'  — items_helper's wording. One 400 message parameterized by a
  *                human-readable label; no per-branch logging.
- *   'plain'    — timelines_helper / headings_controller's shape. A bare
- *                'Bad request.' string body, and a 500 whose message
- *                concatenates the caller's text with the error's.
+ *   'plain'    — timelines_helper / headings_controller's wording: a flat
+ *                'Bad request.', and a 500 whose message concatenates the
+ *                caller's text with the error's.
  *
- * The validation PREDICATES differ per format too, not just the messages —
- * 'plain' accepts null and 0 where 'labeled' rejects them — so each format
- * owns its predicate. That preserved behaviour is why the formats exist at
- * all; collapsing them is the Phase 3 change.
+ * The predicates differ too — 'plain' accepts null and 0 where 'labeled'
+ * rejects them, and timelines_controller leans on that — so each format still
+ * owns its predicate. Collapsing those would change WHICH requests get a 400,
+ * which is a behaviour change and deliberately not part of this item.
  *
  * `AUTHORIZE.check_permission` stays the single authorization decision point.
  * Every format's gate reads it as `!== true` (fail closed): the three forks
@@ -66,6 +69,10 @@ const AUTHORIZE = require('../auth/authorize');
 
 const UNAUTHORIZED_MESSAGE = 'Unauthorized request';
 const INVALID_MODEL_RESULT_MESSAGE = 'Invalid response from database model';
+
+/* The 'plain' format's single 400 wording, kept verbatim from the two forks it
+   replaced; only the envelope around it changed (Phase 3 item 19). */
+const PLAIN_BAD_REQUEST_MESSAGE = 'Bad request.';
 
 /* Safe ID character class: alphanumerics, hyphens, underscores. */
 const ID_FORMAT_REGEX = /^[a-zA-Z0-9_-]+$/;
@@ -166,9 +173,10 @@ const validate_status_code = (status) => {
 /* ==================== RESPONSE FORMATS ==================== */
 
 /*
- * Each format owns its validation predicates, its 400 bodies and whether the
- * branch is logged. Every string below is reproduced verbatim from the fork
- * it replaces; changing one changes the wire format for that controller.
+ * Each format owns its validation predicates, its 400 message wording and
+ * whether the branch is logged. Every string below is reproduced verbatim from
+ * the fork it replaces. The envelope is no longer per-format — all three send
+ * through `libs/http`.
  */
 
 const FORMATS = {
@@ -177,16 +185,10 @@ const FORMATS = {
         logs: true,
         checks_id_format: true,
         is_valid_id: (value) => !!value,
-        send_missing_id: (res, label) => res.status(400).send({
-            message: `Invalid request: ${label} is required`
-        }),
-        send_invalid_id_format: (res, label) => res.status(400).send({
-            message: `Invalid ${label} format`
-        }),
+        send_missing_id: (res, label) => send_error(res, 400, `Invalid request: ${label} is required`),
+        send_invalid_id_format: (res, label) => send_error(res, 400, `Invalid ${label} format`),
         is_valid_body: (data) => !(!data || typeof data !== 'object' || Object.keys(data).length === 0),
-        send_invalid_body: (res) => res.status(400).send({
-            message: 'Invalid request: data is required'
-        }),
+        send_invalid_body: (res) => send_error(res, 400, 'Invalid request: data is required'),
         send_server_error: (res, context, error, message, log_meta) => {
 
             LOGGER.module().error(`${context}: ${message}`, {
@@ -195,10 +197,10 @@ const FORMATS = {
                 ...(log_meta || {})
             });
 
-            return res.status(500).send({
-                message,
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
-            });
+            /* The development-only `error` detail rides alongside the envelope
+               rather than inside `data`, exactly as it did before. */
+            return send_error(res, 500, message,
+                process.env.NODE_ENV === 'development' ? {error: error.message} : undefined);
         }
     },
 
@@ -206,24 +208,16 @@ const FORMATS = {
         logs: false,
         checks_id_format: false,
         is_valid_id: is_valid_string,
-        send_missing_id: (res, label) => res.status(400).send({
-            message: `Bad request. Missing or invalid ${label}.`
-        }),
-        send_invalid_id_format: (res, label) => res.status(400).send({
-            message: `Bad request. Missing or invalid ${label}.`
-        }),
+        send_missing_id: (res, label) => send_error(res, 400, `Bad request. Missing or invalid ${label}.`),
+        send_invalid_id_format: (res, label) => send_error(res, 400, `Bad request. Missing or invalid ${label}.`),
         is_valid_body: (data) => !(!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0),
-        send_invalid_body: (res, label) => res.status(400).send({
-            message: `Bad request. Missing or invalid ${label}.`
-        }),
+        send_invalid_body: (res, label) => send_error(res, 400, `Bad request. Missing or invalid ${label}.`),
         send_server_error: (res, context, error, message, detail, log_prefix) => {
 
             const detail_suffix = detail ? ' ' + detail : '';
             LOGGER.module().error(`ERROR: [${log_prefix} (${context})]${detail_suffix} ${message}: ${error.message}`);
 
-            return res.status(500).send({
-                message
-            });
+            return send_error(res, 500, message);
         }
     },
 
@@ -237,19 +231,42 @@ const FORMATS = {
          * `req.body`, which express.json() delivers as `{}` for an empty POST.
          */
         is_valid_id: (value) => !(value === undefined || (typeof value === 'string' && value.length === 0)),
-        send_missing_id: (res) => res.status(400).send('Bad request.'),
-        send_invalid_id_format: (res) => res.status(400).send('Bad request.'),
+        send_missing_id: (res) => send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE),
+        send_invalid_id_format: (res) => send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE),
         is_valid_body: (data) => !(data === undefined || (typeof data === 'string' && data.length === 0)),
-        send_invalid_body: (res) => res.status(400).send('Bad request.'),
+        send_invalid_body: (res) => send_error(res, 400, PLAIN_BAD_REQUEST_MESSAGE),
         send_server_error: (res, context, error, message) => {
 
             LOGGER.module().error(`ERROR: [${context}] ${message} ${error.message}`);
 
-            return res.status(500).send({
-                message: `${message} ${error.message}`
-            });
+            return send_error(res, 500, `${message} ${error.message}`);
         }
     }
+};
+
+/**
+ * Forwards a model envelope as the shared HTTP envelope.
+ *
+ * Every exhibits model answers `{status, message, data?}` — the HTTP status
+ * carried inside the body — and all seven controllers used to ship that object
+ * verbatim with `res.status(result.status).send(result)`. The status now lives
+ * only where it belongs, on the response, and the body is the same
+ * `{success, message, data}` every other module sends (Phase 3 item 19).
+ *
+ * `success` follows the status, so a model that reports a soft failure as a 2xx
+ * still reads as a success — exactly what the wire said before.
+ *
+ * @param {Object} res - Express response object
+ * @param {Object} result - Model envelope `{status, message, data?}`
+ * @returns {Object} The response
+ */
+const send_model_result = (res, result) => {
+
+    if (result.status >= 400) {
+        return send_error(res, result.status, result.message);
+    }
+
+    return send_ok(res, result.data === undefined ? null : result.data, result.message, result.status);
 };
 
 /* ==================== FORMAT-BOUND API ==================== */
@@ -364,9 +381,7 @@ const create_controller_helper = (options = {}) => {
                 });
             }
 
-            res.status(403).send({
-                message: UNAUTHORIZED_MESSAGE
-            });
+            send_error(res, 403, UNAUTHORIZED_MESSAGE);
 
             return false;
         }
@@ -391,9 +406,7 @@ const create_controller_helper = (options = {}) => {
                 ...log_meta
             });
 
-            res.status(500).send({
-                message: INVALID_MODEL_RESULT_MESSAGE
-            });
+            send_error(res, 500, INVALID_MODEL_RESULT_MESSAGE);
 
             return false;
         }
@@ -453,6 +466,8 @@ const create_controller_helper = (options = {}) => {
 module.exports = {
     UNAUTHORIZED_MESSAGE,
     INVALID_MODEL_RESULT_MESSAGE,
+    PLAIN_BAD_REQUEST_MESSAGE,
+    send_model_result,
     ID_FORMAT_REGEX,
     is_valid_string,
     validate_string_param,

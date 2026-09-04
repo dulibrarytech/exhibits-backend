@@ -46,7 +46,7 @@ module.exports = function (app) {
         );
 
     // Get all item records
-    app.route(endpoints.exhibits.item_records.endpoint)
+    app.route(endpoints.exhibits.item_records_list.get.endpoint)
         .get(
             rate_limits.read_operations,
             TOKEN.verify,
@@ -82,7 +82,7 @@ module.exports = function (app) {
     // ========================================
 
     // Publish item record
-    app.route(endpoints.exhibits.item_records.item_publish.post.endpoint)
+    app.route(endpoints.exhibits.item_publish.post.endpoint)
         .post(
             rate_limits.state_change_operations,
             TOKEN.verify,
@@ -90,7 +90,7 @@ module.exports = function (app) {
         );
 
     // Suppress item record
-    app.route(endpoints.exhibits.item_records.item_suppress.post.endpoint)
+    app.route(endpoints.exhibits.item_suppress.post.endpoint)
         .post(
             rate_limits.state_change_operations,
             TOKEN.verify,

@@ -23,10 +23,6 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits;
 const AUTH_TASKS = require('../auth/tasks/auth_tasks');
 const ROLES_TASKS = require('../auth/tasks/roles_tasks');
-const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints/index')();
-const USERS_ENDPOINTS = require('../users/endpoints')();
-const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
-const MEDIA_LIBRARY_ENDPOINTS = require('../media-library/endpoints')();
 const LOGGER = require('../libs/log4');
 
 // Module-level singleton instances
@@ -199,14 +195,14 @@ exports.get_auth_user_data = async function (id) {
             return {status: 404, message: 'User not found.', data: []};
         }
 
-        const endpoints = {
-            exhibits: (typeof EXHIBITS_ENDPOINTS !== 'undefined') ? EXHIBITS_ENDPOINTS : {},
-            users: (typeof USERS_ENDPOINTS !== 'undefined') ? USERS_ENDPOINTS : {},
-            indexer: (typeof INDEXER_ENDPOINTS !== 'undefined') ? INDEXER_ENDPOINTS : {},
-            media_library: (typeof MEDIA_LIBRARY_ENDPOINTS !== 'undefined') ? MEDIA_LIBRARY_ENDPOINTS : {}
-        };
-
-        const auth_data = {user_data: data, endpoints: endpoints};
+        /* The endpoint registry is NOT returned here any more. It ships with
+         * the client bundle instead (public/app/utils/endpoints.templates.js,
+         * generated from these same server modules by
+         * tools/generate-client-endpoints.js during `npm run build:js`), so
+         * the map can never lag the bundle that reads it. Sending a second
+         * copy at authenticate time meant two channels for one map,
+         * reconciled by a hand-bumped ENDPOINTS_REGISTRY_VERSION string. */
+        const auth_data = {user_data: data};
         LOGGER.module().debug(`DEBUG: [/auth/model (get_auth_user_data)] user data retrieved successfully for id: ${numeric_id}`);
 
         return {status: 200, message: 'User data retrieved.', data: auth_data};

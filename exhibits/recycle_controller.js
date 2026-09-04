@@ -19,6 +19,8 @@
 'use strict';
 
 const RECYCLE_MODEL = require('../exhibits/recycle_model');
+const { send_model_result } = require('../exhibits/controller_helper');
+const { send_error, send_ok } = require('../libs/http');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 
@@ -29,11 +31,11 @@ function has_authorize() {
 }
 
 function authz_unavailable(res) {
-    return res.status(500).send({ message: 'Authorization service unavailable.' });
+    return send_error(res, 500, 'Authorization service unavailable.');
 }
 
 function deny(res) {
-    return res.status(403).send({ message: 'You do not have permission to perform this action.' });
+    return send_error(res, 403, 'You do not have permission to perform this action.');
 }
 
 /**
@@ -68,15 +70,15 @@ exports.get_recycled_records = async function (req, res) {
 
         if (!can_manage_all && !created_by) {
             // Authenticated but no scoping identity and not an admin -> nothing to show.
-            return res.status(200).send({ status: 200, message: 'Recycled records', data: [] });
+            return send_ok(res, [], 'Recycled records');
         }
 
         const result = await RECYCLE_MODEL.get_recycled_records(created_by);
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/recycle_controller (get_recycled_records)] ' + error.message);
-        return res.status(500).send({ message: `Unable to get recycled records. ${error.message}` });
+        return send_error(res, 500, `Unable to get recycled records. ${error.message}`);
     }
 };
 
@@ -93,7 +95,7 @@ exports.restore_recycled_record = async function (req, res) {
         const type = req.params.type;
 
         if (!uuid || !exhibit_id || !type || !VALID_TYPES.includes(type)) {
-            return res.status(400).send({ message: 'Bad request.' });
+            return send_error(res, 400, 'Bad request.');
         }
 
         if (!has_authorize()) {
@@ -106,11 +108,11 @@ exports.restore_recycled_record = async function (req, res) {
         }
 
         const result = await RECYCLE_MODEL.restore_recycled_record(type, uuid, exhibit_id);
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/recycle_controller (restore_recycled_record)] ' + error.message);
-        return res.status(500).send({ message: `Unable to restore recycled record. ${error.message}` });
+        return send_error(res, 500, `Unable to restore recycled record. ${error.message}`);
     }
 };
 
@@ -127,7 +129,7 @@ exports.delete_recycled_record = async function (req, res) {
         const type = req.params.type;
 
         if (!uuid || !exhibit_id || !type || !VALID_TYPES.includes(type)) {
-            return res.status(400).send({ message: 'Bad request.' });
+            return send_error(res, 400, 'Bad request.');
         }
 
         if (!has_authorize()) {
@@ -140,11 +142,11 @@ exports.delete_recycled_record = async function (req, res) {
         }
 
         const result = await RECYCLE_MODEL.delete_recycled_record(type, uuid, exhibit_id);
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/recycle_controller (delete_recycled_record)] ' + error.message);
-        return res.status(500).send({ message: `Unable to delete recycled record. ${error.message}` });
+        return send_error(res, 500, `Unable to delete recycled record. ${error.message}`);
     }
 };
 
@@ -168,10 +170,10 @@ exports.delete_all_recycled_records = async function (req, res) {
         }
 
         const result = await RECYCLE_MODEL.delete_all_recycled_records(created_by);
-        return res.status(result.status).send(result);
+        return send_model_result(res, result);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/recycle_controller (delete_all_recycled_records)] ' + error.message);
-        return res.status(500).send({ message: `Unable to delete all recycled records. ${error.message}` });
+        return send_error(res, 500, `Unable to delete all recycled records. ${error.message}`);
     }
 };

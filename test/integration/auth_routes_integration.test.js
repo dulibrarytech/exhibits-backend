@@ -109,6 +109,33 @@ describe('Auth Routes Integration (real router)', () => {
         SSO_GUARD.mockImplementation((req, res, next) => next());
     });
 
+    // ==================== REGISTRY ↔ ROUTE PARITY ====================
+
+    /*
+     * auth/routes.js registers every path from auth/endpoints.js. The
+     * registry used to be advisory and had drifted: `sso.endpoint` was
+     * `${APP_PATH}/sso`, while the route has always been `${APP_PATH}/auth/sso`.
+     * These pin the registry to the literal paths the routes must answer on.
+     */
+    describe('auth endpoint registry', () => {
+
+        test.each([
+            ['auth_landing', 'get', `${APP_PATH}/auth`],
+            ['auth_login', 'get', `${APP_PATH}/auth/login`],
+            ['sso', 'post', `${APP_PATH}/auth/sso`],
+            ['auth_permissions', 'post', `${APP_PATH}/auth/permissions`],
+            ['auth_roles', 'get', `${APP_PATH}/auth/roles`],
+            ['auth_role', 'get', `${APP_PATH}/auth/role`],
+            ['authentication', 'get', `${APP_PATH}/api/v1/authenticate`]
+        ])('%s.%s.endpoint is %s', (resource, method, expected) => {
+            expect(AUTH_ENDPOINTS[resource][method].endpoint).toBe(expected);
+        });
+
+        test('carries no legacy /sso entry', () => {
+            expect(AUTH_ENDPOINTS.sso.endpoint).toBeUndefined();
+        });
+    });
+
     // ==================== LANDING + LOGIN ====================
 
     describe('GET /auth (landing)', () => {
@@ -303,7 +330,7 @@ describe('Auth Routes Integration (real router)', () => {
             mockAuthModel.get_auth_user_data.mockResolvedValue({ data: { id: TEST_USER_ID, du_id: '871234567' } });
 
             const response = await request(app)
-                .get(AUTH_ENDPOINTS.authentication.endpoint)
+                .get(AUTH_ENDPOINTS.authentication.get.endpoint)
                 .query({ id: TEST_USER_ID });
 
             expect(response.status).toBe(200);
@@ -312,7 +339,7 @@ describe('Auth Routes Integration (real router)', () => {
 
         test('rejects a missing id with 400', async () => {
             const response = await request(app)
-                .get(AUTH_ENDPOINTS.authentication.endpoint);
+                .get(AUTH_ENDPOINTS.authentication.get.endpoint);
 
             expect(response.status).toBe(400);
             expect(mockAuthModel.get_auth_user_data).not.toHaveBeenCalled();

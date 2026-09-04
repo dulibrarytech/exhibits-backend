@@ -27,6 +27,7 @@ const LOGGER = require('../libs/log4');
 const TOKEN = require('../libs/tokens');
 const GATE = require('../auth/permission_gate');
 const { rate_limits } = require('../config/rate_limits_loader');
+const { send_error, send_ok } = require('../libs/http');
 
 // Configuration
 const storage_config = require('./storage_config')();
@@ -524,10 +525,7 @@ const handle_upload = async (req, res) => {
         const files = req.files;
 
         if (!files || files.length === 0) {
-            return res.status(400).json({
-                error: 'No files uploaded',
-                code: 'NO_FILES'
-            });
+            return send_error(res, 400, 'No files uploaded', {code: 'NO_FILES'});
         }
 
         // Process each file: store, generate thumbnail, extract metadata
@@ -562,18 +560,14 @@ const handle_upload = async (req, res) => {
             };
         }));
 
-        return res.status(201).json({
-            success: true,
+        return send_ok(res, {
             count: uploaded_files.length,
             files: uploaded_files
-        });
+        }, `${uploaded_files.length} file(s) uploaded`, 201);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/uploads (handle_upload)] Upload processing error: ${error.message}`);
-        return res.status(500).json({
-            error: 'Failed to process upload',
-            code: 'PROCESSING_ERROR'
-        });
+        return send_error(res, 500, 'Failed to process upload', {code: 'PROCESSING_ERROR'});
     }
 };
 
@@ -732,38 +726,23 @@ const handle_upload_error = (error, req, res, next) => {
     // Handle specific multer errors
     if (error.code === 'LIMIT_FILE_SIZE') {
         const max_mb = Math.round(MAX_FILE_SIZE / (1024 * 1024));
-        return res.status(413).json({
-            error: `File exceeds maximum size of ${max_mb}MB`,
-            code: 'FILE_TOO_LARGE'
-        });
+        return send_error(res, 413, `File exceeds maximum size of ${max_mb}MB`, {code: 'FILE_TOO_LARGE'});
     }
 
     if (error.code === 'LIMIT_FILE_COUNT') {
-        return res.status(400).json({
-            error: `Maximum ${MAX_FILES} files allowed`,
-            code: 'TOO_MANY_FILES'
-        });
+        return send_error(res, 400, `Maximum ${MAX_FILES} files allowed`, {code: 'TOO_MANY_FILES'});
     }
 
     if (error.code === 'INVALID_FILE_TYPE') {
-        return res.status(400).json({
-            error: error.message,
-            code: 'INVALID_FILE_TYPE'
-        });
+        return send_error(res, 400, error.message, {code: 'INVALID_FILE_TYPE'});
     }
 
     if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-        return res.status(400).json({
-            error: 'Unexpected field name',
-            code: 'INVALID_FIELD'
-        });
+        return send_error(res, 400, 'Unexpected field name', {code: 'INVALID_FIELD'});
     }
 
     // Generic error
-    return res.status(500).json({
-        error: 'Upload failed',
-        code: 'UPLOAD_ERROR'
-    });
+    return send_error(res, 500, 'Upload failed', {code: 'UPLOAD_ERROR'});
 };
 
 // ---------------------------------------------------------------------------

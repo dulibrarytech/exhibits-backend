@@ -263,8 +263,10 @@ const mediaUploadsModule = (function() {
 
             error: options.error_handler || function(file, error_message) {
                 const error_element = document.querySelector('.upload-error');
-                const message = typeof error_message === 'object' 
-                    ? (error_message.error || 'Upload failed')
+                /* Upload failures now speak the shared {success, message, data}
+                   envelope; `error` was the pre-Phase-3 key (Phase 3 item 19). */
+                const message = typeof error_message === 'object'
+                    ? (error_message.message || 'Upload failed')
                     : error_message;
                 domModule.set_alert(error_element, 'danger', message);
                 this.removeFile(file);
@@ -319,13 +321,16 @@ const mediaUploadsModule = (function() {
                     thumbnail_display: document.getElementById('item-media-thumbnail-image-display')
                 };
 
-                if (!response || !response.success || !response.files || response.files.length === 0) {
+                /* Uploaded files arrive under the envelope's `data` key. */
+                const uploaded = response && response.data ? response.data.files : null;
+
+                if (!response || !response.success || !uploaded || uploaded.length === 0) {
                     domModule.set_alert(elements.error, 'danger', 'Upload failed - invalid server response');
                     this.removeFile(file);
                     return;
                 }
 
-                const uploaded_file = response.files[0];
+                const uploaded_file = uploaded[0];
                 const uuid = uploaded_file.uuid;
                 const mime_type = uploaded_file.mime_type;
                 const media_type = uploaded_file.media_type;

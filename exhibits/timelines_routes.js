@@ -110,7 +110,7 @@ module.exports = function (app) {
     // ========================================
 
     // Publish timeline item record
-    app.route(endpoints.exhibits.timeline_item_records.timeline_item_publish.post.endpoint)
+    app.route(endpoints.exhibits.timeline_item_publish.post.endpoint)
         .post(
             rate_limits.state_change_operations,
             TOKEN.verify,
@@ -118,7 +118,7 @@ module.exports = function (app) {
         );
 
     // Suppress timeline item record
-    app.route(endpoints.exhibits.timeline_item_records.timeline_item_suppress.post.endpoint)
+    app.route(endpoints.exhibits.timeline_item_suppress.post.endpoint)
         .post(
             rate_limits.state_change_operations,
             TOKEN.verify,

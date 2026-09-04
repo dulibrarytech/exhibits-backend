@@ -69,7 +69,7 @@ module.exports = function (app) {
     // ========================================
 
     // Create exhibit record
-    app.route(endpoints.exhibits.exhibit_records.endpoints.post.endpoint)
+    app.route(endpoints.exhibits.exhibit_records.post.endpoint)
         .post(
             rate_limits.write_operations,
             TOKEN.verify,
@@ -77,7 +77,7 @@ module.exports = function (app) {
         );
 
     // Get all exhibit records
-    app.route(endpoints.exhibits.exhibit_records.endpoint)
+    app.route(endpoints.exhibits.exhibit_records_list.get.endpoint)
         .get(
             rate_limits.read_operations,
             TOKEN.verify,
@@ -85,7 +85,7 @@ module.exports = function (app) {
         );
 
     // Get single exhibit record
-    app.route(endpoints.exhibits.exhibit_records.endpoints.get.endpoint)
+    app.route(endpoints.exhibits.exhibit_records.get.endpoint)
         .get(
             rate_limits.read_operations,
             TOKEN.verify,
@@ -93,7 +93,7 @@ module.exports = function (app) {
         );
 
     // Update exhibit record
-    app.route(endpoints.exhibits.exhibit_records.endpoints.put.endpoint)
+    app.route(endpoints.exhibits.exhibit_records.put.endpoint)
         .put(
             rate_limits.write_operations,
             TOKEN.verify,
@@ -101,7 +101,7 @@ module.exports = function (app) {
         );
 
     // Delete exhibit record (soft delete)
-    app.route(endpoints.exhibits.exhibit_records.endpoints.delete.endpoint)
+    app.route(endpoints.exhibits.exhibit_records.delete.endpoint)
         .delete(
             rate_limits.write_operations,
             TOKEN.verify,
@@ -149,7 +149,7 @@ module.exports = function (app) {
     // ========================================
 
     // Verify token
-    app.route(endpoints.exhibits.token_verify.endpoint)
+    app.route(endpoints.exhibits.token_verify.get.endpoint)
         .post(
             rate_limits.read_operations,
             TOKEN.verify,

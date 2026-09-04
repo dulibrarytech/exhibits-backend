@@ -29,6 +29,8 @@ const EXHIBITS_MODEL = require('./exhibits_model');
  * {message: 'Bad request. Missing or invalid <label>.'} and a 500 of
  * {message}. See exhibits/controller_helper.js.
  */
+const { send_model_result } = require('../exhibits/controller_helper');
+const { send_error, send_ok } = require('../libs/http');
 const {
     validate_id: validate_param,
     validate_body,
@@ -62,7 +64,7 @@ exports.create_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return;
 
     const result = await ITEMS_MODEL.create_item_record(exhibit_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'create_item_record',
@@ -77,7 +79,7 @@ exports.get_item_records = with_handler(async function (req, res) {
     if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
 
     const data = await ITEMS_MODEL.get_item_records(exhibit_id);
-    res.status(data.status).send(data);
+    send_model_result(res, data);
 
 }, {
     context: 'get_item_records',
@@ -97,7 +99,7 @@ exports.get_item_record = with_handler(async function (req, res) {
     /* Default: return standard item record */
     if (type === undefined || type === null) {
         const data = await ITEMS_MODEL.get_item_record(exhibit_id, item_id);
-        res.status(data.status).send(data);
+        send_model_result(res, data);
         return;
     }
 
@@ -108,21 +110,19 @@ exports.get_item_record = with_handler(async function (req, res) {
         if (!validate_param(res, uid, 'user ID for edit mode')) return;
 
         const data = await ITEMS_MODEL.get_item_edit_record(uid, exhibit_id, item_id);
-        res.status(data.status).send(data);
+        send_model_result(res, data);
         return;
     }
 
     /* Details mode: media library JOIN without record locking */
     if (type === 'details') {
         const data = await ITEMS_MODEL.get_item_details_record(exhibit_id, item_id);
-        res.status(data.status).send(data);
+        send_model_result(res, data);
         return;
     }
 
     /* Reject unrecognized type values */
-    res.status(400).send({
-        message: 'Bad request. Invalid type parameter.'
-    });
+    send_error(res, 400, 'Bad request. Invalid type parameter.');
 
 }, {
     context: 'get_item_record',
@@ -148,7 +148,7 @@ exports.update_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return;
 
     const result = await ITEMS_MODEL.update_item_record(exhibit_id, item_id, data);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'update_item_record',
@@ -173,7 +173,7 @@ exports.delete_item_record = with_handler(async function (req, res) {
     if (!is_authorized) return;
 
     const result = await ITEMS_MODEL.delete_item_record(exhibit_id, item_id, record_type);
-    res.status(result.status).send(result);
+    send_model_result(res, result);
 
 }, {
     context: 'delete_item_record',
@@ -211,9 +211,7 @@ exports.publish_item_record = with_handler(async function (req, res) {
 
     /* Validate type parameter against whitelist */
     if (!type || typeof type !== 'string' || !Object.hasOwn(PUBLISH_HANDLERS, type)) {
-        res.status(400).send({
-            message: 'Bad request. Missing or invalid type parameter.'
-        });
+        send_error(res, 400, 'Bad request. Missing or invalid type parameter.');
         return;
     }
 
@@ -227,13 +225,9 @@ exports.publish_item_record = with_handler(async function (req, res) {
     const result = await PUBLISH_HANDLERS[type](exhibit_id, item_id);
 
     if (result.status === true) {
-        res.status(200).send({
-            message: 'Item published.'
-        });
+        send_ok(res, null, 'Item published.');
     } else {
-        res.status(422).send({
-            message: result.message
-        });
+        send_error(res, 422, result.message);
     }
 
 }, {
@@ -253,9 +247,7 @@ exports.suppress_item_record = with_handler(async function (req, res) {
 
     /* Validate type parameter against whitelist */
     if (!type || typeof type !== 'string' || !Object.hasOwn(SUPPRESS_HANDLERS, type)) {
-        res.status(400).send({
-            message: 'Bad request. Missing or invalid type parameter.'
-        });
+        send_error(res, 400, 'Bad request. Missing or invalid type parameter.');
         return;
     }
 
@@ -269,13 +261,9 @@ exports.suppress_item_record = with_handler(async function (req, res) {
     const result = await SUPPRESS_HANDLERS[type](exhibit_id, item_id);
 
     if (result.status === true) {
-        res.status(200).send({
-            message: 'Item suppressed.'
-        });
+        send_ok(res, null, 'Item suppressed.');
     } else {
-        res.status(422).send({
-            message: 'Unable to suppress item.'
-        });
+        send_error(res, 422, 'Unable to suppress item.');
     }
 
 }, {
@@ -293,9 +281,7 @@ exports.reorder_items = with_handler(async function (req, res) {
 
     /* Validate request body is a non-empty array */
     if (!Array.isArray(updated_order) || updated_order.length === 0) {
-        res.status(400).send({
-            message: 'Bad request. Missing or invalid order data.'
-        });
+        send_error(res, 400, 'Bad request. Missing or invalid order data.');
         return;
     }
 
@@ -305,23 +291,17 @@ exports.reorder_items = with_handler(async function (req, res) {
     for (const item of updated_order) {
 
         if (!item || typeof item !== 'object' || Array.isArray(item)) {
-            res.status(400).send({
-                message: 'Bad request. Invalid item in order data.'
-            });
+            send_error(res, 400, 'Bad request. Invalid item in order data.');
             return;
         }
 
         if (!item.type || typeof item.type !== 'string' || !valid_types.includes(item.type)) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item type.'
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid item type.');
             return;
         }
 
         if (item.type === 'griditem' && (!item.grid_id || typeof item.grid_id !== 'string' || item.grid_id.trim() === '')) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid grid ID for grid item.'
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid grid ID for grid item.');
             return;
         }
     }
@@ -332,9 +312,7 @@ exports.reorder_items = with_handler(async function (req, res) {
     const is_reordered = await ITEMS_MODEL.reorder_exhibit_items(exhibit_id, updated_order);
 
     if (is_reordered !== true) {
-        res.status(422).send({
-            message: 'Unable to reorder exhibit items.'
-        });
+        send_error(res, 422, 'Unable to reorder exhibit items.');
         return;
     }
 
@@ -345,9 +323,7 @@ exports.reorder_items = with_handler(async function (req, res) {
         ITEMS_MODEL.schedule_reorder_reindex(exhibit_id, updated_order);
     }
 
-    res.status(200).send({
-        message: 'Exhibit items reordered.'
-    });
+    send_ok(res, null, 'Exhibit items reordered.');
 
 }, {
     context: 'reorder_items',
@@ -373,13 +349,9 @@ exports.unlock_item_record = with_handler(async function (req, res) {
     const result = await ITEMS_MODEL.unlock_item_record(uid, item_id, unlock_options);
 
     if (result && typeof result === 'object') {
-        res.status(200).send({
-            message: 'Item record unlocked.'
-        });
+        send_ok(res, null, 'Item record unlocked.');
     } else {
-        res.status(422).send({
-            message: 'Unable to unlock item record.'
-        });
+        send_error(res, 422, 'Unable to unlock item record.');
     }
 
 }, {

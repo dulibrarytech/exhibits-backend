@@ -4,18 +4,29 @@ const endpointsModule = (function() {
 
     const APP_PATH = '/exhibits-dashboard';
 
-    // Endpoints-registry version. The client caches the server's endpoint
-    // map in localStorage at authenticate time and reuses it indefinitely
-    // (no TTL). When the server adds/changes an endpoint, already-logged-in
-    // clients keep the stale map and silently 404 on the new endpoint until
-    // they re-authenticate. BUMP THIS STRING whenever the endpoint set the
-    // client must know about changes — a mismatch on the next page load
-    // wipes the stale cache and routes the client back through the normal
-    // auth flow once (the automated equivalent of a manual logout/login),
-    // so the new registry is refetched. History:
+    // Endpoints-registry version — LEGACY, no longer needs bumping.
+    //
+    // The registry used to arrive twice: once in the /api/v1/authenticate
+    // response (cached in localStorage with no TTL) and once as the
+    // build-time template below. The runtime copy is gone; the map now ships
+    // inside the client bundle (endpoints.templates.js, generated from the
+    // server endpoint modules by `npm run build:js`), so it is replaced
+    // atomically with the code that reads it and CANNOT go stale. That
+    // removes the whole failure mode this stamp defended against, so adding
+    // or changing an endpoint no longer requires bumping this string.
+    //
+    // What is left runs once per page load and evicts a pre-existing
+    // localStorage registry from a client that logged in before the change.
+    // Remove it — together with save_exhibits_endpoints and
+    // get_cached_endpoints — once auth.module.js has stopped calling
+    // save_exhibits_endpoints and test/e2e/fixtures/auth.js has stopped
+    // seeding the localStorage keys. History:
     //   '1' — baseline
     //   '2' — added media_library.upload.get / upload.delete
-    //   '3' — added media_library.media_file_replace.post
+    //   '3' — added media_library.media_file_replace.post; NOT bumped when
+    //         the registry moved to the bundle, because a bump would send
+    //         every signed-in client through a pointless re-auth redirect
+    //         for a cache nothing reads any more.
     const ENDPOINTS_REGISTRY_VERSION = '3';
     const ENDPOINTS_VERSION_KEY = 'exhibits_endpoints_version';
     // sessionStorage one-shot guard so a failed/no-op re-auth can't loop.
@@ -243,7 +254,12 @@ const endpointsModule = (function() {
     };
 
     /**
-     * Save exhibits endpoints to localStorage
+     * Save exhibits endpoints to localStorage.
+     *
+     * LEGACY. The server no longer returns `endpoints` from
+     * /api/v1/authenticate, so auth.module.js never reaches this with a
+     * payload any more; the live map comes from the bundled templates.
+     * Kept only so an older cached auth.module bundle cannot throw.
      */
     obj.save_exhibits_endpoints = function(data) {
 
@@ -350,6 +366,45 @@ const endpointsModule = (function() {
             console.error('Error getting media library endpoints:', error);
             return null;
         }
+    };
+
+    /**
+     * Get auth endpoints. Bundle-only: auth is not one of the four sections
+     * the removed /authenticate payload used to carry, so there is no
+     * localStorage fallback for it.
+     */
+    obj.get_auth_endpoints = function() {
+        try {
+            const templates = get_endpoint_templates();
+            return (templates && templates.auth) ? templates.auth : null;
+        } catch (error) {
+            console.error('Error getting auth endpoints:', error);
+            return null;
+        }
+    };
+
+    /**
+     * The /authenticate URL, read from the generated registry instead of
+     * being hardcoded here (it was the one endpoint the client duplicated).
+     * Falls back to the literal path on the two pages that load
+     * endpoints.module.js without endpoints.templates.js
+     * (views/dashboard-session-out.ejs), where the bundle-only map is absent.
+     * @returns {string}
+     */
+    obj.get_authenticate_endpoint = function() {
+
+        const auth_endpoints = obj.get_auth_endpoints();
+        const endpoint = auth_endpoints
+            && auth_endpoints.auth
+            && auth_endpoints.auth.authentication
+            && auth_endpoints.auth.authentication.get
+            && auth_endpoints.auth.authentication.get.endpoint;
+
+        if (typeof endpoint === 'string' && endpoint.length > 0) {
+            return endpoint;
+        }
+
+        return `${obj.get_app_path()}/api/v1/authenticate`;
     };
 
     /**
@@ -534,7 +589,7 @@ const endpointsModule = (function() {
 
             // Return authentication endpoint
             return {
-                authenticate: `${APP_PATH}/api/v1/authenticate`,
+                authenticate: obj.get_authenticate_endpoint(),
                 app_path: APP_PATH
             };
 

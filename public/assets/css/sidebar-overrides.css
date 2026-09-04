@@ -107,9 +107,6 @@ html.open #left-panel .navbar .navbar-nav li a .menu-icon {
     margin: 0 !important;
 }
 
-html.open #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
-    margin-top: 0 !important;
-}
 
 /* Hide "Menu" title in collapsed state */
 html.open aside.left-panel .menu-title {
@@ -240,10 +237,6 @@ aside.left-panel:hover {
     margin: 0 !important;
 }
 
-/* Normalize Bootstrap Icons vertical offset in collapsed state */
-.open #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
-    margin-top: 0 !important;
-}
 
 .open #left-panel .navbar .navbar-nav li .nav-label {
     display: none !important;
@@ -299,10 +292,6 @@ aside.left-panel:hover {
         font-size: 20px !important;
     }
 
-    #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
-        margin-top: 0 !important;
-    }
-
     #left-panel .navbar .navbar-nav li .nav-label {
         display: none !important;
     }
@@ -314,4 +303,24 @@ aside.left-panel:hover {
    <li>, so the link stays hidden until the async admin check resolves. */
 .admin-only-nav {
     display: none !important;
+}
+
+/* ── Inline SVG nav icon ── */
+
+/*
+ * One nav link (Media Library) carries inline SVG instead of a font class,
+ * because FontAwesome has no collection-with-play glyph. Size it in `em` so
+ * it tracks whatever font-size the collapsed / expanded / responsive rules
+ * above set on .menu-icon, and align it on the text baseline the way a font
+ * glyph sits. `currentColor` in the markup handles colour and hover.
+ */
+.menu-icon-svg {
+    display: inline-block;
+    line-height: 1;
+}
+
+.menu-icon-svg svg {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
 }
