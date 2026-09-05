@@ -22,6 +22,7 @@
 const { test, expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 const { seedAuth } = require('../fixtures/auth');
+const { openModal } = require('../helpers/bootstrap');
 const {
     stubDashboardDeps,
     stubExhibitsApi,
@@ -44,28 +45,42 @@ const GRID_UUID = '660e8400-e29b-41d4-a716-446655440100';
 // it here so the suite stays focused on standards conformance.
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
-// Rules we deliberately suppress in the baseline. Each entry must
-// document its reason. Re-enable as targeted follow-up work.
-const BASELINE_DISABLED_RULES = [
-    'frame-title',                 // not applicable — no <iframe> on these routes
-    'page-has-heading-one',        // Phase 5 added visually-hidden h1s, but this rule sometimes mis-flags pages with the existing live <h1 id="exhibit-title"> when its content hasn't populated yet
-    'region',                      // landmark coverage is design-system-wide; not actionable per-page
-    'color-contrast',              // requires CSS audit on custom palette; deferred to manual contrast review
-    // DataTables 2.x renders sort-toggle inner buttons (.dt-column-order
-    // with role="button") that have no text content — the parent <th>'s
-    // aria-label "Activate to sort" supplies the name in practice for
-    // most SRs, but axe's strict aria-command-name check flags the inner
-    // role="button". Fixing requires a library patch or upgrade. The
-    // existing <th aria-label> markup keeps the table sortable for SR
-    // users; we accept the noise.
-    'aria-command-name',
-];
+/*
+ * Rules suppressed in the baseline. Each entry must justify itself, and be
+ * re-checked rather than inherited — the 2026-09-04 audit found three of the
+ * previous five were unnecessary:
+ *   - `frame-title` passed everywhere (every iframe has a title), so
+ *     suppressing it only forfeited the regression guard.
+ *   - `page-has-heading-one` and `region` are `best-practice`-tagged, so the
+ *     WCAG tag set above never selected them. They were dead entries; `region`
+ *     reports zero violations across all 49 routes when run explicitly.
+ *   - `color-contrast` was suppressed pending a manual review that never
+ *     happened, and was hiding 141 failing nodes. The palette has since been
+ *     corrected, so the rule is on.
+ * What remains is the genuine third-party case, narrowed to it.
+ */
+const BASELINE_DISABLED_RULES = [];
+
+/*
+ * DataTables 2.x renders a sort-toggle inner element (`.dt-column-order` with
+ * role="button") carrying no text. The parent `<th aria-label="Activate to
+ * sort">` supplies the name in practice, and fixing the inner element needs a
+ * library patch. Excluded by SELECTOR rather than by disabling the rule, so
+ * `aria-command-name` still guards the rest of the page — the audit found the
+ * blanket suppression was also hiding 74 unnamed Quill toolbar buttons, which
+ * were real failures and have since been fixed.
+ */
+const THIRD_PARTY_EXCLUSIONS = ['.dt-column-order'];
 
 async function expectNoAxeViolations(page, opts = {}) {
     const include = opts.include;
-    const builder = new AxeBuilder({ page })
-        .withTags(WCAG_TAGS)
-        .disableRules(BASELINE_DISABLED_RULES);
+    const builder = new AxeBuilder({ page }).withTags(WCAG_TAGS);
+    if (BASELINE_DISABLED_RULES.length > 0) {
+        builder.disableRules(BASELINE_DISABLED_RULES);
+    }
+    for (const selector of THIRD_PARTY_EXCLUSIONS) {
+        builder.exclude(selector);
+    }
     if (include) {
         builder.include(include);
     }
@@ -164,5 +179,84 @@ test.describe('axe-core a11y scans (WCAG 2.0/2.1/2.2 AA)', () => {
         await expect(page.locator('a.btn-delete-media')).toHaveCount(1);
 
         await expectNoAxeViolations(page);
+    });
+
+    /*
+     * FORM ROUTES. The audit found the baseline scanned four list pages out of
+     * 49 routes, so every add/edit/details form went unchecked — which is where
+     * a dashboard's accessibility risk actually lives, and where the labelling
+     * and rich-text-editor defects it found were hiding.
+     */
+
+    test('Exhibit edit form has no axe violations', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Edited exhibit' }) },
+        });
+
+        await page.goto(`${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${EXHIBIT_UUID}`);
+        /* The rich-text editors mount asynchronously; scanning before they
+           exist would skip the very elements this test is here to guard. */
+        await expect(page.locator('.ql-editor').first()).toBeVisible();
+
+        await expectNoAxeViolations(page);
+    });
+
+    test('Standard item media form has no axe violations', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Item host exhibit' }) },
+        });
+
+        await page.goto(`${APP_PATH}/items/standard/media?exhibit_id=${EXHIBIT_UUID}`);
+        await expect(page.locator('.ql-editor').first()).toBeVisible();
+
+        await expectNoAxeViolations(page);
+    });
+
+    test('Exhibit styles form has no axe violations', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Styled exhibit' }) },
+        });
+
+        await page.goto(`${APP_PATH}/styles?exhibit_id=${EXHIBIT_UUID}`);
+        await expect(page.locator('#exhibit-styles-card')).toBeVisible();
+
+        await expectNoAxeViolations(page);
+    });
+
+    /*
+     * The user forms need an Administrator role. The default stub role is
+     * `User`, which silently redirects these routes to /access-denied — the
+     * page then scans clean and the test proves nothing. That trap produced
+     * false passes during the audit.
+     */
+    test('User add form has no axe violations', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, { role: { role: 'Administrator' } });
+
+        await page.goto(`${APP_PATH}/users/add`);
+        await expect(page.locator('#user-form')).toBeVisible();
+        await expect(page.locator('#first-name-input')).toBeVisible();
+
+        await expectNoAxeViolations(page);
+    });
+
+    test('Add Exhibit modal has no axe violations', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Host' }) },
+        });
+        await stubExhibitsApi(page, { records: [] });
+
+        await page.goto(`${APP_PATH}/exhibits`);
+        await openModal(page, 'add-exhibit-modal');
+        await expect(page.locator('#add-exhibit-modal')).toBeVisible();
+        /* Bootstrap's fade must settle: scanning mid-transition measures colours
+           blended against the backdrop and invents contrast failures. */
+        await page.waitForTimeout(600);
+
+        await expectNoAxeViolations(page, { include: '#add-exhibit-modal' });
     });
 });

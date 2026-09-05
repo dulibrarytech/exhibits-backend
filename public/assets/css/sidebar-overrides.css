@@ -324,3 +324,60 @@ aside.left-panel:hover {
     height: 1em;
     vertical-align: -0.125em;
 }
+
+/* ── 7. Small-screen navigation rail (≤768px) ── */
+
+/*
+ * WCAG 1.4.10 Reflow. The theme hides the sidebar outright below 768px
+ * (`.left-panel { display: none }`) because it expects an off-canvas menu
+ * opened from a header hamburger. This app has no header hamburger — its
+ * only toggle, #sidebar-toggle, lives *inside* the sidebar. So at 320px the
+ * panel and the control that reopens it disappeared together: all nine nav
+ * links became unreachable, which is loss of functionality, not reflow.
+ *
+ * Keep the collapsed icon rail visible instead, narrowed from 83px to 56px
+ * so it costs 17% of a 320px viewport rather than 26%. Icons stay 20px and
+ * the tap target stays well over the 24px minimum (2.5.8).
+ *
+ * The theme's own ≤768px block stretches the menu into a full-height,
+ * full-width drawer (`.navbar { height: 100vh }`, `#left-panel { width: 100% }`)
+ * and re-enables the 14px label text; each of those is overridden below.
+ * Every selector here is at least as specific as the theme rule it answers.
+ */
+@media (max-width: 768px) {
+
+    .left-panel,
+    aside.left-panel {
+        display: block;
+    }
+
+    aside.left-panel,
+    html.open aside.left-panel,
+    body.open aside.left-panel,
+    #left-panel {
+        width: 56px;
+        max-width: 56px;
+    }
+
+    .right-panel,
+    html.open .right-panel,
+    body.open .right-panel,
+    .small-device .right-panel {
+        margin-left: 56px;
+    }
+
+    /* Rail, not drawer: height follows its own content. */
+    #left-panel .navbar {
+        height: auto;
+    }
+
+    /* Labels stay hidden at rail width regardless of the collapsed state,
+       since the theme re-asserts a 14px font-size in this range. */
+    #left-panel .navbar .navbar-nav li > a {
+        font-size: 0;
+    }
+
+    #left-panel .navbar .navbar-nav li > a .menu-icon {
+        font-size: 20px;
+    }
+}

@@ -113,8 +113,13 @@
 /* Focus state */
 .dt-paging .dt-paging-button:focus {
     z-index: 3;
-    outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25) !important;
+}
+
+/* Pointer focus only — keyboard focus keeps the :focus-visible ring
+   (WCAG 2.4.7 Focus Visible). */
+.dt-paging .dt-paging-button:focus:not(:focus-visible) {
+    outline: 0;
 }
 
 /* ── Ellipsis styling ── */
@@ -143,18 +148,20 @@
 
 .dt-info {
     font-size: 0.875rem;
-    color: #6c757d;
+    /* WCAG 1.4.3: muted grey darkened from #6c757d, which clears 4.5:1
+       only on pure white and fails on every tinted surface. */
+    color: #5c636a;
     padding-top: 15px;
 }
 
 .dt-length {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: #5c636a;
 }
 
 .dt-search {
     font-size: 0.875rem;
-    color: #6c757d;
+    color: #5c636a;
 }
 
 /* ── Responsive pagination adjustments ── */
@@ -191,4 +198,52 @@
  */
 table.display td {
     font-size: 0.875rem;
+}
+
+/*
+ * Row values are wrapped in <small> — the title, the file name, the dates,
+ * the status caption, the order number. `small` is 0.875em, so it compounded
+ * against the 0.875rem cell above and rendered at 12.25px, which read as too
+ * small in review. Set it outright at 13.5px (0.84375rem) rather than
+ * inflating the cell, so the cell-level metrics and the action dropdown keep
+ * the sizes they were tuned at.
+ *
+ * rem, not px, so the size still tracks a reader's browser font setting
+ * (WCAG 1.4.4).
+ */
+table.display td small {
+    font-size: 0.84375rem;
+}
+
+/*
+ * A <small> nested inside another one is a sub-caption of it (e.g. the note
+ * under a publish status). Because the rule above is in rem it would flatten
+ * those to the same 13.5px as their parent and lose the step, so restore the
+ * relative one — 0.875em of 13.5px = 11.8px.
+ */
+table.display td small small {
+    font-size: 0.875em;
+}
+
+/* ── Reflow: keep table overflow inside the table ── */
+
+/*
+ * WCAG 1.4.10 Reflow. At a 320px viewport the listing tables are wider than
+ * the content column (measured: a 430px table inside a 157px cell), and the
+ * cell was `overflow-x: visible`, so the whole PAGE panned sideways — the
+ * heading, the nav and the alert region all moved off-screen with it.
+ *
+ * A data table is an explicit exception to 1.4.10: it may scroll
+ * horizontally. The page may not. Scoping the scroll to the layout row that
+ * holds the table keeps the search, length and paging controls in place and
+ * reflowing normally.
+ *
+ * Two selectors because the tables do not all share a layout: the exhibit,
+ * item and grid lists render DataTables 2.x's own `dt-layout-*` wrappers,
+ * while the media library renders the Bootstrap `row`/`col-sm-12` variant.
+ * Each selector is the element that directly wraps its table.
+ */
+.dt-container .dt-layout-row.dt-layout-table,
+.dt-container > .row > .col-sm-12 {
+    overflow-x: auto;
 }

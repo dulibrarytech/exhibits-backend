@@ -2,13 +2,17 @@
 <link rel="stylesheet" href="/exhibits-dashboard/static/assets/css/media.library.css?<%=build_version%>" type="text/css">
 
 <body>
+<%- include('../partials/skip-link.ejs'); %>
 
 <%- include('../partials/nav-dashboard'); %>
 
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     
-    <main class="content" id="main-content">
+    <%# id="main" + tabindex="-1" match the skip link's #main target and let
+        focus actually land here; this was the one <main> in the tree using a
+        different id, so the skip link was inert on this page (WCAG 2.4.1). -%>
+    <main class="content" id="main" tabindex="-1">
         <div id="message" role="status" aria-live="polite"></div>
 
         <h1 id="media-library-title">Media Library</h1>

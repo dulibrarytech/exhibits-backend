@@ -91,9 +91,15 @@ p:focus {
   border: none;
   outline: 0; }
 
+/* The `!important` that used to sit on this outline reset defeated the
+   :focus-visible token in exhibits.common.css §9.5 regardless of
+   specificity, leaving keyboard users with no visible focus indicator
+   anywhere in the dashboard (WCAG 2.4.7 Focus Visible). Dropping
+   `!important` keeps the theme's intent — no ring on pointer focus —
+   while letting the token win for keyboard focus. */
 a, button {
   text-decoration: none;
-  outline: none !important;
+  outline: none;
   color: #5A5A5A;
   -webkit-transition: all 0.25s ease;
   transition: all 0.25s ease; }
@@ -122,8 +128,12 @@ ul,
 ol {
   padding-left: 0; }
 
-.btn:focus,
-button:focus {
+/* Scoped to :not(:focus-visible) so pointer focus stays ring-free while
+   keyboard focus inherits the :focus-visible token (WCAG 2.4.7). Without
+   the scope `button:focus` (0,1,1) outranked the bare `:focus-visible`
+   token (0,1,0) and suppressed the ring on every plain <button>. */
+.btn:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
   -webkit-box-shadow: none !important;
           box-shadow: none !important;
   outline: 0; }
@@ -146,13 +156,16 @@ img {
 .ov-h {
   overflow: hidden; }
 
+/* `!important` removed here for the same reason as the a/button reset
+   above: it made the :focus-visible token dead code on every button,
+   input and textarea in the dashboard (WCAG 2.4.7). */
 .btn,
 button,
 input,
 textarea {
   -webkit-box-shadow: none;
           box-shadow: none;
-  outline: 0 !important; }
+  outline: 0; }
 
 .no-padding {
   padding: 0 !important; }
@@ -566,14 +579,14 @@ header .form-inline {
       top: 50%;
       margin-top: -14px !important; }
     header .form-inline .search-form button:active,
-    header .form-inline .search-form button:focus,
+    header .form-inline .search-form button:focus:not(:focus-visible),
     header .form-inline .search-form button:visited,
     header .form-inline .search-form .btn-outline-success:hover {
       background: transparent;
       border: none !important;
       -webkit-box-shadow: none;
               box-shadow: none;
-      outline: 0 !important; }
+      outline: 0; }
     header .form-inline .search-form.close {
       display: none; }
 

@@ -227,7 +227,7 @@ const mediaModalsModule = (function() {
         html += '<span class="file-number">' + file_number + '</span>';
         html += '<span class="file-form-title fw-bold" style="margin-left: 12px;">' + display_name + '</span>';
         html += '</div>';
-        html += '<span class="badge bg-secondary file-type-badge type-' + media_type + '">' + type_label + '</span>';
+        html += '<span class="badge badge-secondary file-type-badge type-' + media_type + '">' + type_label + '</span>';
         html += '</div>';
         
         // Card body

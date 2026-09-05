@@ -721,6 +721,11 @@ const exhibitsModule = (function () {
         }
 
         if (aria_label) {
+
+            /* aria-label is prohibited on a generic element, so an <i> carrying
+               one has no accessible name at all. role="img" gives the glyph a
+               role that permits the label and exposes it as a named image. */
+            icon.setAttribute('role', 'img');
             icon.setAttribute('aria-label', aria_label);
         } else {
             icon.setAttribute('aria-hidden', 'true');
