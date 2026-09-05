@@ -491,6 +491,15 @@ const domModule = (function () {
      * Renders a spinner / loading indicator into a container using safe DOM
      * construction (no innerHTML). Used for in-progress status messages.
      *
+     * Accessibility (WCAG 4.1.3 Status Messages):
+     * Same approach as set_alert — the live-region semantics ride on the
+     * inserted element rather than the container, because most of the
+     * containers these are injected into (the generic #message divs) are not
+     * declared as live regions in markup, so an injected child with no role
+     * is never announced. Progress is always 'polite': a loading notice must
+     * not interrupt whatever the screen reader is currently reading. The
+     * spinner glyph stays aria-hidden so only the message text is spoken.
+     *
      * @param {string|Element} target  - CSS selector or DOM element
      * @param {string}         message - Plain-text loading message
      */
@@ -502,11 +511,19 @@ const domModule = (function () {
             el.removeChild(el.firstChild);
         }
 
+        const status = document.createElement('span');
+        status.className = 'loading-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.setAttribute('aria-atomic', 'true');
+
         const icon = document.createElement('i');
         icon.className = 'fa fa-spinner fa-spin';
         icon.setAttribute('aria-hidden', 'true');
-        el.appendChild(icon);
-        el.appendChild(document.createTextNode(' ' + (message || '')));
+        status.appendChild(icon);
+        status.appendChild(document.createTextNode(' ' + (message || '')));
+
+        el.appendChild(status);
     };
 
     return obj;

@@ -30,8 +30,12 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
     <div class="card-body">
 
         <!-- ── Required Styles ── -->
-        <div class="section-group-label">Required Styles</div>
-        <div class="accordion mb-4" id="requiredStylesAccordion">
+        <%# role="group" + aria-labelledby ties the four required style panels
+            to the "Required Styles" caption above them; the caption was a bare
+            <div> with nothing associating it (WCAG 1.3.1). -%>
+        <div class="section-group-label" id="required-styles-group-label">Required Styles</div>
+        <div class="accordion mb-4" id="requiredStylesAccordion"
+             role="group" aria-labelledby="required-styles-group-label">
             <% requiredSections.forEach(function(section, idx) { %>
             <div class="card">
                 <div class="card-header" id="heading-<%= section.key %>">
@@ -64,7 +68,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 <label for="<%= section.key %>-background-color">Background Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <input title="Color Picker"
+                                        <input title="Background color picker for <%= section.label %>"
+                                               aria-label="Background color picker for <%= section.label %>"
                                                class="color-picker btn btn-default"
                                                type="color"
                                                id="<%= section.key %>-background-color-picker"
@@ -83,7 +88,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 <label for="<%= section.key %>-font-color">Font Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <input title="Color Picker"
+                                        <input title="Font color picker for <%= section.label %>"
+                                               aria-label="Font color picker for <%= section.label %>"
                                                class="color-picker btn btn-default"
                                                type="color"
                                                id="<%= section.key %>-font-color-picker"
@@ -157,11 +163,12 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
         </div>
 
         <!-- ── Optional Styles ── -->
-        <div class="section-group-label">
+        <div class="section-group-label" id="optional-styles-group-label">
             Optional Styles
             <span class="optional-info ml-2">&mdash; Leave blank to inherit defaults</span>
         </div>
-        <div class="accordion mb-3" id="optionalStylesAccordion">
+        <div class="accordion mb-3" id="optionalStylesAccordion"
+             role="group" aria-labelledby="optional-styles-group-label">
             <% optionalSections.forEach(function(section) { %>
             <div class="card">
                 <div class="card-header" id="heading-<%= section.key %>">
@@ -194,7 +201,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 <label for="<%= section.key %>-background-color">Background Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <input title="Color Picker"
+                                        <input title="Background color picker for <%= section.label %>"
+                                               aria-label="Background color picker for <%= section.label %>"
                                                class="color-picker btn btn-default"
                                                type="color"
                                                id="<%= section.key %>-background-color-picker"
@@ -213,7 +221,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 <label for="<%= section.key %>-font-color">Font Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <input title="Color Picker"
+                                        <input title="Font color picker for <%= section.label %>"
+                                               aria-label="Font color picker for <%= section.label %>"
                                                class="color-picker btn btn-default"
                                                type="color"
                                                id="<%= section.key %>-font-color-picker"

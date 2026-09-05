@@ -75,7 +75,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #6c757d;
+        color: #5c636a;
         font-size: 2rem;
         overflow: hidden;
     }
@@ -92,7 +92,7 @@
         color: #333;
     }
     #media-picker-modal .media-card-type {
-        color: #6c757d;
+        color: #5c636a;
         font-size: 11px;
     }
     #media-picker-modal .media-selection-bar {
@@ -146,14 +146,14 @@
         align-items: center;
         justify-content: center;
         padding: 60px 0;
-        color: #6c757d;
+        color: #5c636a;
     }
     #media-picker-modal .media-empty {
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 60px 0;
-        color: #6c757d;
+        color: #5c636a;
         font-size: 14px;
     }
     @media (max-width: 768px) {
@@ -178,13 +178,13 @@
             <div class="modal-body" style="min-height: 500px; overflow-x: hidden;">
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs" id="media-picker-tabs" role="tablist">
-                    <li class="nav-item">
+                    <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="media-browse-tab" data-toggle="tab"
                            href="#media-browse-panel" role="tab" aria-controls="media-browse-panel"
                            aria-selected="true">Browse Library</a>
                     </li>
                     <!--
-                    <li class="nav-item">
+                    <li class="nav-item" role="presentation">
                         <a class="nav-link" id="media-add-tab" data-toggle="tab"
                            href="#media-add-panel" role="tab" aria-controls="media-add-panel"
                            aria-selected="false">Add New</a>
@@ -203,11 +203,12 @@
                                         <span class="input-group-text"><i class="fa fa-search" aria-hidden="true"></i></span>
                                     </div>
                                     <input type="text" class="form-control" id="media-picker-search"
+                                           aria-label="Search media library"
                                            placeholder="Search media..." autocomplete="off">
                                 </div>
                             </div>
                             <div class="col-4">
-                                <select class="form-control" id="media-picker-type-filter">
+                                <select class="form-control" id="media-picker-type-filter" aria-label="Filter by media type">
                                     <option value="">All types</option>
                                     <option value="image">Images</option>
                                     <option value="video">Video</option>

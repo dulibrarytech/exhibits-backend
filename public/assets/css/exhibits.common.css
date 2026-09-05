@@ -105,7 +105,10 @@
     flex-direction: column;
     align-items: center;
     gap: 6px;
-    color: #adb5bd;
+    /* WCAG 1.4.3: #adb5bd measured 1.96:1 against the #f8f9fa preview
+       box — the worst ratio in the dashboard. #5c636a is 5.78:1 there
+       and 6.09:1 on white. */
+    color: #5c636a;
 }
 
 .media-placeholder i {
@@ -114,6 +117,10 @@
 
 .media-placeholder span {
     font-size: 12px;
+    /* Declared (not inherited) so the populated-preview inline colour on
+       the parent placeholder cannot leak into the label text, which
+       measured 3.77:1 as #007bff on #f8f9fa. (WCAG 1.4.3) */
+    color: #5c636a;
 }
 
 .media-preview-area:has(img) .media-placeholder {
@@ -174,7 +181,8 @@
 
 .badge-optional {
     background-color: #f0f0f0;
-    color: #6c757d;
+    /* WCAG 1.4.3: #6c757d measured 4.11:1 on #f0f0f0; #5c636a is 5.34:1. */
+    color: #5c636a;
     font-size: 0.65rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -234,14 +242,15 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6c757d;
+    color: #5c636a;
     margin-bottom: 0.5rem;
     padding-left: 0.25rem;
 }
 
 #exhibit-styles-card .section-group-label .optional-info {
     font-size: 0.78rem;
-    color: #adb5bd;
+    /* WCAG 1.4.3: #adb5bd measured 2.07:1 on white; #5c636a is 6.09:1. */
+    color: #5c636a;
     font-style: italic;
     text-transform: none;
     letter-spacing: normal;
@@ -422,7 +431,7 @@
     display: block;
     font-size: 11px;
     font-weight: 600;
-    color: #6c757d;
+    color: #5c636a;
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin-bottom: 5px;
@@ -513,11 +522,19 @@
 /* 9.3 .content min-height replacement.
        Phase 1 strips the inline `style="min-height: 875px;"` from every
        page template. Defining the rule here keeps the visual identical
-       so the inline-style removal is non-breaking. (WCAG 1.4.10 Reflow
-       follow-up: Phase 5 will revisit whether 875px is still warranted
-       once layouts have been audited at 320 CSS px.) */
+       so the inline-style removal is non-breaking. */
 .content {
     min-height: 875px;
+}
+
+/* 875px was chosen to fill a desktop window. At 320px it is taller than the
+   viewport on its own, so a short page scrolls through a screen and a half of
+   empty space below the content. Release the floor once the layout is a
+   single column (WCAG 1.4.10). */
+@media (max-width: 768px) {
+    .content {
+        min-height: 0;
+    }
 }
 
 /* 9.4 Scroll-padding under fixed navbar.
@@ -588,4 +605,143 @@ main:focus-visible {
 .site-footer a,
 .footer-inner a {
     text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. Contrast palette overrides (WCAG 1.4.3 Contrast (Minimum), AA)
+   Bootstrap 4's stock $primary, $text-muted and $danger all land just
+   under the 4.5:1 threshold for normal-size text against the surfaces
+   this dashboard actually uses. These rules restate the same tokens
+   one step darker. dashboard.min.css is linked after bootstrap.min.css,
+   so equal-specificity rules here win on source order; `!important`
+   appears only where Bootstrap's own utility already uses it.
+
+   Measured (axe-core, sRGB):
+     #ffffff on #007bff  3.97:1  →  #ffffff on #0062cc  5.80:1
+     #007bff on #ffffff  3.97:1  →  #0062cc on #ffffff  5.80:1
+     #6c757d on #f0f3f5  4.20:1  →  #5c636a on #f0f3f5  5.46:1
+     #6c757d on #f8f9fa  4.44:1  →  #5c636a on #f8f9fa  5.78:1
+     #dc3545 on #f7f7f7  4.22:1  →  #c82333 on #f7f7f7  5.24:1
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Primary buttons — the label text failed on 36 of 59 audited scans.
+   Hover/active shades keep Bootstrap's relative darkening steps. */
+.btn-primary {
+    background-color: #0062cc;
+    border-color: #0062cc;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-primary.disabled,
+.btn-primary:disabled {
+    background-color: #0062cc;
+    border-color: #0062cc;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+    background-color: #0050a5;
+    border-color: #004a99;
+}
+
+/* Outline primary — the blue is the text colour here. */
+.btn-outline-primary {
+    color: #0062cc;
+    border-color: #0062cc;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-primary.dropdown-toggle {
+    color: #ffffff;
+    background-color: #0062cc;
+    border-color: #0062cc;
+}
+
+.btn-outline-primary.disabled,
+.btn-outline-primary:disabled {
+    color: #0062cc;
+}
+
+/* Muted text. Bootstrap declares .text-muted with !important, so the
+   override has to match it. This one rule covers the card-footer type
+   captions, the media-modal metadata rows and the repo-import item
+   metadata — the largest group of contrast failures after the primary
+   button. */
+.text-muted {
+    color: #5c636a !important;
+}
+
+/* Destructive card headings sit on Bootstrap's .card-header surface
+   (rgba(0,0,0,.03) over white = #f7f7f7), where #dc3545 falls short.
+   Scoped to card titles so ordinary .text-danger error text, which
+   clears 4.5:1 on white, keeps the standard danger red. */
+.card-title.text-danger {
+    color: #c82333 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Row actions toggle — minimum target size
+   ═══════════════════════════════════════════════════════════════════ */
+
+/*
+ * WCAG 2.5.8 Target Size (Minimum) requires 24x24 CSS px. These toggles
+ * measured 4.3 x 20 — they are a 3-dot glyph in a `btn-link p-0 border-0`,
+ * so the button collapsed to the glyph's own width. They are the only route
+ * to Edit, Move and Delete on every listing page, which makes them the
+ * smallest and most important targets in the application.
+ *
+ * Sized rather than padded so the row height does not change: the glyph
+ * stays centred and the hit area grows around it.
+ */
+.item-actions-toggle,
+.exhibit-actions-toggle,
+.media-actions-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Styles accordion — narrow-viewport reflow
+   ═══════════════════════════════════════════════════════════════════ */
+
+/*
+ * WCAG 1.4.10 Reflow. The accordion header is a flex row of section-left
+ * (label + Required badge) and section-right (colour swatches + chevron).
+ * At 320px the left side would not shrink, so the right side was pushed
+ * past the card edge and CLIPPED — the swatches and chevron measured at
+ * right:432 with no way to scroll to them. Unreachable content is worse
+ * than a pan.
+ *
+ * Allowing the row to wrap and the left side to shrink below its content
+ * width lets the header reflow onto two lines instead. No effect above the
+ * breakpoint, where both sides fit on one line.
+ */
+@media (max-width: 575px) {
+    #exhibit-styles-card .accordion .card-header .btn-link {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    #exhibit-styles-card .section-left {
+        min-width: 0;
+        flex: 1 1 100%;
+        /* The label and its Required badge are themselves a flex row; without
+           this the badge is pushed past the card edge instead of dropping
+           under the label. */
+        flex-wrap: wrap;
+    }
+
+    #exhibit-styles-card .section-right {
+        flex: 0 0 auto;
+    }
 }

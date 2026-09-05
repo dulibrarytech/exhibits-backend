@@ -1,0 +1,15 @@
+<%#
+    Skip link — WCAG 2.4.1 Bypass Blocks.
+
+    Included as the FIRST child of <body> on every page, ahead of
+    nav-dashboard, so it is the first focusable element in the document.
+    It used to live in main-header.ejs, which every template includes
+    *after* the sidebar; that made it the 10th tab stop, behind the whole
+    sidebar including Logout, so the bypass mechanism sat behind the block
+    it was meant to bypass.
+
+    The target is the page's own main landmark. Every page template gives
+    its <main> id="main" tabindex="-1" so the fragment resolves and focus
+    actually moves.
+-%>
+<a class="skip-link" href="#main">Skip to main content</a>

@@ -9,11 +9,11 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="first-name-input" style="font-size: 17px; margin-bottom: 0">
                                 First Name <span class="badge badge-required">Required</span>
-                            </div>
+                            </label>
                             <div id="first-name-input-error" class="is-error"></div>
-                            <input id="first-name-input" class="form-control" name="first_name_input" type="text">
+                            <input id="first-name-input" autocomplete="given-name" class="form-control" name="first_name_input" type="text">
                         </div>
                     </div>
                 </div>
@@ -22,11 +22,11 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="last-name-input" style="font-size: 17px; margin-bottom: 0">
                                 Last Name <span class="badge badge-required">Required</span>
-                            </div>
+                            </label>
                             <div id="last-name-input-error" class="is-error"></div>
-                            <input id="last-name-input" class="form-control" name="last_name_input" type="text">
+                            <input id="last-name-input" autocomplete="family-name" class="form-control" name="last_name_input" type="text">
                         </div>
                     </div>
                 </div>
@@ -35,11 +35,11 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="email-input" style="font-size: 17px; margin-bottom: 0">
                                 Email <span class="badge badge-required">Required</span>
-                            </div>
+                            </label>
                             <div id="email-input-error" class="is-error"></div>
-                            <input id="email-input" class="form-control" name="email_input" type="text">
+                            <input id="email-input" autocomplete="email" class="form-control" name="email_input" type="text">
                         </div>
                     </div>
                 </div>
@@ -48,11 +48,11 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="du-id-input" style="font-size: 17px; margin-bottom: 0">
                                 DU ID <span class="badge badge-required">Required</span>
-                            </div>
+                            </label>
                             <div id="du-id-input-error" class="is-error"></div>
-                            <input id="du-id-input" class="form-control" name="du_id_input" type="text">
+                            <input id="du-id-input" autocomplete="username" class="form-control" name="du_id_input" type="text">
                         </div>
                     </div>
                 </div>
@@ -61,9 +61,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="user-roles" style="font-size: 17px; margin-bottom: 0">
                                 Role <span class="badge badge-required">Required</span>
-                            </div>
+                            </label>
                             <div id="role-error" class="is-error"></div>
                             <div id="role-descriptions" class="col-12 col-md-12"></div>
                             <div class="input-group">
@@ -89,9 +89,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="first-name-disabled" style="font-size: 17px; margin-bottom: 0">
                                 First Name
-                            </div>
+                            </label>
                             <div id="first-name-input-error" class="is-error"></div>
                             <input disabled id="first-name-disabled" class="form-control" name="first_name_disabled" type="text">
                         </div>
@@ -102,9 +102,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="last-name-disabled" style="font-size: 17px; margin-bottom: 0">
                                 Last Name
-                            </div>
+                            </label>
                             <div id="last-name-input-error" class="is-error"></div>
                             <input disabled id="last-name-disabled" class="form-control" name="last_name_disabled" type="text">
                         </div>
@@ -115,9 +115,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="email-disabled" style="font-size: 17px; margin-bottom: 0">
                                 Email
-                            </div>
+                            </label>
                             <div id="email-input-error" class="is-error"></div>
                             <input disabled id="email-disabled" class="form-control" name="email_disabled" type="text">
                         </div>
@@ -128,9 +128,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="du-id-disabled" style="font-size: 17px; margin-bottom: 0">
                                 DU ID
-                            </div>
+                            </label>
                             <div id="du-id-input-error" class="is-error"></div>
                             <input disabled id="du-id-disabled" class="form-control" name="du_id_disabled" type="text">
                         </div>
@@ -142,9 +142,9 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
+                            <label class="form-text text-muted" for="role-disabled" style="font-size: 17px; margin-bottom: 0">
                                 Role
-                            </div>
+                            </label>
                             <div id="role-input-error" class="is-error"></div>
                             <input disabled id="role-disabled" class="form-control" name="role_disabled" type="text">
                         </div>

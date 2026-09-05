@@ -1,5 +1,10 @@
+<%#
+    The skip link is NOT rendered here. Every page includes this partial
+    after nav-dashboard, which put the bypass link behind the whole
+    sidebar (10th tab stop). It now lives in partials/skip-link.ejs,
+    included as the first child of <body> — see WCAG 2.4.1 / 2.4.3.
+-%>
 <header>
-    <a class="skip-link" href="#main">Skip to main content</a>
     <nav class="navbar navbar-expand-md fixed-top" style="background-color: white">
         <div class="container-fluid">
             <a class="navbar-brand" href="/exhibits-dashboard/exhibits">

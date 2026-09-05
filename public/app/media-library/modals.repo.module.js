@@ -549,7 +549,7 @@ const repoModalsModule = (function() {
         html += '<span class="item-number">' + item_number + '</span>';
         html += '<span class="item-form-title fw-bold" style="margin-left: 12px;">' + title + '</span>';
         html += '</div>';
-        html += '<span class="badge bg-secondary item-type-badge type-' + object_type + '">' + type_label + '</span>';
+        html += '<span class="badge badge-secondary item-type-badge type-' + object_type + '">' + type_label + '</span>';
         html += '</div>';
 
         // Card body

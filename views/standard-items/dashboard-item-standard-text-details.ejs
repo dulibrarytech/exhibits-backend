@@ -1,5 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
+<%- include('../partials/skip-link.ejs'); %>
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
@@ -22,7 +23,7 @@
                             <span class="badge badge-required">Required</span></span>
                                     
                                 </div>
-                                <div id="item-text-input" class="rte-container" data-rte="full" data-rte-disabled="true"></div>
+                                <div id="item-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full" data-rte-disabled="true"></div>
                             </div>
                         </div>
                     </div>
@@ -45,10 +46,10 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Caption
-                                    
+                                <div class="form-text text-muted" style="font-size: 17px"><span id="item-caption-input-label">Caption</span>
+
                                 </div>
-                                <div id="item-caption-input" class="rte-container" data-rte="full" data-rte-disabled="true"></div>
+                                <div id="item-caption-input" aria-labelledby="item-caption-input-label" class="rte-container" data-rte="full" data-rte-disabled="true"></div>
                             </div>
                         </div>
                     </div>

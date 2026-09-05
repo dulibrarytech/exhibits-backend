@@ -508,6 +508,66 @@ const helperMediaLibraryModule = (function() {
     // BOOTSTRAP MODAL LIFECYCLE HELPERS
     // ========================================
 
+    /*
+     * Trigger element per open modal, for focus return (WCAG 2.4.3 Focus
+     * Order). Bootstrap 4.6 restores focus to the trigger only for modals
+     * opened through its own data-api click delegate; every modal opened via
+     * show_bootstrap_modal below is opened programmatically, so without this
+     * the user is dropped on <body> when the modal closes.
+     *
+     * A WeakMap keeps this out of the DOM and lets a discarded modal element
+     * (modals whose markup is rebuilt) release its trigger.
+     */
+    const modal_triggers = new WeakMap();
+
+    /*
+     * Resolves where focus should land when a modal closes. The recorded
+     * trigger is usually a row-action <a> inside a dropdown menu that
+     * Bootstrap has since collapsed — focusing a hidden element is a no-op
+     * and would leave focus on <body>, so fall back to the dropdown's own
+     * toggle, which is the visible control in the same row.
+     */
+    const resolve_focus_target = (trigger) => {
+        if (!trigger || typeof trigger.focus !== 'function') return null;
+        if (!document.body.contains(trigger)) return null;
+        if (trigger === document.body) return null;
+        if (trigger.offsetParent !== null) return trigger;
+
+        const dropdown = typeof trigger.closest === 'function'
+            ? trigger.closest('.dropdown, .btn-group, .dropdown-menu')
+            : null;
+        if (!dropdown) return null;
+
+        const parent = dropdown.parentElement || dropdown;
+        const toggle = parent.querySelector('[data-toggle="dropdown"], .dropdown-toggle');
+
+        return (toggle && toggle.offsetParent !== null) ? toggle : null;
+    };
+
+    /*
+     * Returns focus to the element that opened the modal. Only acts when
+     * focus is currently nowhere useful (body, or still inside the closing
+     * modal) so it never steals focus from a modal opened on top of this one.
+     */
+    const restore_trigger_focus = (modal_element) => {
+        if (!modal_element || !modal_triggers.has(modal_element)) return;
+
+        const trigger = modal_triggers.get(modal_element);
+        modal_triggers.delete(modal_element);
+
+        const active = document.activeElement;
+        const focus_is_loose = !active || active === document.body ||
+            modal_element.contains(active);
+
+        if (!focus_is_loose) return;
+
+        const target = resolve_focus_target(trigger);
+
+        if (target) {
+            target.focus();
+        }
+    };
+
     /**
      * Show a Bootstrap modal with BS5 -> BS4/jQuery -> manual fallback chain
      * @param {HTMLElement} modal_element - The modal DOM element
@@ -517,6 +577,20 @@ const helperMediaLibraryModule = (function() {
      */
     obj.show_bootstrap_modal = (modal_element, options) => {
         const opts = options || { backdrop: 'static', keyboard: false };
+
+        if (modal_element) {
+            const trigger = document.activeElement;
+
+            if (trigger && trigger !== document.body && !modal_element.contains(trigger)) {
+                modal_triggers.set(modal_element, trigger);
+            }
+
+            if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                $(modal_element).one('hidden.bs.modal', () => {
+                    restore_trigger_focus(modal_element);
+                });
+            }
+        }
 
         if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             const modal = new bootstrap.Modal(modal_element, opts);
@@ -570,6 +644,13 @@ const helperMediaLibraryModule = (function() {
             if (typeof cleanup_callback === 'function') {
                 cleanup_callback();
             }
+
+            /*
+             * Backstop for the manual/BS5 paths and for a hidden.bs.modal
+             * that never fires. restore_trigger_focus is idempotent — the
+             * WeakMap entry is consumed on the first call.
+             */
+            restore_trigger_focus(modal_element);
         }, 150);
     };
 

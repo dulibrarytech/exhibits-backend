@@ -71,6 +71,58 @@ const rteModule = (function () {
     };
 
     /*
+     * Accessible names for the Quill toolbar (WCAG 4.1.2 Name, Role, Value).
+     *
+     * Quill 2.x labels its <button> controls itself but leaves the picker
+     * dropdowns — <span class="ql-picker-label" role="button"> and the
+     * <span class="ql-picker-item" role="button"> options inside them —
+     * with no accessible name at all. These maps are keyed by the
+     * ql-<format> class Quill puts on the control so a name can be derived
+     * without reading the (SVG-only) content.
+     *
+     * Names are only applied where the control has none; Quill's own labels
+     * are never overwritten.
+     */
+    const PICKER_LABELS = {
+        'ql-header': 'Heading level',
+        'ql-color': 'Text color',
+        'ql-background': 'Background color',
+        'ql-align': 'Text alignment',
+        'ql-font': 'Font',
+        'ql-size': 'Text size'
+    };
+
+    const BUTTON_LABELS = {
+        'ql-bold': 'Bold',
+        'ql-italic': 'Italic',
+        'ql-underline': 'Underline',
+        'ql-strike': 'Strikethrough',
+        'ql-link': 'Insert link',
+        'ql-blockquote': 'Block quote',
+        'ql-code-block': 'Code block',
+        'ql-clean': 'Remove formatting',
+        'ql-list': 'List',
+        'ql-indent': 'Indent'
+    };
+
+    /* value-specific overrides for the multi-value toolbar buttons */
+    const BUTTON_VALUE_LABELS = {
+        'ql-list': {ordered: 'Numbered list', bullet: 'Bulleted list'},
+        'ql-indent': {'-1': 'Decrease indent', '+1': 'Increase indent'}
+    };
+
+    /* header picker option values -> readable names */
+    const HEADER_ITEM_LABELS = {
+        '': 'Normal text',
+        '1': 'Heading 1',
+        '2': 'Heading 2',
+        '3': 'Heading 3',
+        '4': 'Heading 4',
+        '5': 'Heading 5',
+        '6': 'Heading 6'
+    };
+
+    /*
      * Values considered empty for required-field checks. Quill represents an
      * empty document as '<p><br></p>'.
      */
@@ -84,6 +136,169 @@ const rteModule = (function () {
         return quill.getContents().ops.some(function (op) {
             return typeof op.insert === 'object';
         });
+    }
+
+    /* first ql-<format> class on a toolbar control, or '' */
+    function format_class(element) {
+
+        const match = Array.prototype.find.call(element.classList, function (name) {
+            return name.indexOf('ql-') === 0 && name !== 'ql-picker-label' &&
+                name !== 'ql-picker-item' && name !== 'ql-picker-options' &&
+                name !== 'ql-picker' && name !== 'ql-selected' && name !== 'ql-active' &&
+                name !== 'ql-expanded';
+        });
+
+        return match || '';
+    }
+
+    /* true when the control already exposes a name of its own */
+    function has_name(element) {
+
+        const label = element.getAttribute('aria-label');
+
+        if (label !== null && label.trim().length > 0) {
+            return true;
+        }
+
+        if (element.getAttribute('aria-labelledby') !== null) {
+            return true;
+        }
+
+        return element.textContent.trim().length > 0;
+    }
+
+    /*
+     * Names every unnamed control in one editor's toolbar
+     * (WCAG 4.1.2). Quill's own aria-labels are left untouched.
+     */
+    function label_toolbar(quill) {
+
+        const toolbar = quill.getModule('toolbar');
+
+        if (toolbar === undefined || toolbar === null || !toolbar.container) {
+            return;
+        }
+
+        const container = toolbar.container;
+
+        container.querySelectorAll('button').forEach(function (button) {
+
+            if (has_name(button) === true) {
+                return;
+            }
+
+            const key = format_class(button);
+            const value = button.value || '';
+            const by_value = BUTTON_VALUE_LABELS[key];
+            const name = (by_value !== undefined && by_value[value] !== undefined)
+                ? by_value[value]
+                : BUTTON_LABELS[key];
+
+            if (name !== undefined) {
+                button.setAttribute('aria-label', name);
+            }
+        });
+
+        container.querySelectorAll('.ql-picker').forEach(function (picker) {
+
+            const key = format_class(picker);
+            const picker_name = PICKER_LABELS[key] || 'Formatting options';
+            const picker_label = picker.querySelector('.ql-picker-label');
+
+            if (picker_label !== null && has_name(picker_label) === false) {
+                picker_label.setAttribute('aria-label', picker_name);
+            }
+
+            picker.querySelectorAll('.ql-picker-item').forEach(function (item) {
+
+                if (has_name(item) === true) {
+                    return;
+                }
+
+                const value = item.getAttribute('data-value') || '';
+
+                if (key === 'ql-header') {
+                    item.setAttribute('aria-label', HEADER_ITEM_LABELS[value] || 'Normal text');
+                    return;
+                }
+
+                if (key === 'ql-color' || key === 'ql-background') {
+                    item.setAttribute('aria-label', value.length > 0
+                        ? picker_name + ' ' + value
+                        : 'Remove ' + picker_name.toLowerCase());
+                    return;
+                }
+
+                item.setAttribute('aria-label', value.length > 0
+                    ? picker_name + ' ' + value
+                    : picker_name + ' default');
+            });
+        });
+    }
+
+    /*
+     * Moves the container's aria-labelledby onto the element that actually
+     * receives focus (WCAG 4.1.2). Quill converts the authored wrapper into
+     * a role-less .ql-container, so an aria-labelledby left there is both
+     * prohibited (axe: aria-prohibited-attr) and ignored by assistive tech,
+     * leaving the .ql-editor textbox with no accessible name.
+     *
+     * The label association authored in the template is preserved verbatim —
+     * the id is only re-pointed at the inner editor. aria-required mirrors
+     * the "Required" badge the label span already carries, so the editor
+     * announces the same requirement a sighted user reads.
+     */
+    function label_editor(container, quill) {
+
+        const editor = quill.root;
+
+        if (!editor) {
+            return;
+        }
+
+        if (editor.getAttribute('role') === null) {
+            editor.setAttribute('role', 'textbox');
+        }
+
+        if (container.classList.contains('rte-single-line') === false) {
+            editor.setAttribute('aria-multiline', 'true');
+        }
+
+        const labelled_by = container.getAttribute('aria-labelledby');
+
+        if (labelled_by === null || labelled_by.trim().length === 0) {
+            return;
+        }
+
+        editor.setAttribute('aria-labelledby', labelled_by);
+        container.removeAttribute('aria-labelledby');
+
+        const label_element = document.getElementById(labelled_by);
+
+        if (label_element !== null && label_element.querySelector('.badge-required') !== null) {
+            editor.setAttribute('aria-required', 'true');
+        }
+    }
+
+    /*
+     * Read-only details pages render stored rich text into a plain
+     * <div class="rte-readonly" aria-labelledby="..."> that Quill never
+     * mounts on. A div with no role may not carry aria-labelledby, so give
+     * it a role that can (WCAG 4.1.2 / axe aria-prohibited-attr).
+     */
+    function label_readonly(element) {
+
+        if (element === null) {
+            return;
+        }
+
+        if (element.getAttribute('aria-labelledby') === null) {
+            return;
+        }
+
+        if (element.getAttribute('role') === null) {
+            element.setAttribute('role', 'group');
+        }
     }
 
     /**
@@ -132,6 +347,13 @@ const rteModule = (function () {
                 placeholder: container.dataset.rtePlaceholder || '',
                 readOnly: is_disabled
             });
+
+            /* accessible naming — see label_editor / label_toolbar */
+            label_editor(container, quill);
+
+            if (is_disabled === false) {
+                label_toolbar(quill);
+            }
 
             const instance = {
                 quill: quill,
@@ -189,6 +411,9 @@ const rteModule = (function () {
                 obj.init(container.id);
             }
         });
+
+        /* details-page read-only boxes carry a label but never get an editor */
+        document.querySelectorAll('.rte-readonly').forEach(label_readonly);
     };
 
     /* mirrors editor HTML into the instance's hidden sync field, if any */
@@ -333,6 +558,8 @@ const rteModule = (function () {
         }
 
         const value = typeof html === 'string' ? html : '';
+
+        label_readonly(element);
 
         if (typeof DOMPurify !== 'undefined') {
             element.innerHTML = DOMPurify.sanitize(value);

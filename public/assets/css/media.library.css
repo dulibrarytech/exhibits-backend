@@ -86,8 +86,9 @@
 
 .exhibit-filter-wrapper {
     position: relative;
-    font-size: 0.85rem;
-    color: #6c757d;
+    font-size: 0.875rem;
+    /* WCAG 1.4.3: muted grey darkened from #6c757d (4.44:1 on #f8f9fa). */
+    color: #5c636a;
 }
 
 .exhibit-filter-label {
@@ -119,13 +120,18 @@
 }
 
 .exhibit-filter-input::placeholder {
-    color: #6c757d;
+    color: #5c636a;
 }
 
 .exhibit-filter-input:focus {
     border-color: #7f7f7f;
-    outline: 0;
     box-shadow: 0 0 0 0.15rem rgba(127, 127, 127, 0.2);
+}
+
+/* Outline suppression is scoped to pointer focus so keyboard focus keeps
+   the site-wide :focus-visible ring (WCAG 2.4.7 Focus Visible). */
+.exhibit-filter-input:focus:not(:focus-visible) {
+    outline: 0;
 }
 
 .exhibit-filter-clear {
@@ -135,7 +141,7 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: #6c757d;
+    color: #5c636a;
     font-size: 1.15rem;
     line-height: 1;
     padding: 0 0.35rem;
@@ -152,7 +158,9 @@
     right: 0.5rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #adb5bd;
+    /* #adb5bd measured 2.08:1 against the white input — below the 3:1
+       floor for a meaningful UI glyph (WCAG 1.4.11). */
+    color: #5c636a;
     font-size: 0.75rem;
     pointer-events: all;
     cursor: pointer;
@@ -194,7 +202,8 @@
 
 .exhibit-filter-empty {
     padding: 0.5rem 0.75rem;
-    color: #adb5bd;
+    /* WCAG 1.4.3: #adb5bd on the white listbox measured 2.08:1. */
+    color: #5c636a;
     font-style: italic;
     font-size: 0.85rem;
     list-style: none;
@@ -312,13 +321,18 @@
 
 .repo-pagination .page-link:focus {
     z-index: 3;
-    outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25);
 }
 
+/* Pointer focus only — keyboard focus keeps the :focus-visible ring
+   (WCAG 2.4.7 Focus Visible). */
+.repo-pagination .page-link:focus:not(:focus-visible) {
+    outline: 0;
+}
+
 .repo-pagination .pagination-info {
-    font-size: 0.85rem;
-    color: #6c757d;
+    font-size: 0.875rem;
+    color: #5c636a;
 }
 
 /* Responsive pagination adjustments */
@@ -633,35 +647,48 @@ body.modal-open {
    Color coding for media type badges across both badge prefixes.
    ═══════════════════════════════════════════════════════════════════ */
 
+/*
+ * Badge text colour is set per type because no single colour clears 4.5:1 on
+ * all six backgrounds (WCAG 1.4.3): white fails on the orange and teal, dark
+ * fails on the rest. The blue and red are also a shade darker than Bootstrap's
+ * defaults, which sat at 4.50 and 4.53 — passing, but with no margin.
+ */
+
 /* Shared colors: image, pdf, video, audio */
 .file-type-badge.type-image,
 .item-type-badge.type-image,
 .item-type-badge.type-object {
-    background-color: #0d6efd !important;
+    background-color: #0b5ed7 !important;
+    color: #ffffff;
 }
 
 .file-type-badge.type-pdf,
 .item-type-badge.type-pdf {
-    background-color: #dc3545 !important;
+    background-color: #c82333 !important;
+    color: #ffffff;
 }
 
 .file-type-badge.type-video,
 .item-type-badge.type-video {
     background-color: #6f42c1 !important;
+    color: #ffffff;
 }
 
 .file-type-badge.type-audio,
 .item-type-badge.type-audio {
     background-color: #fd7e14 !important;
+    color: #212529;
 }
 
 /* Repo-only types */
 .item-type-badge.type-collection {
     background-color: #20c997 !important;
+    color: #212529;
 }
 
 .item-type-badge.type-compound {
     background-color: #6c757d !important;
+    color: #ffffff;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -886,7 +913,8 @@ body.modal-open {
 }
 
 #kaltura-player-modal.kaltura-audio-mode #kaltura-player-info {
-    color: #6c757d !important;
+    /* WCAG 1.4.3: #6c757d on the modal's #f8f9fa body measured 4.44:1. */
+    color: #5c636a !important;
     border-top-color: #dee2e6 !important;
 }
 
@@ -895,7 +923,7 @@ body.modal-open {
 }
 
 #kaltura-player-modal.kaltura-audio-mode #kaltura-player-info span {
-    color: #6c757d;
+    color: #5c636a;
 }
 
 /* Responsive adjustments */

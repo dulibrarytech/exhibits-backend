@@ -1,3 +1,15 @@
+<%#
+    Item Media Widths — the six media_width radios.
+
+    Wrapped in a fieldset/legend so the set is announced as a named group
+    (WCAG 1.3.1); previously the only group name was the host card's
+    <strong class="card-title">, which carries no semantics. Bootstrap's
+    reboot zeroes fieldset border/padding/margin, and the legend is
+    visually hidden because that card title is still on screen, so nothing
+    moves. Included inside each host template's .card-body.
+-%>
+<fieldset>
+    <legend class="visually-hidden">Item Media Widths</legend>
 <div class="row">
     <div class="col-4 col-md-4">
         <p><img src="/exhibits-dashboard/static/images/media_25_width.png"
@@ -56,3 +68,4 @@
         </p>
     </div>
 </div>
+</fieldset>

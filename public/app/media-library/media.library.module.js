@@ -917,13 +917,14 @@ const mediaLibraryModule = (function() {
         const sorted_entries = Array.from(titles_map.entries())
             .sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: 'base' }));
 
-        // Build wrapper
+        /*
+         * Build wrapper. The combobox role lives on the <input> (below), not
+         * on this wrapper — ARIA 1.2 puts role/aria-expanded/aria-controls on
+         * the focusable text input so aria-activedescendant announcements are
+         * read against the element the user is actually in (WCAG 4.1.2).
+         */
         const wrapper = document.createElement('div');
         wrapper.className = 'exhibit-filter-wrapper';
-        wrapper.setAttribute('role', 'combobox');
-        wrapper.setAttribute('aria-expanded', 'false');
-        wrapper.setAttribute('aria-haspopup', 'listbox');
-        wrapper.setAttribute('aria-label', 'Filter by Exhibit');
 
         // Label
         const label = document.createElement('label');
@@ -942,8 +943,11 @@ const mediaLibraryModule = (function() {
         input.className = 'exhibit-filter-input';
         input.placeholder = 'All exhibits';
         input.setAttribute('autocomplete', 'off');
+        input.setAttribute('role', 'combobox');
         input.setAttribute('aria-controls', 'exhibit-filter-listbox');
-        input.setAttribute('role', 'searchbox');
+        input.setAttribute('aria-expanded', 'false');
+        input.setAttribute('aria-haspopup', 'listbox');
+        input.setAttribute('aria-autocomplete', 'list');
         input_container.appendChild(input);
 
         const clear_btn = document.createElement('button');
@@ -967,9 +971,17 @@ const mediaLibraryModule = (function() {
         listbox.className = 'exhibit-filter-listbox d-none';
         listbox.setAttribute('role', 'listbox');
 
-        sorted_entries.forEach(([uuid, title]) => {
+        /*
+         * Each option needs a real id: aria-activedescendant is resolved by
+         * id, so pointing it at the exhibit uuid (which is only a data-
+         * attribute) referenced nothing and the roving highlight announced
+         * nothing (WCAG 4.1.2).
+         */
+        sorted_entries.forEach(([uuid, title], index) => {
             const li = document.createElement('li');
+            li.id = 'exhibit-filter-option-' + index;
             li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', 'false');
             li.setAttribute('data-uuid', uuid);
             li.className = 'exhibit-filter-option';
             li.textContent = title;
@@ -990,14 +1002,17 @@ const mediaLibraryModule = (function() {
 
         const open_list = () => {
             listbox.classList.remove('d-none');
-            wrapper.setAttribute('aria-expanded', 'true');
+            input.setAttribute('aria-expanded', 'true');
         };
 
         const close_list = () => {
             listbox.classList.add('d-none');
-            wrapper.setAttribute('aria-expanded', 'false');
+            input.setAttribute('aria-expanded', 'false');
             active_index = -1;
-            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => el.classList.remove('active'));
+            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => {
+                el.classList.remove('active');
+                el.setAttribute('aria-selected', 'false');
+            });
             input.removeAttribute('aria-activedescendant');
         };
 
@@ -1009,14 +1024,18 @@ const mediaLibraryModule = (function() {
             const options = get_visible_options();
             if (options.length === 0) return;
 
-            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => el.classList.remove('active'));
+            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => {
+                el.classList.remove('active');
+                el.setAttribute('aria-selected', 'false');
+            });
 
             if (index < 0) index = options.length - 1;
             if (index >= options.length) index = 0;
             active_index = index;
             options[active_index].classList.add('active');
+            options[active_index].setAttribute('aria-selected', 'true');
             options[active_index].scrollIntoView({ block: 'nearest' });
-            input.setAttribute('aria-activedescendant', options[active_index].getAttribute('data-uuid'));
+            input.setAttribute('aria-activedescendant', options[active_index].id);
         };
 
         const apply_filter = (uuid, title) => {
