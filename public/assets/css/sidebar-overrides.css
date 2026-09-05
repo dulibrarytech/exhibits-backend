@@ -366,8 +366,19 @@ aside.left-panel:hover {
         margin-left: 56px;
     }
 
-    /* Rail, not drawer: height follows its own content. */
-    #left-panel .navbar {
+    /*
+     * Rail, not drawer: height follows its own content.
+     *
+     * The theme's rule in this range is `.navbar { height: 100vh }`, written
+     * for its off-canvas sidebar menu but left unscoped — so it also hits the
+     * page header in main-header.ejs, which is `.navbar.fixed-top`. That
+     * header is fixed, opaque white and z-index 1030, so at 100vh it covers
+     * the entire viewport and the whole page paints blank while the content
+     * underneath keeps perfectly correct geometry. Both navbars are pinned
+     * back to auto.
+     */
+    #left-panel .navbar,
+    header .navbar {
         height: auto;
     }
 

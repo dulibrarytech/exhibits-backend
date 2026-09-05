@@ -58,6 +58,74 @@ async function expectNoDocumentScroll(page, label) {
     ).toBeLessThanOrEqual(measured.clientWidth + 1);
 }
 
+/*
+ * PAINT, not geometry.
+ *
+ * The reflow tests below assert layout: box widths, scroll widths, computed
+ * visibility. All of those passed while the dashboard was rendering a
+ * completely blank page at every width <= 768px, because the content was
+ * laid out perfectly and then covered. The theme's `.navbar { height: 100vh }`
+ * in that range is unscoped and also matched the page header in
+ * main-header.ejs, which is `.navbar.fixed-top` — fixed, opaque white,
+ * z-index 1030. At 100vh it painted over the entire viewport.
+ *
+ * Neither the DOM measurements nor axe can see that: the content is present,
+ * correctly sized and reported `visible`; it is simply underneath something.
+ * So these tests use hit-testing, which is the cheapest assertion that
+ * actually depends on paint order.
+ */
+test.describe('page content is not covered', () => {
+
+    /* 768 is the theme breakpoint itself, and 750 is a typical half-screen
+       window — the width this was first reported at. */
+    for (const width of [1280, 768, 750, 320]) {
+
+        test(`content is hittable at ${width}px`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 820 });
+            await seedAuth(page);
+            await stubDashboardDeps(page);
+            await stubExhibitsApi(page, {
+                records: [exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Sample exhibit' })],
+            });
+
+            await page.goto(`${APP_PATH}/exhibits`);
+            await expect(page.locator('table#exhibits tbody tr')).toHaveCount(1);
+
+            const probe = await page.evaluate(() => {
+                const header = document.querySelector('header .navbar');
+                const main = document.querySelector('main.content');
+                const box = main.getBoundingClientRect();
+
+                /* Hit-test the middle of the content column. Whatever is
+                   returned is what a click would land on and what the reader
+                   actually sees at that point. */
+                const x = Math.round(box.left + (box.width / 2));
+                const y = Math.round(Math.min(box.top + 120, window.innerHeight - 10));
+                const hit = document.elementFromPoint(x, y);
+
+                return {
+                    headerHeight: Math.round(header.getBoundingClientRect().height),
+                    viewportHeight: window.innerHeight,
+                    hitInsideMain: hit ? main.contains(hit) : false,
+                    hit: hit ? `${hit.tagName}${hit.id ? '#' + hit.id : ''}.${String(hit.className).split(' ')[0]}` : null,
+                };
+            });
+
+            expect(
+                probe.headerHeight,
+                `the fixed page header is ${probe.headerHeight}px tall in a `
+                + `${probe.viewportHeight}px viewport — it is covering the page`
+            ).toBeLessThan(200);
+
+            expect(
+                probe.hitInsideMain,
+                `the point at the centre of the content column hits ${probe.hit}, `
+                + 'which is outside <main> — something is painted over the content'
+            ).toBe(true);
+        });
+    }
+});
+
 test.describe('WCAG 1.4.10 reflow at 320px', () => {
 
     test.use({ viewport: { width: REFLOW_WIDTH, height: 800 } });
