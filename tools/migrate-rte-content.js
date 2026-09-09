@@ -12,7 +12,9 @@
  *   - h1 → h2; center/div → p; button → unwrapped text
  *   - snaps inline colors to the nearest DU palette color
  *   - converts bare newlines in tag-free values to <p>/<br> markup
- * Then each value runs through its field profile (full/reduced/plain).
+ * Then each value runs through its field profile (full/reduced/plain), and a
+ * whitespace tidy pass clears the blank runs and stranded spacer <br>s that
+ * unwrapping legacy layout markup leaves behind.
  *
  * Dry run (default):  node tools/migrate-rte-content.js
  *                     (writes a diff report to tools/rte-migration-report.txt)
@@ -70,18 +72,38 @@ const PROFILE_FN = {
  * Decodes the legacy VALIDATOR.escape entity set exactly once. Applied only
  * when the value contains no raw markup but does contain escaped markup, so
  * already-decoded values are never double-processed.
+ *
+ * `&amp;` is treated differently from the rest of the set. The vocabulary
+ * gate emits `&amp;` itself for a literal ampersand, so decoding it on sight
+ * fights the gate and makes the migration non-idempotent — a second run
+ * un-escaped three values the first run had correctly escaped. It is
+ * therefore decoded only alongside `&lt;`/`&gt;`, which mark a genuinely
+ * escape-era value. The quote/apostrophe/slash entities never appear in gate
+ * output for text, so they are always safe to decode.
  */
 function decode_legacy_entities(value) {
 
-    if (value.includes('<') || /&(lt|gt|amp|quot|#x27|#x2F|#39);/i.test(value) === false) {
+    if (value.includes('<')) {
         return value;
     }
 
-    return value
+    const has_escaped_tags = /&(lt|gt);/i.test(value);
+
+    if (has_escaped_tags === false && /&(quot|#x27|#x2F|#39);/i.test(value) === false) {
+        return value;
+    }
+
+    const decoded = value
         .replace(/&#x2F;/gi, '/')
         .replace(/&#x27;/g, '\'')
         .replace(/&#39;/g, '\'')
-        .replace(/&quot;/g, '"')
+        .replace(/&quot;/g, '"');
+
+    if (has_escaped_tags === false) {
+        return decoded;
+    }
+
+    return decoded
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&amp;/g, '&');
@@ -206,6 +228,87 @@ function normalize_structure(document) {
     });
 }
 
+/*
+ * Block elements in the editor vocabulary. Whitespace between two of these
+ * is layout noise the browser collapses anyway; whitespace around inline
+ * elements is a real word boundary and must survive.
+ */
+const BLOCK_ELEMENTS = new Set(['P', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+
+function is_block(node) {
+    return node !== null && node.nodeType === 1 && BLOCK_ELEMENTS.has(node.tagName);
+}
+
+/*
+ * True when a node sits at a block boundary — between block elements, or at
+ * the start/end of its container. Whitespace and spacer <br>s in those
+ * positions carry no meaning once the wrapper markup is gone.
+ */
+function at_block_boundary(node) {
+
+    const before = node.previousSibling;
+    const after = node.nextSibling;
+
+    return (before === null || is_block(before)) && (after === null || is_block(after));
+}
+
+/*
+ * Tidies the whitespace left behind when the vocabulary gate unwraps legacy
+ * layout markup. Unwrapping <div class="container"><div class="row"> nesting
+ * leaves the newlines and indentation that separated those tags as text
+ * nodes, so a migrated value arrives full of blank runs, and legacy spacer
+ * <br>s end up stranded between paragraphs.
+ *
+ * Every edit here is render-equivalent — HTML already collapses whitespace
+ * and ignores it between blocks — so this changes the stored bytes, not the
+ * page. Whitespace between inline elements is preserved as a single space.
+ */
+function tidy_whitespace(html) {
+
+    const dom = new JSDOM(`<body>${html}</body>`);
+    const document = dom.window.document;
+
+    /* whitespace-only text: drop at block boundaries, otherwise one space */
+    const walker = document.createTreeWalker(document.body, dom.window.NodeFilter.SHOW_TEXT);
+    const text_nodes = [];
+
+    while (walker.nextNode() !== null) {
+        text_nodes.push(walker.currentNode);
+    }
+
+    for (const node of text_nodes) {
+
+        if (node.nodeValue.trim().length === 0) {
+
+            if (at_block_boundary(node)) {
+                node.remove();
+            } else {
+                node.nodeValue = ' ';
+            }
+
+            continue;
+        }
+
+        node.nodeValue = node.nodeValue.replace(/\s+/g, ' ');
+    }
+
+    /* legacy spacer <br> stranded between blocks */
+    document.querySelectorAll('br').forEach((br) => {
+        if (at_block_boundary(br)) {
+            br.remove();
+        }
+    });
+
+    /* blocks emptied out by the gate */
+    document.querySelectorAll('p, h2, h3, li').forEach((block) => {
+        if (block.textContent.trim().length === 0 && block.children.length === 0) {
+            block.remove();
+        }
+    });
+
+    return document.body.innerHTML.trim();
+}
+
 /* converts a tag-free multi-line value into <p>/<br> markup */
 function newlines_to_markup(value) {
 
@@ -229,6 +332,12 @@ function newlines_to_markup(value) {
 
 /**
  * Full transformation pipeline for one value.
+ *
+ * Whitespace tidying rides along only with values the migration is already
+ * rewriting, and only for the FULL profile — the reduced and plain gates
+ * collapse whitespace themselves. Tidying every value instead would turn
+ * ~470 otherwise-untouched rows into writes for a render-identical result.
+ *
  * @param {string} value
  * @param {string} profile - full | reduced | plain
  * @returns {string}
@@ -238,6 +347,18 @@ function transform(value, profile) {
     if (typeof value !== 'string' || value.trim().length === 0) {
         return value;
     }
+
+    const migrated = migrate_value(value, profile);
+
+    if (migrated === value || profile !== 'full') {
+        return migrated;
+    }
+
+    return tidy_whitespace(migrated);
+}
+
+/* the migration pipeline proper, before whitespace tidying */
+function migrate_value(value, profile) {
 
     let working = decode_legacy_entities(value);
 
