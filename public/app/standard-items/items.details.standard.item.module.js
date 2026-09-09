@@ -20,6 +20,19 @@ const itemsDetailsStandardItemModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — set textContent, never innerHTML, so a
+     * stored value containing markup displays literally instead of rendering.
+     */
+    function set_caption_text(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.textContent = value || '';
+        }
+    }
+
     // const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
@@ -155,7 +168,7 @@ const itemsDetailsStandardItemModule = (function () {
             // (also init'd on this page) reveals/relocates them; here we fill in
             // their values and gate the Embed Item control to audio/video media.
             rteModule.render_static('item-description-input', helperModule.unescape(record.description));
-            rteModule.render_static('item-caption-input', helperModule.unescape(record.caption));
+            set_caption_text(helperModule.unescape(record.caption));
 
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;

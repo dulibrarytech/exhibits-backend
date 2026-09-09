@@ -5,10 +5,23 @@
             <div class="col-12">
                 <div class="form-text text-muted" style="font-size: 17px"><span id="item-caption-input-label">Caption</span>
                 </div>
+                <%
+                /*
+                 * Caption is plain text, not rich text — it is a short label under
+                 * the media, and the server gate holds it at the `plain` profile.
+                 * The details branch keeps the .rte-readonly box so it matches the
+                 * other read-only panels on the page, but it is populated with
+                 * textContent, never innerHTML. role="group" is what lets a div
+                 * legitimately carry aria-labelledby.
+                 */
+                %>
                 <% if (typeof is_details !== 'undefined' && is_details) { %>
-                <div id="item-caption-input" aria-labelledby="item-caption-input-label" class="rte-readonly"></div>
+                <div id="item-caption-input" aria-labelledby="item-caption-input-label" role="group" class="rte-readonly"></div>
                 <% } else { %>
-                <div id="item-caption-input" aria-labelledby="item-caption-input-label" class="rte-container" data-rte="full"></div>
+                <textarea id="item-caption-input"
+                          aria-labelledby="item-caption-input-label"
+                          class="form-control"
+                          rows="2"></textarea>
                 <% } %>
             </div>
         </div>

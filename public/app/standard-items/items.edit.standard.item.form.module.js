@@ -20,6 +20,18 @@ const itemsEditStandardItemFormModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — write it into the textarea directly.
+     */
+    function set_caption_value(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.value = value || '';
+        }
+    }
+
     const APP_PATH = endpointsModule.get_app_path();
     let obj = {};
 
@@ -244,7 +256,7 @@ const itemsEditStandardItemFormModule = (function () {
 
                 // Populate optional Pop-up Window Description + Caption fields
                 rteModule.set_html('item-description-input', helperModule.unescape(record.description));
-                rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
+                set_caption_value(helperModule.unescape(record.caption));
 
                 // Populate the Embed Item flag and sync the description's enabled
                 // state (dispatch 'change' so the common module's listener runs).

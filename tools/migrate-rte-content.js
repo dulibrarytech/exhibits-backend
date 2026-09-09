@@ -70,9 +70,9 @@ const DB = knex({
 const TARGETS = [
     {table: 'tbl_exhibits', key: 'id', fields: {title: 'reduced', subtitle: 'reduced', description: 'full', about_the_curators: 'full', alert_text: 'plain'}},
     {table: 'tbl_heading_items', key: 'id', fields: {text: 'reduced'}},
-    {table: 'tbl_standard_items', key: 'id', fields: {text: 'full', description: 'full', caption: 'full', alt_text: 'plain'}},
-    {table: 'tbl_grid_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'full', alt_text: 'plain'}},
-    {table: 'tbl_timeline_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'full', alt_text: 'plain'}},
+    {table: 'tbl_standard_items', key: 'id', fields: {text: 'full', description: 'full', caption: 'plain', alt_text: 'plain'}},
+    {table: 'tbl_grid_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'plain', alt_text: 'plain'}},
+    {table: 'tbl_timeline_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'plain', alt_text: 'plain'}},
     {table: 'tbl_grids', key: 'id', fields: {text: 'full'}},
     {table: 'tbl_timelines', key: 'id', fields: {text: 'full'}},
     {table: 'tbl_media_library', key: 'id', fields: {name: 'plain', description: 'full', alt_text: 'plain'}}

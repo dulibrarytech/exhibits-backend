@@ -20,6 +20,19 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — set textContent, never innerHTML, so a
+     * stored value containing markup displays literally instead of rendering.
+     */
+    function set_caption_text(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.textContent = value || '';
+        }
+    }
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -275,7 +288,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
                 // Surface the Pop-up Window Description + Caption read-only.
                 rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-                rteModule.render_static('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+                set_caption_text(record.caption ? helperModule.unescape(record.caption) : '');
             }
 
             // Set embed item checkbox from record

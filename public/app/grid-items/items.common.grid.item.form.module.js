@@ -550,7 +550,7 @@ const itemsCommonGridItemFormModule = (function () {
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
                 item.description = rteModule.get_html('item-description-input');
-                item.caption = rteModule.get_html('item-caption-input');
+                item.caption = (document.querySelector('#item-caption-input') || {}).value || '';
 
                 // Validate media content
                 if (!item.media_uuid) {

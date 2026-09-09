@@ -141,7 +141,7 @@ const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 const ITEM_RTE_PROFILES = {
     text: 'full',
     description: 'full',
-    caption: 'full',
+    caption: 'plain',
     alt_text: 'plain'
 };
 

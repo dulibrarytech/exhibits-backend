@@ -20,6 +20,18 @@ const itemsEditGridItemFormModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — write it into the textarea directly.
+     */
+    function set_caption_value(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.value = value || '';
+        }
+    }
+
     // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
@@ -580,7 +592,7 @@ const itemsEditGridItemFormModule = (function () {
 
                 // Populate optional Pop-up Window Description + Caption fields
                 rteModule.set_html('item-description-input', helperModule.unescape(record.description));
-                rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
+                set_caption_value(helperModule.unescape(record.caption));
             }
 
             // Set layout selection

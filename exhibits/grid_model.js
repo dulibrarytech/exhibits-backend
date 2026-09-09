@@ -177,7 +177,7 @@ const GRID_ITEM_RTE_PROFILES = {
     title: 'reduced',
     text: 'full',
     description: 'full',
-    caption: 'full',
+    caption: 'plain',
     alt_text: 'plain'
 };
 
