@@ -66,9 +66,140 @@ const rteModule = (function () {
             toolbar: [
                 ['bold', 'italic', 'underline'],
                 ['clean']
-            ]
+            ],
+            /*
+             * Reduced fields are single-line — they render inside <h*> tags on
+             * the public site and the server's reduced profile flattens block
+             * markup. Quill's own Enter handler is registered AFTER the
+             * bindings passed in here, and the first matching binding whose
+             * handler returns non-true wins, so this suppresses the newline
+             * rather than letting one be typed and silently flattened later.
+             * shiftKey: null means "either", covering Shift+Enter too.
+             */
+            keyboard: {
+                bindings: {
+                    'single line enter': {
+                        key: 'Enter',
+                        shiftKey: null,
+                        handler: function () {
+                            return false;
+                        }
+                    }
+                }
+            }
         }
     };
+
+    /* mirrors ALLOWED_URI_REGEX / BARE_HOST_REGEX in libs/rte_vocabulary.js */
+    const LINK_SCHEME_REGEX = /^(?:https?:|mailto:|tel:|\/(?!\/)|#)/i;
+    const BARE_HOST_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)?$/i;
+
+    /* true once the shared Link blot has been patched (see patch_link_format) */
+    let link_format_patched = false;
+
+    /*
+     * Returns the href to use, or null when the value cannot be made into a
+     * usable link. Kept in step with normalize_href() in
+     * libs/rte_vocabulary.js so the editor stores what the server keeps.
+     */
+    function normalize_link(url) {
+
+        const value = (typeof url === 'string' ? url : '').trim();
+
+        if (value.length === 0) {
+            return null;
+        }
+
+        if (LINK_SCHEME_REGEX.test(value) === true) {
+            return value;
+        }
+
+        if (BARE_HOST_REGEX.test(value) === true) {
+            return 'https://' + value;
+        }
+
+        return null;
+    }
+
+    /*
+     * Teaches the shared Link blot to add a missing scheme.
+     *
+     * Quill tests a typed URL by resolving it against the current page, so
+     * "www.example.com" passes its protocol whitelist and is stored with no
+     * scheme — a relative link the server then has to reject. Normalizing
+     * here means the editor shows the same link the server will keep.
+     * Values normalize_link() cannot repair fall through to Quill's own
+     * sanitizer, which still blocks javascript:/data: URLs.
+     */
+    function patch_link_format() {
+
+        if (link_format_patched === true) {
+            return;
+        }
+
+        const Link = Quill.import('formats/link');
+
+        if (Link === undefined || Link === null || typeof Link.sanitize !== 'function') {
+            return;
+        }
+
+        const quill_sanitize = Link.sanitize;
+
+        Link.sanitize = function (url) {
+
+            const normalized = normalize_link(url);
+
+            if (normalized !== null) {
+                return normalized;
+            }
+
+            return quill_sanitize.call(this, url);
+        };
+
+        link_format_patched = true;
+    }
+
+    /*
+     * Collapses a reduced editor's document to one line, turning each newline
+     * into a space so words either side of a pasted block boundary stay
+     * apart. Inline formatting is preserved — only the insert text changes.
+     * Returns true when the document was rewritten.
+     */
+    function flatten_single_line(quill) {
+
+        const text = quill.getText();
+
+        /* Quill always terminates the document with a newline */
+        if (text.slice(0, -1).indexOf('\n') === -1) {
+            return false;
+        }
+
+        const ops = quill.getContents().ops.map(function (op) {
+
+            if (typeof op.insert !== 'string') {
+                return op;
+            }
+
+            return Object.assign({}, op, {insert: op.insert.replace(/\n/g, ' ')});
+        });
+
+        /* the document-terminating newline became a trailing space */
+        const last = ops[ops.length - 1];
+
+        if (last !== undefined && typeof last.insert === 'string') {
+
+            last.insert = last.insert.replace(/\s+$/, '');
+
+            if (last.insert.length === 0) {
+                ops.pop();
+            }
+        }
+
+        quill.setContents({ops: ops}, 'silent');
+        quill.setSelection(quill.getLength(), 0, 'silent');
+
+        return true;
+    }
 
     /*
      * Accessible names for the Quill toolbar (WCAG 4.1.2 Name, Role, Value).
@@ -334,16 +465,26 @@ const rteModule = (function () {
                 return null;
             }
 
-            const profile_name = profile || container.dataset.rte || 'full';
-            const config = PROFILES[profile_name] || PROFILES.full;
+            patch_link_format();
+
+            const profile_name = PROFILES[profile || container.dataset.rte] !== undefined
+                ? (profile || container.dataset.rte)
+                : 'full';
+            const config = PROFILES[profile_name];
             const is_disabled = container.dataset.rteDisabled === 'true';
+
+            const modules = {
+                toolbar: is_disabled ? false : config.toolbar
+            };
+
+            if (config.keyboard !== undefined) {
+                modules.keyboard = config.keyboard;
+            }
 
             const quill = new Quill(container, {
                 theme: 'snow',
                 formats: config.formats,
-                modules: {
-                    toolbar: is_disabled ? false : config.toolbar
-                },
+                modules: modules,
                 placeholder: container.dataset.rtePlaceholder || '',
                 readOnly: is_disabled
             });
@@ -357,12 +498,23 @@ const rteModule = (function () {
 
             const instance = {
                 quill: quill,
+                profile: profile_name,
                 dirty: false,
                 on_change: null,
                 sync_id: container.dataset.rteSync || null
             };
 
             quill.on('text-change', function (delta, old_delta, source) {
+
+                /*
+                 * Enter is bound away in reduced editors, so a newline here
+                 * arrived by paste. Flatten before syncing so the hidden
+                 * field and the editor agree. setContents is 'silent', which
+                 * cannot re-enter this branch.
+                 */
+                if (source === 'user' && instance.profile === 'reduced') {
+                    flatten_single_line(quill);
+                }
 
                 sync_hidden_field(id, instance);
 
@@ -485,6 +637,12 @@ const rteModule = (function () {
         const value = typeof html === 'string' ? html : '';
         const delta = instance.quill.clipboard.convert({html: value});
         instance.quill.setContents(delta, 'silent');
+
+        /* legacy multi-block values in a single-line field (see H1) */
+        if (instance.profile === 'reduced') {
+            flatten_single_line(instance.quill);
+        }
+
         instance.quill.history.clear();
         instance.dirty = false;
         sync_hidden_field(id, instance);

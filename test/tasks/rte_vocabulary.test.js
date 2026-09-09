@@ -44,10 +44,55 @@ describe('libs/rte_vocabulary — full profile', () => {
     test('link hygiene: safe schemes only, rel forced on target=_blank', () => {
         expect(vocabulary.sanitize_rich_full('<a href="https://du.edu" target="_blank">x</a>'))
             .toBe('<a href="https://du.edu" target="_blank" rel="noopener noreferrer">x</a>');
-        expect(vocabulary.sanitize_rich_full('<a href="javascript:alert(1)">x</a>'))
-            .toBe('<a>x</a>');
         expect(vocabulary.sanitize_rich_full('<a href="mailto:a@du.edu">x</a>'))
             .toBe('<a href="mailto:a@du.edu">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="/exhibits/1">x</a>'))
+            .toBe('<a href="/exhibits/1">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="#section">x</a>'))
+            .toBe('<a href="#section">x</a>');
+    });
+
+    /*
+     * Quill resolves a scheme-less value against the dashboard origin to test
+     * its protocol, so "www.example.com" passes its whitelist and is stored
+     * verbatim. Dropping it here is what made staff links vanish on save.
+     */
+    test('adds https:// to scheme-less hosts instead of dropping the link', () => {
+        expect(vocabulary.sanitize_rich_full('<a href="www.example.com">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="du.edu">x</a>'))
+            .toBe('<a href="https://du.edu">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="libguides.du.edu/c.php?g=629200">x</a>'))
+            .toBe('<a href="https://libguides.du.edu/c.php?g=629200">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="  www.example.com  ">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+    });
+
+    /*
+     * A dangling <a> still picks up the crimson underlined link styling on
+     * the public site, so it reads as a broken link rather than plain text.
+     */
+    test('unwraps anchors whose href cannot be made usable', () => {
+        expect(vocabulary.sanitize_rich_full('<a href="javascript:alert(1)">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="data:text/html,x">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="//evil.test">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="about:blank">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a>x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<p>see <a href="not a url">this</a> now</p>'))
+            .toBe('<p>see this now</p>');
+    });
+
+    /*
+     * Blocks outside the vocabulary are unwrapped, so their boundaries have
+     * to survive as whitespace or adjacent words run together.
+     */
+    test('keeps a word boundary where an out-of-vocabulary block is dropped', () => {
+        expect(vocabulary.sanitize_rich_full('<div>First line</div><div>Second line</div>'))
+            .toBe('First line Second line');
+        expect(vocabulary.sanitize_rich_full('<p>a</p><h1>Heading</h1><p>b</p>'))
+            .toBe('<p>a</p> Heading<p>b</p>');
+        expect(vocabulary.sanitize_rich_full('<table><tr><td>one</td><td>two</td></tr></table>'))
+            .toBe('one two');
     });
 
     test('strips out-of-vocabulary structure but keeps content', () => {
@@ -76,6 +121,27 @@ describe('libs/rte_vocabulary — reduced profile', () => {
         expect(vocabulary.sanitize_rich_reduced('<a href="https://x.test">t</a>')).toBe('t');
         expect(vocabulary.sanitize_rich_reduced('<p>para</p>')).toBe('para');
     });
+
+    /*
+     * Pressing Enter in a reduced editor, or pasting multi-line text into
+     * one, produces block markup the profile has to flatten — the words on
+     * either side of the boundary must not be joined.
+     */
+    test('flattens block boundaries to a single space', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+        expect(vocabulary.sanitize_rich_reduced('<ol><li>one</li><li>two</li></ol>'))
+            .toBe('one two');
+        expect(vocabulary.sanitize_rich_reduced('<div>a</div><div>b</div><div>c</div>'))
+            .toBe('a b c');
+        expect(vocabulary.sanitize_rich_reduced('<p><strong>Bold</strong></p><p>plain</p>'))
+            .toBe('<strong>Bold</strong> plain');
+    });
+
+    test('does not introduce padding around already-flat content', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>Only one line</p>')).toBe('Only one line');
+        expect(vocabulary.sanitize_rich_reduced('  spaced  out  ')).toBe('spaced out');
+    });
 });
 
 describe('libs/rte_vocabulary — plain profile', () => {
@@ -83,6 +149,14 @@ describe('libs/rte_vocabulary — plain profile', () => {
     test('strips all markup, keeps text', () => {
         expect(vocabulary.sanitize_plain('<b>bold</b> text')).toBe('bold text');
         expect(vocabulary.sanitize_plain('plain')).toBe('plain');
+    });
+
+    test('flattens block boundaries to a single space', () => {
+        expect(vocabulary.sanitize_plain('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+        expect(vocabulary.sanitize_plain('a<br>b')).toBe('a b');
+        expect(vocabulary.sanitize_plain('<div>Portrait</div><div>1921</div>'))
+            .toBe('Portrait 1921');
     });
 });
 

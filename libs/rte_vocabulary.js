@@ -55,6 +55,37 @@ const COLOR_STYLE_REGEX = /^\s*color:\s*([^;]+);?\s*$/i;
 const ALLOWED_URI_REGEX = /^(?:https?:|mailto:|tel:|\/(?!\/)|#)/i;
 
 /*
+ * A scheme-less host the author almost certainly meant as a web address:
+ * one or more dot-separated labels ending in an alphabetic TLD, with an
+ * optional port and path/query/fragment. Matched only after
+ * ALLOWED_URI_REGEX has already rejected the value, so "javascript:..."
+ * and "data:..." never reach it (neither carries a dot before its colon).
+ */
+const BARE_HOST_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)?$/i;
+
+/*
+ * Anchors left with no usable href serialize as a bare <a>. They are
+ * unwrapped rather than kept, because the public site styles every anchor
+ * as a crimson underlined link — a dangling one reads as a broken link
+ * instead of the plain text it actually is.
+ */
+const BARE_ANCHOR_REGEX = /<a>([\s\S]*?)<\/a>/g;
+
+/*
+ * Block-level tags whose boundaries carry a word break. When a profile does
+ * not allow one, DOMPurify's KEEP_CONTENT lifts the text straight into the
+ * parent — "<p>First</p><p>Second</p>" becomes "FirstSecond" — so
+ * boundary_hook inserts a space before the element is dropped.
+ */
+const BLOCK_TAGS = new Set([
+    'address', 'article', 'aside', 'blockquote', 'br', 'caption', 'dd', 'div',
+    'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1',
+    'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'ol',
+    'p', 'pre', 'section', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead',
+    'tr', 'ul'
+]);
+
+/*
  * Normalizes a CSS color to a lowercase hex string when possible so palette
  * membership can be checked against ALLOWED_COLORS. rgb(...) values are
  * converted; anything unrecognized returns null and is stripped.
@@ -83,10 +114,66 @@ function normalize_color(value) {
 }
 
 /*
+ * Returns the href to store, or null when the value cannot be made into a
+ * usable link. Values already carrying an allowed scheme (or a root-relative
+ * path / in-page fragment) pass through; a scheme-less host gets https://.
+ *
+ * The editor's link tooltip is the reason the second case exists: Quill
+ * resolves a typed "www.example.com" against the dashboard's own origin to
+ * test its protocol, so the value passes Quill's whitelist and is stored
+ * verbatim, with no scheme. Dropping it here is what made links appear to
+ * vanish on save.
+ */
+function normalize_href(value) {
+
+    const href = value.trim();
+
+    if (href.length === 0) {
+        return null;
+    }
+
+    if (ALLOWED_URI_REGEX.test(href) === true) {
+        return href;
+    }
+
+    if (BARE_HOST_REGEX.test(href) === true) {
+        return 'https://' + href;
+    }
+
+    return null;
+}
+
+/*
+ * uponSanitizeElement hook preserving word boundaries. Fires before the
+ * allow-list decision, so a block element about to be dropped can leave a
+ * space behind in its place. Elements the profile allows are untouched.
+ */
+function boundary_hook(node, data) {
+
+    if (BLOCK_TAGS.has(data.tagName) === false) {
+        return;
+    }
+
+    if (data.allowedTags[data.tagName] === true) {
+        return;
+    }
+
+    const parent = node.parentNode;
+
+    if (parent === null || node.ownerDocument === null) {
+        return;
+    }
+
+    parent.insertBefore(node.ownerDocument.createTextNode(' '), node);
+}
+
+/*
  * afterSanitizeAttributes hook enforcing the FULL profile's attribute rules:
  * - class: only ql-indent-1..8 survive
  * - style: only a palette color survives (normalized to hex)
- * - a: safe href schemes only; target="_blank" forces rel="noopener noreferrer"
+ * - a: href normalized to a safe scheme; target="_blank" forces
+ *      rel="noopener noreferrer"; an unusable href strips the anchor bare so
+ *      BARE_ANCHOR_REGEX can unwrap it afterwards
  */
 function full_profile_hook(node) {
 
@@ -122,10 +209,18 @@ function full_profile_hook(node) {
     if (node.tagName === 'A') {
 
         const href = node.getAttribute('href');
+        const normalized = href === null ? null : normalize_href(href);
 
-        if (href === null || ALLOWED_URI_REGEX.test(href.trim()) === false) {
+        if (normalized === null) {
+
+            /* strip to a bare <a> so the unwrap pass can find it */
             node.removeAttribute('href');
+            node.removeAttribute('target');
+            node.removeAttribute('rel');
+            return;
         }
+
+        node.setAttribute('href', normalized);
 
         if (node.getAttribute('target') === '_blank') {
             node.setAttribute('rel', 'noopener noreferrer');
@@ -136,18 +231,37 @@ function full_profile_hook(node) {
     }
 }
 
-function run_sanitize(value, config, hook) {
+/*
+ * @param {string} value
+ * @param {Object} config - DOMPurify config for the profile
+ * @param {Function} [hook] - afterSanitizeAttributes hook for the profile
+ * @param {boolean} [collapse] - true for the single-line profiles (reduced,
+ *        plain), where the spaces boundary_hook leaves behind should be
+ *        squeezed to one. FULL keeps its whitespace so stored markup stays
+ *        diff-able against what the editor produced.
+ */
+function run_sanitize(value, config, hook, collapse) {
 
     if (typeof value !== 'string' || value.length === 0) {
         return value;
     }
+
+    DOMPURIFY.addHook('uponSanitizeElement', boundary_hook);
 
     if (hook !== undefined) {
         DOMPURIFY.addHook('afterSanitizeAttributes', hook);
     }
 
     try {
-        return DOMPURIFY.sanitize(value, config).trim();
+
+        const sanitized = DOMPURIFY.sanitize(value, config);
+
+        if (collapse === true) {
+            return sanitized.replace(/\s+/g, ' ').trim();
+        }
+
+        return sanitized.trim();
+
     } finally {
         DOMPURIFY.removeAllHooks();
     }
@@ -161,11 +275,17 @@ function run_sanitize(value, config, hook) {
  */
 exports.sanitize_rich_full = function (value) {
 
-    return run_sanitize(value, {
+    const sanitized = run_sanitize(value, {
         ALLOWED_TAGS: FULL_TAGS,
         ALLOWED_ATTR: FULL_ATTRS,
         KEEP_CONTENT: true
     }, full_profile_hook);
+
+    if (typeof sanitized !== 'string') {
+        return sanitized;
+    }
+
+    return sanitized.replace(BARE_ANCHOR_REGEX, '$1').trim();
 };
 
 /**
@@ -179,7 +299,7 @@ exports.sanitize_rich_reduced = function (value) {
         ALLOWED_TAGS: REDUCED_TAGS,
         ALLOWED_ATTR: [],
         KEEP_CONTENT: true
-    });
+    }, undefined, true);
 };
 
 /**
@@ -193,7 +313,7 @@ exports.sanitize_plain = function (value) {
     return run_sanitize(value, {
         ALLOWED_TAGS: [],
         KEEP_CONTENT: true
-    });
+    }, undefined, true);
 };
 
 const PROFILES = {
