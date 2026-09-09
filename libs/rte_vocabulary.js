@@ -32,6 +32,7 @@
  *             ordered/bullet lists, indent classes, H2/H3 headings (h1 and
  *             h4-h6 are remapped into that range), DU-palette text color on
  *             <span style="color: ...">
+ *   linked_text — plain text plus hyperlinks, nothing else (captions)
  *   reduced — inline bold/italic/underline, plus <br> (titles, headings).
  *             Block boundaries collapse to a space, but a <br> that arrives
  *             from pasted markup is preserved, so a stored reduced value can
@@ -53,6 +54,8 @@ const ALLOWED_COLORS = new Set(['#181818', '#8b2332', '#3c7896', '#139aa1', '#6c
 const FULL_TAGS = ['p', 'br', 'strong', 'em', 'u', 'b', 'i', 'a', 'ol', 'ul', 'li', 'h2', 'h3', 'span'];
 const FULL_ATTRS = ['href', 'target', 'rel', 'class', 'style'];
 const REDUCED_TAGS = ['strong', 'em', 'u', 'b', 'i', 'br'];
+const LINKED_TEXT_TAGS = ['a'];
+const LINKED_TEXT_ATTRS = ['href', 'target', 'rel'];
 
 const INDENT_CLASS_REGEX = /^ql-indent-[1-8]$/;
 const COLOR_STYLE_REGEX = /^\s*color:\s*([^;]+);?\s*$/i;
@@ -183,7 +186,42 @@ function boundary_hook(node, data) {
         return;
     }
 
-    parent.insertBefore(node.ownerDocument.createTextNode(' '), node);
+    /*
+     * Both sides, but only where a separator is not already there.
+     *
+     * A space in front alone handles the common "<p>a</p><p>b</p>" shape —
+     * the leading space of the *next* block separates them — but leaves
+     * "<p>a</p>b" and "<h2>a</h2><strong>b</strong>" joined, because nothing
+     * follows the dropped element to supply the break. Inserting on both
+     * sides unconditionally instead doubles the spacing between consecutive
+     * blocks, which the FULL profile would keep (it does not collapse
+     * whitespace runs). Hence the adjacency checks.
+     */
+    if (needs_separator(node.previousSibling, /\s$/) === true) {
+        parent.insertBefore(node.ownerDocument.createTextNode(' '), node);
+    }
+
+    if (needs_separator(node.nextSibling, /^\s/) === true) {
+        parent.insertBefore(node.ownerDocument.createTextNode(' '), node.nextSibling);
+    }
+}
+
+/*
+ * True when `sibling` is content that would butt up against the unwrapped
+ * text. Nothing at the container edge needs a separator, and neither does a
+ * text node that already carries whitespace on the touching side.
+ */
+function needs_separator(sibling, whitespace_edge) {
+
+    if (sibling === null) {
+        return false;
+    }
+
+    if (sibling.nodeType === 3 && whitespace_edge.test(sibling.nodeValue) === true) {
+        return false;
+    }
+
+    return true;
 }
 
 /*
@@ -386,9 +424,43 @@ exports.sanitize_plain = function (value) {
     }, undefined, true);
 };
 
+/**
+ * LINKED_TEXT profile — plain text that may carry hyperlinks, and nothing
+ * else. Used for item captions.
+ *
+ * The caption control is a plain <textarea>, not an editor, so no new
+ * formatting can be authored through the dashboard. Anchors are kept because
+ * existing captions carry source and photo-credit links that render on the
+ * public site, and stripping them would discard the destination URLs
+ * irrecoverably — the link text survives a `plain` pass, the href does not.
+ *
+ * Anchor handling matches the FULL profile: scheme-less hosts are normalized,
+ * target="_blank" forces rel, and an anchor whose href cannot be made usable
+ * is unwrapped rather than left dangling. Everything else is stripped, and
+ * block boundaries collapse to a single space as in `plain`.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+exports.sanitize_linked_text = function (value) {
+
+    const sanitized = run_sanitize(value, {
+        ALLOWED_TAGS: LINKED_TEXT_TAGS,
+        ALLOWED_ATTR: LINKED_TEXT_ATTRS,
+        KEEP_CONTENT: true
+    }, full_profile_hook, true);
+
+    if (typeof sanitized !== 'string') {
+        return sanitized;
+    }
+
+    return sanitized.replace(BARE_ANCHOR_REGEX, '$1').trim();
+};
+
 const PROFILES = {
     full: exports.sanitize_rich_full,
     reduced: exports.sanitize_rich_reduced,
+    linked_text: exports.sanitize_linked_text,
     plain: exports.sanitize_plain
 };
 

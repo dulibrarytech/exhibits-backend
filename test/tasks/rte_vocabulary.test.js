@@ -89,9 +89,14 @@ describe('libs/rte_vocabulary — full profile', () => {
     test('keeps a word boundary where an out-of-vocabulary block is dropped', () => {
         expect(vocabulary.sanitize_rich_full('<div>First line</div><div>Second line</div>'))
             .toBe('First line Second line');
-        /* h1 is remapped rather than dropped now — blockquote still drops */
+        /*
+         * h1 is remapped rather than dropped now — blockquote still drops.
+         * The separator appears on BOTH sides of the unwrapped text; the
+         * trailing one is invisible when rendered (a block follows) but keeps
+         * the rule uniform, and is what stops "<p>a</p>b" joining.
+         */
         expect(vocabulary.sanitize_rich_full('<p>a</p><blockquote>Quoted</blockquote><p>b</p>'))
-            .toBe('<p>a</p> Quoted<p>b</p>');
+            .toBe('<p>a</p> Quoted <p>b</p>');
         expect(vocabulary.sanitize_rich_full('<table><tr><td>one</td><td>two</td></tr></table>'))
             .toBe('one two');
     });
@@ -171,9 +176,60 @@ describe('libs/rte_vocabulary — reduced profile', () => {
             .toBe('<strong>Bold</strong> plain');
     });
 
+    /*
+     * The first version of boundary_hook inserted a space only BEFORE a
+     * dropped block, which handles "<p>a</p><p>b</p>" (the next block's
+     * leading space separates them) but silently joined anything that
+     * FOLLOWED one.
+     */
+    test('separates a dropped block from whatever follows it', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>First</p>Second')).toBe('First Second');
+        expect(vocabulary.sanitize_rich_reduced('<h2>Head</h2><strong>bold</strong>'))
+            .toBe('Head <strong>bold</strong>');
+        expect(vocabulary.sanitize_plain('<ul><li>one</li></ul>after')).toBe('one after');
+        expect(vocabulary.sanitize_plain('<div><p>a</p></div>b')).toBe('a b');
+    });
+
     test('does not introduce padding around already-flat content', () => {
         expect(vocabulary.sanitize_rich_reduced('<p>Only one line</p>')).toBe('Only one line');
         expect(vocabulary.sanitize_rich_reduced('  spaced  out  ')).toBe('spaced out');
+    });
+});
+
+describe('libs/rte_vocabulary — linked_text profile', () => {
+
+    /*
+     * Captions are authored in a plain <textarea>, so no new formatting can
+     * be created — but existing captions carry photo-credit and source links
+     * whose destination URL is unrecoverable if the anchor is stripped.
+     */
+    test('keeps hyperlinks and strips everything else', () => {
+        expect(vocabulary.sanitize_linked_text('Credit: <a href="https://du.edu">DU</a>.'))
+            .toBe('Credit: <a href="https://du.edu">DU</a>.');
+        expect(vocabulary.sanitize_linked_text('Book cover. <i>Courtesy</i> of DU.'))
+            .toBe('Book cover. Courtesy of DU.');
+        expect(vocabulary.sanitize_linked_text('<h2>Head</h2><strong>b</strong><ul><li>x</li></ul>'))
+            .toBe('Head b x');
+    });
+
+    test('applies the same anchor hygiene as the full profile', () => {
+        expect(vocabulary.sanitize_linked_text('<a href="www.example.com">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+        expect(vocabulary.sanitize_linked_text('see <a href="javascript:alert(1)">this</a> now'))
+            .toBe('see this now');
+        expect(vocabulary.sanitize_linked_text('<a href="https://du.edu" target="_blank">x</a>'))
+            .toBe('<a href="https://du.edu" target="_blank" rel="noopener noreferrer">x</a>');
+    });
+
+    test('flattens block boundaries to a single space, like plain', () => {
+        expect(vocabulary.sanitize_linked_text('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+    });
+
+    test('removes script and event handlers', () => {
+        expect(vocabulary.sanitize_linked_text('a<script>alert(1)</script>b')).toBe('ab');
+        expect(vocabulary.sanitize_linked_text('<a href="https://du.edu" onclick="evil()">x</a>'))
+            .toBe('<a href="https://du.edu">x</a>');
     });
 });
 
