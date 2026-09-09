@@ -24,8 +24,9 @@
  * and instantiated by rteModule.init_all() (or rteModule.init(id)).
  *
  * Profiles:
- *   full    — bold/italic/underline, DU-palette text color, H2/H3 headings,
- *             links, ordered/bullet lists, indent
+ *   full    — bold/italic/underline, DU-palette text color, H2/H3 headings
+ *             (pasted h1/h4/h5/h6 are remapped into that range), links,
+ *             ordered/bullet lists, indent
  *   reduced — bold/italic/underline only (titles, subtitles, headings —
  *             fields rendered inside <h*> tags on the public site)
  *
@@ -157,6 +158,43 @@ const rteModule = (function () {
         };
 
         link_format_patched = true;
+    }
+
+    /*
+     * Pasted heading levels mapped to the two the vocabulary allows.
+     *
+     * Quill's header format accepts h1-h6 even though the toolbar picker
+     * offers only H2 and H3, so a pasted h1/h4/h5/h6 survives into the editor
+     * looking like a heading — and is then stripped to plain text by the
+     * server gate, which allows h2/h3 only. Mapping them at the clipboard
+     * boundary means the editor shows what the save will actually keep.
+     *
+     * h1 goes up to h2 because public pages reserve h1 for the exhibit title
+     * (the same choice tools/migrate-rte-content.js makes); h4-h6 come down
+     * to h3, the deepest level available, so the subordinate-heading intent
+     * survives.
+     */
+    const HEADING_LEVEL_MAP = {1: 2, 4: 3, 5: 3, 6: 3};
+
+    function register_heading_matcher(quill) {
+
+        Object.keys(HEADING_LEVEL_MAP).forEach(function (level) {
+
+            const from = Number(level);
+            const to = HEADING_LEVEL_MAP[level];
+
+            quill.clipboard.addMatcher('H' + level, function (node, delta) {
+
+                delta.ops.forEach(function (op) {
+                    if (op.attributes !== undefined && op.attributes !== null &&
+                        op.attributes.header === from) {
+                        op.attributes.header = to;
+                    }
+                });
+
+                return delta;
+            });
+        });
     }
 
     /*
@@ -488,6 +526,11 @@ const rteModule = (function () {
                 placeholder: container.dataset.rtePlaceholder || '',
                 readOnly: is_disabled
             });
+
+            /* headings outside the vocabulary are remapped on paste */
+            if (config.formats.indexOf('header') !== -1) {
+                register_heading_matcher(quill);
+            }
 
             /* accessible naming — see label_editor / label_toolbar */
             label_editor(container, quill);
