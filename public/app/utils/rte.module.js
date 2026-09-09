@@ -45,7 +45,7 @@ const rteModule = (function () {
     /*
      * DU palette swatches. Empty string = "remove color" swatch.
      * Keep in sync with the server-side allow-list in libs/rte_vocabulary.js
-     * and the migration color map in scripts/migrate_rte_content.js.
+     * and the migration color map in tools/migrate-rte-content.js.
      */
     const DU_PALETTE = ['', '#181818', '#8B2332', '#3C7896', '#139AA1', '#6C757D'];
 
@@ -165,9 +165,11 @@ const rteModule = (function () {
      *
      * Quill's header format accepts h1-h6 even though the toolbar picker
      * offers only H2 and H3, so a pasted h1/h4/h5/h6 survives into the editor
-     * looking like a heading — and is then stripped to plain text by the
-     * server gate, which allows h2/h3 only. Mapping them at the clipboard
-     * boundary means the editor shows what the save will actually keep.
+     * looking like a heading. The server gate maps them the same way
+     * (remap_headings in libs/rte_vocabulary.js), so the value would survive
+     * either way — mapping here as well means the EDITOR shows the level the
+     * save will keep, instead of displaying an h1 that silently becomes an
+     * h2. Keep the two maps in step.
      *
      * h1 goes up to h2 because public pages reserve h1 for the exhibit title
      * (the same choice tools/migrate-rte-content.js makes); h4-h6 come down

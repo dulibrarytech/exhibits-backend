@@ -29,9 +29,13 @@
  *
  * Profiles:
  *   full    — paragraphs/line breaks, bold/italic/underline, links,
- *             ordered/bullet lists, indent classes, H2/H3 headings,
- *             DU-palette text color on <span style="color: ...">
- *   reduced — inline bold/italic/underline only (titles, headings)
+ *             ordered/bullet lists, indent classes, H2/H3 headings (h1 and
+ *             h4-h6 are remapped into that range), DU-palette text color on
+ *             <span style="color: ...">
+ *   reduced — inline bold/italic/underline, plus <br> (titles, headings).
+ *             Block boundaries collapse to a space, but a <br> that arrives
+ *             from pasted markup is preserved, so a stored reduced value can
+ *             still carry a hard line break.
  *   plain   — all markup stripped; text content only
  */
 
@@ -42,7 +46,7 @@ const CREATEDOMPURIFY = require('dompurify'),
 
 /*
  * DU palette — keep in sync with DU_PALETTE in public/app/utils/rte.module.js
- * and the migration color map in scripts/migrate_rte_content.js.
+ * and the migration color map in tools/migrate-rte-content.js.
  */
 const ALLOWED_COLORS = new Set(['#181818', '#8b2332', '#3c7896', '#139aa1', '#6c757d']);
 
@@ -58,8 +62,10 @@ const ALLOWED_URI_REGEX = /^(?:https?:|mailto:|tel:|\/(?!\/)|#)/i;
  * A scheme-less host the author almost certainly meant as a web address:
  * one or more dot-separated labels ending in an alphabetic TLD, with an
  * optional port and path/query/fragment. Matched only after
- * ALLOWED_URI_REGEX has already rejected the value, so "javascript:..."
- * and "data:..." never reach it (neither carries a dot before its colon).
+ * ALLOWED_URI_REGEX has already rejected the value. "javascript:..." and
+ * "data:..." DO reach this test — rejection is what routes them here — but
+ * neither matches, because the pattern requires a dotted host before any
+ * colon and both carry their colon in the first label.
  */
 const BARE_HOST_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)?$/i;
 
@@ -70,6 +76,19 @@ const BARE_HOST_REGEX = /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{
  * instead of the plain text it actually is.
  */
 const BARE_ANCHOR_REGEX = /<a>([\s\S]*?)<\/a>/g;
+
+/*
+ * Heading levels outside the vocabulary, mapped to the nearest one inside it:
+ * h1 up to h2 (public pages reserve h1 for the exhibit title), h4-h6 down to
+ * h3, the deepest level available. Keep in sync with HEADING_LEVEL_MAP in
+ * public/app/utils/rte.module.js.
+ *
+ * The editor remaps these at the clipboard boundary, so this pass exists for
+ * the paths that never touch an editor — imports and direct API writes — where
+ * an unmapped heading would otherwise be flattened to plain text.
+ */
+const HEADING_LEVEL_MAP = {h1: 'h2', h4: 'h3', h5: 'h3', h6: 'h3'};
+const OUT_OF_RANGE_HEADING_REGEX = /<h[1456][\s/>]/i;
 
 /*
  * Block-level tags whose boundaries carry a word break. When a profile does
@@ -213,7 +232,13 @@ function full_profile_hook(node) {
 
         if (normalized === null) {
 
-            /* strip to a bare <a> so the unwrap pass can find it */
+            /*
+             * Strip to a bare <a> so the unwrap pass can find it. class and
+             * style are handled above and are already gone by this point for
+             * anything outside the vocabulary; an anchor that legitimately
+             * keeps one would not match BARE_ANCHOR_REGEX and would survive
+             * as a styled, hrefless anchor.
+             */
             node.removeAttribute('href');
             node.removeAttribute('target');
             node.removeAttribute('rel');
@@ -240,6 +265,49 @@ function full_profile_hook(node) {
  *        squeezed to one. FULL keeps its whitespace so stored markup stays
  *        diff-able against what the editor produced.
  */
+/*
+ * Rewrites out-of-vocabulary headings before the value reaches DOMPurify.
+ * @param {string} value
+ * @returns {string} the value with h1 -> h2 and h4-h6 -> h3
+ *
+ * It has to happen here rather than in a hook: DOMPurify offers no safe point
+ * to rename an element. An afterSanitizeAttributes hook runs too late (the
+ * removal is already decided), mutating hookEvent.tagName has no effect (the
+ * allow-list is checked against DOMPurify's own local copy), and replacing the
+ * node during uponSanitizeElement makes DOMPurify refuse to sanitize at all
+ * ("a node selected for removal could not be detached from its tree").
+ *
+ * The regex guard keeps the cost off the common path — only a value that
+ * actually contains one of these headings pays for the extra parse.
+ */
+function remap_headings(value) {
+
+    if (OUT_OF_RANGE_HEADING_REGEX.test(value) === false) {
+        return value;
+    }
+
+    const dom = new JSDOM(`<body>${value}</body>`);
+    const document = dom.window.document;
+
+    document.querySelectorAll('h1, h4, h5, h6').forEach((heading) => {
+
+        const replacement = document.createElement(HEADING_LEVEL_MAP[heading.tagName.toLowerCase()]);
+
+        /* attributes ride along; the profile hook filters them afterwards */
+        for (const attribute of Array.from(heading.attributes)) {
+            replacement.setAttribute(attribute.name, attribute.value);
+        }
+
+        while (heading.firstChild !== null) {
+            replacement.appendChild(heading.firstChild);
+        }
+
+        heading.replaceWith(replacement);
+    });
+
+    return document.body.innerHTML;
+}
+
 function run_sanitize(value, config, hook, collapse) {
 
     if (typeof value !== 'string' || value.length === 0) {
@@ -275,7 +343,9 @@ function run_sanitize(value, config, hook, collapse) {
  */
 exports.sanitize_rich_full = function (value) {
 
-    const sanitized = run_sanitize(value, {
+    const prepared = typeof value === 'string' ? remap_headings(value) : value;
+
+    const sanitized = run_sanitize(prepared, {
         ALLOWED_TAGS: FULL_TAGS,
         ALLOWED_ATTR: FULL_ATTRS,
         KEEP_CONTENT: true

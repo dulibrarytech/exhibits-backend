@@ -89,16 +89,49 @@ describe('libs/rte_vocabulary — full profile', () => {
     test('keeps a word boundary where an out-of-vocabulary block is dropped', () => {
         expect(vocabulary.sanitize_rich_full('<div>First line</div><div>Second line</div>'))
             .toBe('First line Second line');
-        expect(vocabulary.sanitize_rich_full('<p>a</p><h1>Heading</h1><p>b</p>'))
-            .toBe('<p>a</p> Heading<p>b</p>');
+        /* h1 is remapped rather than dropped now — blockquote still drops */
+        expect(vocabulary.sanitize_rich_full('<p>a</p><blockquote>Quoted</blockquote><p>b</p>'))
+            .toBe('<p>a</p> Quoted<p>b</p>');
         expect(vocabulary.sanitize_rich_full('<table><tr><td>one</td><td>two</td></tr></table>'))
             .toBe('one two');
     });
 
     test('strips out-of-vocabulary structure but keeps content', () => {
         expect(vocabulary.sanitize_rich_full('<button style="color:#fff">CLICK</button>')).toBe('CLICK');
-        expect(vocabulary.sanitize_rich_full('<h1>big</h1>')).toBe('big');
+        expect(vocabulary.sanitize_rich_full('<section>chunk</section>')).toBe('chunk');
         expect(vocabulary.sanitize_rich_full('<table><tr><td>cell</td></tr></table>')).toBe('cell');
+        /* headings are the exception — they are remapped, not stripped */
+        expect(vocabulary.sanitize_rich_full('<h1>big</h1>')).toBe('<h2>big</h2>');
+    });
+
+    /*
+     * Quill remaps these at the clipboard boundary, so this covers the paths
+     * that never touch an editor — imports and direct API writes. Without it
+     * an h1 arriving that way is flattened to plain text.
+     */
+    test('remaps out-of-vocabulary headings instead of flattening them', () => {
+        expect(vocabulary.sanitize_rich_full('<h1>Section</h1><p>body</p>'))
+            .toBe('<h2>Section</h2><p>body</p>');
+        expect(vocabulary.sanitize_rich_full('<h4>A</h4><h5>B</h5><h6>C</h6>'))
+            .toBe('<h3>A</h3><h3>B</h3><h3>C</h3>');
+        expect(vocabulary.sanitize_rich_full('<h2>Two</h2><h3>Three</h3>'))
+            .toBe('<h2>Two</h2><h3>Three</h3>');
+        expect(vocabulary.sanitize_rich_full('<div><h1>Inside a div</h1></div>'))
+            .toBe('<h2>Inside a div</h2>');
+    });
+
+    test('remapped headings keep their content and still lose bad attributes', () => {
+        expect(vocabulary.sanitize_rich_full('<h1>Text with <strong>bold</strong></h1>'))
+            .toBe('<h2>Text with <strong>bold</strong></h2>');
+        expect(vocabulary.sanitize_rich_full('<h1 class="ql-indent-2 junk" style="color: #8B2332">S</h1>'))
+            .toBe('<h2 class="ql-indent-2" style="color: #8b2332">S</h2>');
+        expect(vocabulary.sanitize_rich_full('<h1 style="font-size: 40px" onclick="evil()">B</h1>'))
+            .toBe('<h2>B</h2>');
+    });
+
+    test('reduced and plain still flatten every heading level', () => {
+        expect(vocabulary.sanitize_rich_reduced('<h1>x</h1><h4>y</h4>')).toBe('x y');
+        expect(vocabulary.sanitize_plain('<h1>x</h1><h4>y</h4>')).toBe('x y');
     });
 
     test('removes script/style entirely', () => {
