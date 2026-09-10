@@ -24,9 +24,10 @@
  * and instantiated by rteModule.init_all() (or rteModule.init(id)).
  *
  * Profiles:
- *   full    — bold/italic/underline, DU-palette text color, H2/H3 headings
- *             (pasted h1/h4/h5/h6 are remapped into that range), links,
- *             ordered/bullet lists, indent
+ *   full    — bold/italic/underline, DU-palette text color, links,
+ *             ordered/bullet lists, indent. No heading control: headings
+ *             cannot be authored, but pasted h1-h6 are remapped into the
+ *             h2/h3 the gate allows, and existing headings are preserved.
  *   reduced — bold/italic/underline only (titles, subtitles, headings —
  *             fields rendered inside <h*> tags on the public site)
  *
@@ -52,8 +53,20 @@ const rteModule = (function () {
     const PROFILES = {
         full: {
             formats: ['bold', 'italic', 'underline', 'color', 'header', 'link', 'list', 'indent'],
+            /*
+             * No heading picker: staff author body prose, and the site's
+             * heading structure comes from exhibit/item titles and heading
+             * items, not from inline headings inside a text field.
+             *
+             * `header` deliberately STAYS in `formats` below. Dropping it
+             * would make Quill strip h2/h3 on load as well as on paste —
+             * verified: an existing "<h2>Beacon Printing</h2>" comes back as
+             * "<p>Beacon Printing</p>", and the next save would persist that
+             * loss. Keeping it means the 19 stored values that already carry
+             * a heading survive, and pasted headings still route through
+             * HEADING_LEVEL_MAP into the h2/h3 the gate allows.
+             */
             toolbar: [
-                [{header: [2, 3, false]}],
                 ['bold', 'italic', 'underline'],
                 [{color: DU_PALETTE}],
                 ['link'],
@@ -163,9 +176,9 @@ const rteModule = (function () {
     /*
      * Pasted heading levels mapped to the two the vocabulary allows.
      *
-     * Quill's header format accepts h1-h6 even though the toolbar picker
-     * offers only H2 and H3, so a pasted h1/h4/h5/h6 survives into the editor
-     * looking like a heading. The server gate maps them the same way
+     * Quill's header format accepts h1-h6, and the toolbar no longer offers
+     * a heading control at all, so any heading in the editor arrived by paste
+     * or from a stored value. The server gate maps them the same way
      * (remap_headings in libs/rte_vocabulary.js), so the value would survive
      * either way — mapping here as well means the EDITOR shows the level the
      * save will keep, instead of displaying an h1 that silently becomes an
@@ -255,7 +268,6 @@ const rteModule = (function () {
      * are never overwritten.
      */
     const PICKER_LABELS = {
-        'ql-header': 'Heading level',
         'ql-color': 'Text color',
         'ql-background': 'Background color',
         'ql-align': 'Text alignment',
@@ -280,17 +292,6 @@ const rteModule = (function () {
     const BUTTON_VALUE_LABELS = {
         'ql-list': {ordered: 'Numbered list', bullet: 'Bulleted list'},
         'ql-indent': {'-1': 'Decrease indent', '+1': 'Increase indent'}
-    };
-
-    /* header picker option values -> readable names */
-    const HEADER_ITEM_LABELS = {
-        '': 'Normal text',
-        '1': 'Heading 1',
-        '2': 'Heading 2',
-        '3': 'Heading 3',
-        '4': 'Heading 4',
-        '5': 'Heading 5',
-        '6': 'Heading 6'
     };
 
     /*
@@ -387,11 +388,6 @@ const rteModule = (function () {
                 }
 
                 const value = item.getAttribute('data-value') || '';
-
-                if (key === 'ql-header') {
-                    item.setAttribute('aria-label', HEADER_ITEM_LABELS[value] || 'Normal text');
-                    return;
-                }
 
                 if (key === 'ql-color' || key === 'ql-background') {
                     item.setAttribute('aria-label', value.length > 0

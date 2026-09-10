@@ -65,6 +65,34 @@ test.describe('RTE vocabulary — full profile (standard item text)', () => {
         }
     });
 
+    /*
+     * The heading picker was removed from the toolbar on 2026-09-10. `header`
+     * stays in `formats` on purpose — dropping it makes Quill strip h2/h3 on
+     * LOAD as well as paste, which would destroy the stored headings.
+     */
+    test('offers no heading control, but still preserves headings', async ({ page }) => {
+        const toolbar = await page.evaluate(() => {
+            const quill = window.Quill.find(document.getElementById('item-text-input'));
+            const container = quill.getModule('toolbar').container;
+            return {
+                hasHeadingPicker: container.querySelector('.ql-header') !== null,
+                controls: [...container.querySelectorAll('button, .ql-picker')]
+                    .map((el) => [...el.classList].find((c) => c.startsWith('ql-'))),
+            };
+        });
+
+        expect(toolbar.hasHeadingPicker).toBe(false);
+        expect(toolbar.controls).not.toContain('ql-header');
+        /* the rest of the toolbar is unchanged */
+        expect(toolbar.controls).toEqual(
+            expect.arrayContaining(['ql-bold', 'ql-italic', 'ql-underline', 'ql-color', 'ql-link', 'ql-clean'])
+        );
+
+        /* a stored heading still round-trips */
+        expect(await paste(page, 'item-text-input', '<h2>Beacon Printing</h2><p>body</p>'))
+            .toBe('<h2>Beacon Printing</h2><p>body</p>');
+    });
+
     test('leaves h2 and h3 untouched', async ({ page }) => {
         expect(await paste(page, 'item-text-input', '<h2>Two</h2>')).toBe('<h2>Two</h2>');
         expect(await paste(page, 'item-text-input', '<h3>Three</h3>')).toBe('<h3>Three</h3>');
