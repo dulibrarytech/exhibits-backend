@@ -7,8 +7,11 @@
                 </div>
                 <%
                 /*
-                 * Caption is plain text, not rich text — it is a short label under
-                 * the media, and the server gate holds it at the `plain` profile.
+                 * Caption has no editor — it is a short label under the media.
+                 * The gate is `linked_text`, NOT `plain`: existing captions carry
+                 * photo-credit hyperlinks whose href a plain pass would discard,
+                 * so anchors are kept and everything else is stripped. A typed
+                 * anchor is therefore preserved too.
                  * The details branch keeps the .rte-readonly box so it matches the
                  * other read-only panels on the page, but it is populated with
                  * textContent, never innerHTML. role="group" is what lets a div

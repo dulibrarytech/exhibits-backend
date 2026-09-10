@@ -10,7 +10,8 @@
  * These lock in three things:
  *   - the control is a <textarea>, with no Quill editor mounted on it
  *   - the submitted value is bare text, NOT the `<p>…</p>` a full-profile
- *     editor produces (the server gate holds caption at the `plain` profile)
+ *     editor produces (the gate holds caption at `linked_text`, which keeps
+ *     anchors and strips everything else)
  *   - the details page renders it as static text
  */
 

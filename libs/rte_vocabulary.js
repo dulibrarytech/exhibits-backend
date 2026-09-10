@@ -23,9 +23,12 @@
  *
  * The global request middleware (libs/dom.js) is an XSS backstop with
  * DOMPurify's default allow-list. This module is the content gate: it
- * normalizes staff-entered rich text to exactly what the dashboard editors
- * (public/app/utils/rte.module.js) can produce, so nothing outside the
- * editor vocabulary reaches the database.
+ * constrains what may be STORED in each field.
+ *
+ * That is a separate question from what may be AUTHORED. Several fields —
+ * item caption, heading text — have a profile here but no editor at all;
+ * their control is a plain <textarea>, so markup typed straight into one is
+ * governed by the profile rather than by a toolbar.
  *
  * Profiles:
  *   full    — paragraphs/line breaks, bold/italic/underline, links,
@@ -299,9 +302,9 @@ function full_profile_hook(node) {
  * @param {Object} config - DOMPurify config for the profile
  * @param {Function} [hook] - afterSanitizeAttributes hook for the profile
  * @param {boolean} [collapse] - true for the single-line profiles (reduced,
- *        plain), where the spaces boundary_hook leaves behind should be
- *        squeezed to one. FULL keeps its whitespace so stored markup stays
- *        diff-able against what the editor produced.
+ *        linked_text, plain), where the spaces boundary_hook leaves behind
+ *        should be squeezed to one. FULL keeps its whitespace so stored
+ *        markup stays diff-able against what the editor produced.
  */
 /*
  * Rewrites out-of-vocabulary headings before the value reaches DOMPurify.
@@ -374,8 +377,9 @@ function run_sanitize(value, config, hook, collapse) {
 }
 
 /**
- * FULL profile — item/container text, descriptions, captions, exhibit
- * introduction, about the curators, media library description.
+ * FULL profile — item/container text, descriptions, exhibit introduction,
+ * about the curators, media library description. (Captions are NOT full —
+ * they are `linked_text`; see sanitize_linked_text below.)
  * @param {string} value
  * @returns {string}
  */
