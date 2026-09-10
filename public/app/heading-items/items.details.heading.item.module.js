@@ -88,7 +88,12 @@ const itemsDetailsHeadingModule = (function () {
         }
 
         domModule.html('#created', item_created);
-        rteModule.set_html('item-heading-text-input', helperModule.unescape(record.text));
+        /*
+         * Static box, not a disabled editor. render_static sanitizes and sets
+         * innerHTML — correct here, because the reduced gate legitimately
+         * stores b/i/u markup that should display formatted, not literally.
+         */
+        rteModule.render_static('item-heading-text-input', helperModule.unescape(record.text));
         domModule.set_value('#item-heading-type-input', record.type);
 
         if (is_published === 1) {

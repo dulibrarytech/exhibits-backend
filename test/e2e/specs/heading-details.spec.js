@@ -39,11 +39,12 @@ test.describe('Heading details page (items.details.heading.item.module)', () => 
 
         await page.goto(`${APP_PATH}/items/heading/details?exhibit_id=${EXHIBIT_UUID}&item_id=${HEADING_UUID}`);
 
-        await expect(page.locator('#item-heading-text-input .ql-editor')).toHaveText('Read-only heading');
+        await expect(page.locator('#item-heading-text-input')).toHaveText('Read-only heading');
         await expect(page.locator('#item-heading-type-input')).toHaveValue('heading');
 
         // The details EJS renders inputs with the disabled attribute set.
-        await expect(page.locator('#item-heading-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
+        // Details renders a static .rte-readonly box now, not a disabled editor.
+        await expect(page.locator('#item-heading-text-input')).toHaveClass(/rte-readonly/);
         await expect(page.locator('#item-heading-type-input')).toBeDisabled();
 
         // Save button is hidden in details mode; Edit is the primary action.

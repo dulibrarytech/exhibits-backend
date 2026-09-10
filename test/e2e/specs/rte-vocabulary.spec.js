@@ -19,9 +19,7 @@ const { test, expect } = require('@playwright/test');
 const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
-    stubHeadingPageDeps,
     stubStandardItemApi,
-    stubHeadingRecordsApi,
     exhibitFixture,
 } = require('../fixtures/api-stubs');
 
@@ -106,18 +104,20 @@ test.describe('RTE vocabulary — full profile (standard item text)', () => {
     });
 });
 
-test.describe('RTE vocabulary — reduced profile (heading text)', () => {
+test.describe('RTE vocabulary — reduced profile (exhibit title)', () => {
 
+    /*
+     * Exhibit title, not heading text: Heading Text lost its editor on
+     * 2026-09-09 and is a plain textarea now. Exhibit title/subtitle and the
+     * grid/timeline item titles are the remaining reduced-profile editors.
+     */
     test.beforeEach(async ({ page }) => {
         await seedAuth(page);
-        await stubHeadingPageDeps(page, {
-            exhibit: {
-                record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'RTE host exhibit' }),
-            },
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
         });
-        await stubHeadingRecordsApi(page, { exhibitId: EXHIBIT_UUID });
-        await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}`);
-        await expect(page.locator('#item-heading-text-input')).toBeVisible();
+        await page.goto(`${APP_PATH}/exhibits/exhibit`);
+        await expect(page.locator('#exhibit-title-input')).toBeVisible();
     });
 
     /*
@@ -125,27 +125,27 @@ test.describe('RTE vocabulary — reduced profile (heading text)', () => {
      * server joined the words either side of it ("FirstSecond").
      */
     test('flattens pasted blocks to one line, keeping the word boundary', async ({ page }) => {
-        expect(await paste(page, 'item-heading-text-input', '<p>First line</p><p>Second line</p>'))
+        expect(await paste(page, 'exhibit-title-input', '<p>First line</p><p>Second line</p>'))
             .toBe('<p>First line Second line</p>');
 
-        expect(await paste(page, 'item-heading-text-input', '<ol><li>one</li><li>two</li></ol>'))
+        expect(await paste(page, 'exhibit-title-input', '<ol><li>one</li><li>two</li></ol>'))
             .toBe('<p>one two</p>');
     });
 
     test('keeps inline formatting while flattening', async ({ page }) => {
-        expect(await paste(page, 'item-heading-text-input', '<p><strong>Bold</strong></p><p>plain</p>'))
+        expect(await paste(page, 'exhibit-title-input', '<p><strong>Bold</strong></p><p>plain</p>'))
             .toBe('<p><strong>Bold</strong> plain</p>');
     });
 
     test('Enter does not create a second line', async ({ page }) => {
-        await page.fill('#item-heading-text-input .ql-editor', 'First line');
-        await page.click('#item-heading-text-input .ql-editor');
+        await page.fill('#exhibit-title-input .ql-editor', 'First line');
+        await page.click('#exhibit-title-input .ql-editor');
         await page.keyboard.press('End');
         await page.keyboard.press('Enter');
         await page.keyboard.type('Second line');
 
         const value = await page.evaluate(() => {
-            return rteModule.get_html('item-heading-text-input');
+            return rteModule.get_html('exhibit-title-input');
         });
 
         expect(value).toBe('<p>First lineSecond line</p>');

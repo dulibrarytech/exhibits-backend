@@ -19,6 +19,7 @@ const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
     stubStandardItemApi,
+    stubHeadingRecordsApi,
     stubGridItemRecordApi,
     stubTimelineItemApi,
     stubMediaApi,
@@ -154,5 +155,65 @@ test.describe('Caption field is plain text, not an RTE', () => {
 
         await expect(page.locator(CAPTION)).toHaveText('Read-only caption');
         await expect(page.locator(`${CAPTION} .ql-editor`)).toHaveCount(0);
+    });
+});
+
+test.describe('Heading Text is a plain textarea, gate keeps its emphasis', () => {
+
+    /*
+     * The editor came off Heading Text on 2026-09-09, but the gate stayed at
+     * `reduced` — 171 of 300 stored headings carry b/i/u or <br>, and a
+     * `plain` gate would have flattened 142 of them, including italicised
+     * work titles. So: authored as plain text, existing markup preserved.
+     */
+    test.beforeEach(async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+    });
+
+    test('renders a textarea, not an editor', async ({ page }) => {
+        await stubHeadingRecordsApi(page, { exhibitId: EXHIBIT_UUID });
+        await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}`);
+
+        const shape = await page.evaluate(() => {
+            const el = document.querySelector('#item-heading-text-input');
+            return {
+                tag: el.tagName,
+                hasRteAttr: el.hasAttribute('data-rte'),
+                hasQuillChild: el.querySelector('.ql-editor') !== null,
+            };
+        });
+
+        expect(shape.tag).toBe('TEXTAREA');
+        expect(shape.hasRteAttr).toBe(false);
+        expect(shape.hasQuillChild).toBe(false);
+    });
+
+    test('submits the heading as bare text, not paragraph-wrapped', async ({ page }) => {
+        const state = await stubHeadingRecordsApi(page, { exhibitId: EXHIBIT_UUID });
+        await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}`);
+        /* init() is async — wait for the save handler to be wired */
+        await expect(page.locator('#save-heading-btn')).toBeEnabled();
+
+        await page.fill('#item-heading-text-input', 'Chapter One');
+        await page.selectOption('#item-heading-type-input', 'heading');
+        await page.click('#save-heading-btn');
+
+        await expect.poll(() => state.createCount).toBeGreaterThan(0);
+        expect(state.lastCreatePayload.text).toBe('Chapter One');
+        expect(state.lastCreatePayload.text).not.toContain('<p>');
+    });
+
+    test('still blocks submit when the heading text is empty', async ({ page }) => {
+        const state = await stubHeadingRecordsApi(page, { exhibitId: EXHIBIT_UUID });
+        await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}`);
+
+        await page.selectOption('#item-heading-type-input', 'heading');
+        await page.click('#save-heading-btn');
+
+        await expect(page.locator('#message .alert-danger')).toContainText(/please enter heading text/i);
+        expect(state.createCount).toBe(0);
     });
 });
