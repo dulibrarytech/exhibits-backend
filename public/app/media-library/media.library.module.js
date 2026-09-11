@@ -1569,7 +1569,7 @@ const mediaLibraryModule = (function() {
                     }
                 },
                 dom: '<"row align-items-end"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-6"<"#exhibit-filter-container">><"col-sm-12 col-md-3"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 dt-table-cell"tr>>' +
                      '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 drawCallback: function() {
                     // Accessibility improvements after each draw

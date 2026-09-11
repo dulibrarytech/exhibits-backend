@@ -240,10 +240,16 @@ table.display td small small {
  *
  * Two selectors because the tables do not all share a layout: the exhibit,
  * item and grid lists render DataTables 2.x's own `dt-layout-*` wrappers,
- * while the media library renders the Bootstrap `row`/`col-sm-12` variant.
- * Each selector is the element that directly wraps its table.
+ * while the users, exhibits and media library lists render the Bootstrap
+ * `row`/`col-sm-12` variant (the `dom` option in their modules). Each
+ * selector is the element that directly wraps its table — and ONLY that
+ * element: the Bootstrap variant's control rows are `.col-sm-12` too, and
+ * `overflow-x: auto` on those forces `overflow-y: auto`, which clipped the
+ * media library's "Filter by Exhibit" listbox (absolutely positioned, taller
+ * than its 57px column) into an invisible scroll area. Hence the dedicated
+ * `dt-table-cell` class set in those `dom` strings.
  */
 .dt-container .dt-layout-row.dt-layout-table,
-.dt-container > .row > .col-sm-12 {
+.dt-container > .row > .dt-table-cell {
     overflow-x: auto;
 }
