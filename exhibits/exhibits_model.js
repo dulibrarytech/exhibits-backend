@@ -29,6 +29,7 @@ const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tas
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
 const EXHIBIT_MEDIA_LIBRARY_TASKS = require('./tasks/exhibit_media_library_tasks');
+const MEDIA_REFERENCE_TASKS = require('../media-library/tasks/media_reference_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const INDEXER_MODEL = require('../indexer/model');
@@ -67,6 +68,7 @@ const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
+const media_reference_task = new MEDIA_REFERENCE_TASKS(DB, TABLES);
 
 // build_response, validate_input, prepare_styles imported from common_helper
 
@@ -755,6 +757,36 @@ const set_all_to_publish = async (uuid) => {
     ]);
 };
 
+/*
+ * Names each piece of content bound to deleted media the way staff find it in
+ * the dashboard: standard items by position, grid/timeline items by container
+ * and title, exhibit media by role. Titles are rich text, so tags are stripped.
+ */
+const strip_tags = (value) => String(value || '').replace(/<[^>]*>/g, '').trim();
+
+const describe_deleted_media_references = (references) => {
+
+    return references.map((reference) => {
+
+        const media = strip_tags(reference.media_name) || 'untitled media';
+        const as_thumbnail = reference.role === 'thumbnail' ? ' as thumbnail' : '';
+
+        if (reference.record_type === 'exhibit') {
+            return `the exhibit ${reference.role === 'hero_image' ? 'hero image' : 'thumbnail'} ("${media}")`;
+        }
+
+        if (reference.record_type === 'item') {
+            return `item ${reference.order} ("${media}"${as_thumbnail})`;
+        }
+
+        const container = reference.record_type === 'grid_item' ? 'grid' : 'timeline';
+        const container_name = strip_tags(reference.container_name) || 'untitled';
+        const title = strip_tags(reference.item_title);
+
+        return `${container} "${container_name}" item ${title ? `"${title}"` : reference.order} ("${media}"${as_thumbnail})`;
+    }).join('; ');
+};
+
 /**
  * Publishes exhibit
  * @param {string} uuid - Exhibit UUID
@@ -801,6 +833,26 @@ const publish_exhibit = async (uuid) => {
             return {
                 status: 'under_filled_grids',
                 message: `Cannot publish exhibit. Grids need at least as many items as columns. Add grid items, or reduce the columns, for: ${grid_list}.`
+            };
+        }
+
+        // Media that was deleted from the media library cannot be served by the
+        // IIIF routes, so an item still bound to it would publish as a broken
+        // viewer. The indexer drops such media; this gate stops the publish.
+        const deleted_media = await media_reference_task.get_deleted_media_references(uuid);
+
+        if (deleted_media.length > 0) {
+
+            const item_list = describe_deleted_media_references(deleted_media);
+
+            LOGGER.module().info(
+                `INFO: [/exhibits/model (publish_exhibit)] Publish blocked - content bound to deleted media: ${item_list}`
+            );
+
+            return {
+                status: 'deleted_media',
+                message: `Cannot publish exhibit. Some content uses media that was deleted from the Media Library: ${item_list}. ` +
+                    'Open each one and select different media, then publish again.'
             };
         }
 

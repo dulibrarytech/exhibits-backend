@@ -646,6 +646,15 @@ exports.publish_exhibit = async function (req, res) {
             });
         }
 
+        if (result.status === 'deleted_media') {
+            LOGGER.module().info(`INFO: [/exhibits/controller (publish_exhibit)] Publish failed - content bound to deleted media: ${sanitized_uuid}`);
+            return res.status(422).json({
+                success: false,
+                message: result.message,
+                data: null
+            });
+        }
+
         if (result.status === true) {
             LOGGER.module().info(`INFO: [/exhibits/controller (publish_exhibit)] Successfully published exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
             return res.status(200).json({

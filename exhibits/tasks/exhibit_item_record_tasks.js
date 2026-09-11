@@ -218,6 +218,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `${this.TABLE.item_records}.*`,
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
+                    // Soft-delete flag: a deleted asset must not be served, indexed, or shown as bound
+                    `media_lib.is_deleted as media_is_deleted`,
                     `media_lib.ingest_method as media_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
@@ -236,6 +238,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `media_lib.places_subjects as media_places_subjects`,
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.is_deleted as thumbnail_media_is_deleted`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'thumb_lib', 'thumbnail_media_kaltura_thumbnail_url'),
                     `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
@@ -299,6 +302,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `${this.TABLE.item_records}.*`,
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
+                    // Soft-delete flag: a deleted asset must not be served, indexed, or shown as bound
+                    `media_lib.is_deleted as media_is_deleted`,
                     `media_lib.ingest_method as media_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
@@ -317,6 +322,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `media_lib.places_subjects as media_places_subjects`,
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.is_deleted as thumbnail_media_is_deleted`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'thumb_lib', 'thumbnail_media_kaltura_thumbnail_url'),
                     `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
@@ -385,6 +391,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `${this.TABLE.item_records}.*`,
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
+                    // Soft-delete flag: a deleted asset must not be served, indexed, or shown as bound
+                    `media_lib.is_deleted as media_is_deleted`,
                     `media_lib.ingest_method as media_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
@@ -396,6 +404,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `media_lib.places_subjects as media_places_subjects`,
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.is_deleted as thumbnail_media_is_deleted`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
                     `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
                     `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
@@ -495,6 +504,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `${this.TABLE.item_records}.*`,
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
+                    // Soft-delete flag: a deleted asset must not be served, indexed, or shown as bound
+                    `media_lib.is_deleted as media_is_deleted`,
                     `media_lib.ingest_method as media_ingest_method`,
                     KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
@@ -506,6 +517,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `media_lib.places_subjects as media_places_subjects`,
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.is_deleted as thumbnail_media_is_deleted`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
                     `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
                     `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`

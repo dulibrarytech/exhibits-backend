@@ -101,6 +101,12 @@ jest.mock('../../exhibits/tasks/exhibit_heading_record_tasks', () => jest.fn().m
 jest.mock('../../exhibits/tasks/exhibit_grid_record_tasks', () => jest.fn().mockImplementation(() => mockGridTask));
 jest.mock('../../exhibits/tasks/exhibit_timeline_record_tasks', () => jest.fn().mockImplementation(() => mockTimelineTask));
 
+// publish_exhibit's deleted-media gate; default = nothing bound to deleted media
+const mockMediaReferenceTask = {
+    get_deleted_media_references: jest.fn().mockResolvedValue([])
+};
+jest.mock('../../media-library/tasks/media_reference_tasks', () => jest.fn().mockImplementation(() => mockMediaReferenceTask));
+
 jest.mock('../../indexer/model', () => ({
     index_exhibit: jest.fn().mockResolvedValue({ status: 201 }),
     index_record: jest.fn().mockResolvedValue({ status: 201 }),
@@ -171,6 +177,7 @@ describe('publish publishes container items through the exhibit-scoped writer', 
     beforeEach(() => jest.clearAllMocks());
 
     test('publish_exhibit uses the exhibit-scoped item writers, not the grid/timeline-scoped ones', async () => {
+        mockMediaReferenceTask.get_deleted_media_references.mockResolvedValue([]);
         await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
 
         expect(mockGridTask.set_exhibit_grid_items_to_publish).toHaveBeenCalledWith(EXHIBIT_UUID);
@@ -180,5 +187,82 @@ describe('publish publishes container items through the exhibit-scoped writer', 
         // rows (they filter on is_member_of_grid / is_member_of_timeline).
         expect(mockGridTask.set_to_publish_grid_items).not.toHaveBeenCalled();
         expect(mockTimelineTask.set_to_publish_timeline_items).not.toHaveBeenCalled();
+    });
+});
+
+describe('publish_exhibit deleted-media gate', () => {
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockItemTask.get_record_count.mockResolvedValue(1);
+        mockGridTask.get_grid_records.mockResolvedValue([]);
+    });
+
+    const deleted_reference = (overrides = {}) => ({
+        record_type: 'item',
+        role: 'media',
+        uuid: 'a676c5bb-5d68-4457-b424-1c400163e181',
+        order: 3,
+        item_title: null,
+        media_uuid: '61706e13-7896-46d1-8956-ca2acff4e1d6',
+        media_name: 'Untitled document',
+        container_name: null,
+        ...overrides
+    });
+
+    test('publishes normally when nothing is bound to deleted media', async () => {
+        mockMediaReferenceTask.get_deleted_media_references.mockResolvedValue([]);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(true);
+        expect(mockMediaReferenceTask.get_deleted_media_references).toHaveBeenCalledWith(EXHIBIT_UUID);
+        expect(INDEXER_MODEL.index_exhibit).toHaveBeenCalledWith(EXHIBIT_UUID, 'publish');
+    });
+
+    test('blocks the publish, names the content, and writes nothing', async () => {
+        mockMediaReferenceTask.get_deleted_media_references.mockResolvedValue([
+            deleted_reference(),
+            deleted_reference({ uuid: '6e29fb8d', order: 2, role: 'thumbnail' }),
+            deleted_reference({ record_type: 'grid_item', container_name: 'Portraits', item_title: '<i>Frida</i>', order: 1 }),
+            deleted_reference({ record_type: 'timeline_item', container_name: null, item_title: null, order: 4 }),
+            deleted_reference({ record_type: 'exhibit', role: 'hero_image', media_name: 'Old hero' })
+        ]);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe('deleted_media');
+        expect(result.message).toContain('Cannot publish exhibit');
+        expect(result.message).toContain('item 3 ("Untitled document")');
+        expect(result.message).toContain('item 2 ("Untitled document" as thumbnail)');
+        expect(result.message).toContain('grid "Portraits" item "Frida" ("Untitled document")');
+        expect(result.message).toContain('timeline "untitled" item 4');
+        expect(result.message).toContain('the exhibit hero image ("Old hero")');
+        expect(result.message).toContain('select different media');
+
+        expect(mockExhibitTask.set_to_publish).not.toHaveBeenCalled();
+        expect(mockGridTask.set_exhibit_grid_items_to_publish).not.toHaveBeenCalled();
+        expect(INDEXER_MODEL.index_exhibit).not.toHaveBeenCalled();
+    });
+
+    test('runs after the existing gates (no items short-circuits first)', async () => {
+        mockItemTask.get_record_count.mockResolvedValue(0);
+        mockHeadingTask.get_record_count.mockResolvedValue(0);
+        mockGridTask.get_record_count.mockResolvedValue(0);
+        mockTimelineTask.get_record_count.mockResolvedValue(0);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe('no_items');
+        expect(mockMediaReferenceTask.get_deleted_media_references).not.toHaveBeenCalled();
+    });
+
+    test('a failed lookup fails the publish rather than skipping the gate', async () => {
+        mockMediaReferenceTask.get_deleted_media_references.mockRejectedValue(new Error('Query timeout'));
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(false);
+        expect(mockExhibitTask.set_to_publish).not.toHaveBeenCalled();
     });
 });

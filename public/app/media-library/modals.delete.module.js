@@ -37,6 +37,11 @@ const mediaDeleteModalModule = (function() {
     // tight double-click before the first response lands would hit
     // the cloned button and fire a second DELETE.
     let is_deleting = false;
+    // Set once the server has answered 409 (media still bound to items or
+    // exhibits). From then on the modal is read-only for this record: the
+    // confirm button stays disabled and only Cancel/close remain — the
+    // record cannot be deleted until it is unbound, so a retry is pointless.
+    let is_in_use = false;
 
     let obj = {};
 
@@ -71,6 +76,34 @@ const mediaDeleteModalModule = (function() {
     };
 
     /**
+     * Switch the modal between its confirm state and the locked "in use"
+     * state: the confirmation prompt and irreversibility notice make no
+     * sense for a record that cannot be deleted, and the Delete button is
+     * disabled (not just visually) so it cannot be clicked again.
+     * @param {boolean} in_use - true after a 409 in-use refusal
+     */
+    const set_in_use_state = (in_use) => {
+        const prompt_el = document.getElementById('delete-media-prompt');
+        const irreversible_el = document.getElementById('delete-media-irreversible');
+        const confirm_btn = document.getElementById('delete-media-confirm-btn');
+
+        if (prompt_el) prompt_el.style.display = in_use ? 'none' : '';
+        if (irreversible_el) irreversible_el.style.display = in_use ? 'none' : '';
+
+        if (confirm_btn) {
+            confirm_btn.disabled = in_use;
+            confirm_btn.setAttribute('aria-disabled', in_use ? 'true' : 'false');
+            confirm_btn.innerHTML = '<i class="fa fa-trash" style="margin-right: 6px;"></i>Delete';
+
+            if (in_use) {
+                confirm_btn.title = 'This media is in use and cannot be deleted';
+            } else {
+                confirm_btn.removeAttribute('title');
+            }
+        }
+    };
+
+    /**
      * Close the delete media modal
      */
     const close_delete_modal = () => {
@@ -83,6 +116,7 @@ const mediaDeleteModalModule = (function() {
         current_delete_uuid = null;
         current_delete_name = null;
         delete_modal_callback = null;
+        is_in_use = false;
     };
 
     /**
@@ -90,8 +124,9 @@ const mediaDeleteModalModule = (function() {
      */
     const handle_delete_confirm = async () => {
         // Module-level guard — survives confirm-button cloning across
-        // modal opens, where `disabled` does not.
-        if (is_deleting) {
+        // modal opens, where `disabled` does not. A record already known to
+        // be in use is never re-submitted.
+        if (is_deleting || is_in_use) {
             return;
         }
         is_deleting = true;
@@ -159,6 +194,17 @@ const mediaDeleteModalModule = (function() {
                 return;
             }
 
+            // Handle 409 Conflict - the media is still selected on items or
+            // exhibits. The server message names them; nothing was deleted.
+            // Lock the modal: deleting is not possible until the record is
+            // unbound, so the Delete button stays disabled from here on.
+            if (response.status === HTTP_STATUS.CONFLICT) {
+                is_in_use = true;
+                display_delete_modal_message('warning', response.data?.message || 'This media is still in use and cannot be deleted.');
+                set_in_use_state(true);
+                return;
+            }
+
             // Handle success
             if (response.status === HTTP_STATUS.OK && response.data?.success) {
                 // Store callback reference before closing modal (close_delete_modal nullifies it)
@@ -185,8 +231,9 @@ const mediaDeleteModalModule = (function() {
             // Clear the in-flight guard so the user can retry after
             // a failure (the success path closes the modal anyway).
             is_deleting = false;
-            // Re-enable confirm button
-            if (confirm_btn) {
+            // Re-enable confirm button — unless the record turned out to be
+            // in use, in which case the locked state set above stands.
+            if (confirm_btn && !is_in_use) {
                 confirm_btn.disabled = false;
                 confirm_btn.innerHTML = '<i class="fa fa-trash" style="margin-right: 6px;"></i>Delete';
             }
@@ -250,6 +297,7 @@ const mediaDeleteModalModule = (function() {
         current_delete_uuid = uuid;
         current_delete_name = name;
         delete_modal_callback = callback || null;
+        is_in_use = false;
 
         // Clear previous messages
         clear_delete_modal_message();
@@ -318,6 +366,10 @@ const mediaDeleteModalModule = (function() {
 
         // Setup event handlers
         setup_delete_modal_handlers();
+
+        // Fresh open: confirm state (the handlers step clones the confirm
+        // button, so this must run after it)
+        set_in_use_state(false);
 
         // Show modal
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);

@@ -204,6 +204,10 @@ const itemsCommonGridItemFormModule = (function () {
             if (display_el) display_el.value = '';
             group.style.display = 'none';
         }
+
+        // Bound media that has since been deleted from the library still has a
+        // name, so the group shows — flag it so staff know to replace it.
+        helperModule.toggle_media_deleted_warning('item-media-name-display', media);
     }
 
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
@@ -441,6 +445,7 @@ const itemsCommonGridItemFormModule = (function () {
                 kaltura_thumbnail_url: record.media_kaltura_thumbnail_url || null,
                 repo_uuid: record.media_repo_uuid || null,
                 thumbnail_path: record.media_thumbnail_path || null,
+                is_deleted: record.media_is_deleted ?? null,
                 alt_text: record.media_alt_text || null,
                 is_alt_text_decorative: record.media_is_alt_text_decorative ?? null
             };

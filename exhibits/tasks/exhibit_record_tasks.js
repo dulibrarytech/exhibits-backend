@@ -434,6 +434,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         // Hero image media library metadata
                         `hero_lib.uuid as hero_lib_uuid`,
                         `hero_lib.name as hero_media_name`,
+                        `hero_lib.is_deleted as hero_media_is_deleted`,
                         `hero_lib.ingest_method as hero_ingest_method`,
                         `hero_lib.repo_uuid as hero_repo_uuid`,
                         `hero_lib.kaltura_entry_id as hero_kaltura_entry_id`,
@@ -446,6 +447,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         `hero_lib.places_subjects as hero_places_subjects`,
                         // Thumbnail media library metadata
                         `thumb_lib.uuid as thumb_lib_uuid`,
+                        `thumb_lib.is_deleted as thumb_media_is_deleted`,
                         `thumb_lib.ingest_method as thumb_ingest_method`,
                         `thumb_lib.repo_uuid as thumb_repo_uuid`,
                         `thumb_lib.thumbnail_path as thumb_thumbnail_path`,

@@ -311,6 +311,9 @@ async function stubMediaRecordApi(page, opts = {}) {
     const getStatus = opts.getStatus ?? 200;
     const putStatus = opts.putStatus ?? 200;
     const deleteStatus = opts.deleteStatus ?? 200;
+    // Optional response body for a non-200 DELETE (e.g. the 409 in-use
+    // refusal, whose message the modal surfaces verbatim).
+    const deleteBody = opts.deleteBody ?? null;
 
     const state = {
         getCount: 0,
@@ -389,7 +392,7 @@ async function stubMediaRecordApi(page, opts = {}) {
             return route.fulfill({
                 status: deleteStatus,
                 contentType: 'application/json',
-                body: JSON.stringify({ success: false, message: `HTTP ${deleteStatus}` }),
+                body: JSON.stringify(deleteBody ?? { success: false, message: `HTTP ${deleteStatus}` }),
             });
         }
 

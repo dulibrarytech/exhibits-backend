@@ -973,6 +973,22 @@ const helperModule = (function () {
         }
     };
 
+    /**
+     * Shows or hides the "deleted media" warning that sits under a media
+     * name display (views/partials/media-name-display.ejs). A media object
+     * carries is_deleted only when it came from an item record's media
+     * library join; picker selections never do, so picking new media clears it.
+     * @param {string} input_id - The partial's input_id (e.g. 'item-media-name-display')
+     * @param {Object|null} media - Media object, or null to hide
+     */
+    obj.toggle_media_deleted_warning = function (input_id, media) {
+        const warning_el = document.getElementById(`${input_id}-deleted`);
+        if (!warning_el) return;
+
+        const is_deleted = Boolean(media) && (media.is_deleted === 1 || media.is_deleted === true || media.is_deleted === '1');
+        warning_el.style.display = is_deleted ? '' : 'none';
+    };
+
     obj.init = function () {
         // On read-only details pages, strip the "(Optional)" markers and "Preview
         // Field" links the shared data-card partials carry for the add/edit forms.

@@ -29,7 +29,7 @@
                 
                 <!-- Confirmation content -->
                 <div id="delete-media-content">
-                    <p class="mb-3">Are you sure you want to delete the following media record?</p>
+                    <p class="mb-3" id="delete-media-prompt">Are you sure you want to delete the following media record?</p>
                     
                     <div class="card bg-light mb-3">
                         <div class="card-body py-2">
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                     
-                    <div class="alert alert-warning mb-0" role="alert">
+                    <div class="alert alert-warning mb-0" role="alert" id="delete-media-irreversible">
                         <i class="fa fa-warning" style="margin-right: 6px;" aria-hidden="true"></i>
                         <strong>Warning:</strong> This action cannot be undone.
                     </div>

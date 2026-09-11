@@ -35,6 +35,37 @@ const async_handler = (fn) => {
     };
 };
 
+/*
+ * CORS for the public IIIF route group. The public frontend runs on a
+ * different origin, and a browser reports any cross-origin response that
+ * lacks Access-Control-Allow-Origin as a CORS failure — so an IIIF 404 (deleted
+ * media, missing file), a 400, a 500 or the rate limiter's 429 all used to
+ * surface as "CORS header missing" and hide their real status. Applied ahead
+ * of every route under <APP_PATH>/iiif/, this stamps the headers on every
+ * response (success paths also set them, redundantly) and answers OPTIONS
+ * preflights, which otherwise fell through to the app-level 404.
+ */
+const IIIF_CORS_HEADERS = Object.freeze({
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept'
+});
+
+const iiif_cors = (req, res, next) => {
+
+    res.set(IIIF_CORS_HEADERS);
+
+    if (req.method === 'OPTIONS') {
+        res.set('Access-Control-Max-Age', '86400');
+        return res.sendStatus(204);
+    }
+
+    next();
+};
+
+// <APP_PATH>/iiif — the prefix shared by every public IIIF endpoint
+const IIIF_PREFIX = ENDPOINTS.iiif_manifest.get.endpoint.replace(/\/:media_id\/manifest$/, '');
+
 module.exports = function (app) {
 
     // ========================================
@@ -244,6 +275,10 @@ module.exports = function (app) {
     // ========================================
     // Public-facing IIIF routes use <APP_PATH>/iiif/...
     // Administrative routes (generate/batch) remain on /api/v1/...
+
+    // CORS headers + OPTIONS preflight for every response under the prefix,
+    // error statuses included (see iiif_cors above).
+    app.use(IIIF_PREFIX, iiif_cors);
 
     // Get IIIF manifest for a media record (public-facing)
     // GET <APP_PATH>/iiif/:media_id/manifest
