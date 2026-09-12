@@ -588,6 +588,11 @@ const itemsCommonStandardItemFormModule = (function () {
             const sorted_keys = Object.keys(exhibit_style_map).sort();
             helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 
+            // Mirror the preset on the Exhibit Text editor — the field the preset
+            // styles on the public site (description renders in the item viewer,
+            // outside the styled wrapper). The template preset is the base layer.
+            helperModule.bind_item_style_theme(exhibit_style_map, style_root.template || null, ['item-text-input']);
+
             // Show the styles card
             const card_el = document.querySelector('#item-styles-card');
             if (card_el) card_el.style.display = '';

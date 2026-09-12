@@ -205,6 +205,10 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             const sorted_keys = Object.keys(exhibit_style_map).sort();
             helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 
+            // Mirror the preset on the timeline text editor; the timeline wrapper
+            // carries the preset on the public site. The template preset is the base layer.
+            helperModule.bind_item_style_theme(exhibit_style_map, style_root.template || null, ['timeline-text-input']);
+
             // Show the styles card
             const card_el = document.querySelector('#item-styles-card');
             if (card_el) card_el.style.display = '';

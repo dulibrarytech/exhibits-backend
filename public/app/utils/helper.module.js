@@ -941,18 +941,129 @@ const helperModule = (function () {
         }
 
         const target = value || '';
+        let checked = false;
 
         if (target) {
             for (let i = 0; i < radios.length; i++) {
                 if (radios[i].value === target) {
                     radios[i].checked = true;
-                    return;
+                    checked = true;
+                    break;
                 }
             }
         }
 
         // Empty or unknown value — fall back to the first preset.
-        radios[0].checked = true;
+        if (!checked) {
+            radios[0].checked = true;
+        }
+
+        // A programmatic check fires no change event; mirror the preset here.
+        obj.apply_item_style_theme();
+    };
+
+    /*
+     * Preset mirroring state, set by bind_item_style_theme: the exhibit's
+     * item presets, the exhibit "template" preset underneath them, and the
+     * editors that show the preset. Null until a form binds it, in which
+     * case apply_item_style_theme is a no-op and editors keep the rte.css
+     * defaults.
+     */
+    let item_style_theme = null;
+
+    /**
+     * Resolves the checked item style preset over the template preset —
+     * the same layering the public site renders (Exhibit.svelte resolves
+     * the item's preset key; Item.svelte applies it on the item wrapper,
+     * which sits inside the template element carrying the template preset).
+     * A preset property that is empty falls through to the template's.
+     * @returns {Object|null} { fontFamily, fontSize, color, backgroundColor },
+     *   or null when nothing is bound or no preset is checked (→ defaults)
+     */
+    function resolve_item_style_theme() {
+
+        if (item_style_theme === null) {
+            return null;
+        }
+
+        const checked = document.querySelector('input[name="styles"]:checked');
+
+        if (checked === null) {
+            return null;
+        }
+
+        const preset = (item_style_theme.style_map && item_style_theme.style_map[checked.value]) || {};
+        const base = item_style_theme.base || {};
+        const theme = {};
+
+        ['fontFamily', 'fontSize', 'color', 'backgroundColor'].forEach(function (property) {
+            const value = preset[property];
+            theme[property] = (value !== undefined && value !== null && String(value).trim() !== '')
+                ? value
+                : (base[property] || '');
+        });
+
+        return theme;
+    }
+
+    /**
+     * Applies the checked preset to the bound editors (rteModule.set_theme).
+     * Called on every change of the preset radios and after
+     * check_item_style_option re-checks a saved preset.
+     */
+    obj.apply_item_style_theme = function () {
+
+        if (item_style_theme === null || typeof rteModule === 'undefined') {
+            return;
+        }
+
+        const theme = resolve_item_style_theme();
+
+        item_style_theme.editor_ids.forEach(function (id) {
+            rteModule.set_theme(id, theme);
+        });
+    };
+
+    /**
+     * Mirrors the item style preset chooser on the given editors: applies the
+     * currently checked preset now and again whenever the choice changes.
+     * Call once, after build_item_style_swatch_options.
+     * @param {Object} style_map - preset key → { backgroundColor, color, fontFamily, fontSize }
+     * @param {Object|null} base - the exhibit "template" preset, or null
+     * @param {string[]} editor_ids - rte container ids whose content the
+     *   preset styles on the public site (item text, grid/timeline text)
+     */
+    obj.bind_item_style_theme = function (style_map, base, editor_ids) {
+
+        const container = document.querySelector('#item-style-options');
+
+        /*
+         * The theme follows the preset chooser. Details pages run the same
+         * common form init (and so fetch the presets) but render no chooser
+         * and a disabled editor — without this guard the template preset
+         * would land on the read-only box.
+         */
+        if (container === null) {
+            item_style_theme = null;
+            return;
+        }
+
+        item_style_theme = {
+            style_map: style_map || {},
+            base: base || null,
+            editor_ids: Array.isArray(editor_ids) ? editor_ids : [],
+        };
+
+        if (container.dataset.themeBound !== '1') {
+            container.dataset.themeBound = '1';
+            container.addEventListener('change', function (event) {
+                if (event.target && event.target.name === 'styles') {
+                    obj.apply_item_style_theme();
+                }
+            });
+        }
+
+        obj.apply_item_style_theme();
     };
 
     /**

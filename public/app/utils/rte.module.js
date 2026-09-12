@@ -740,6 +740,50 @@ const rteModule = (function () {
         }
     };
 
+    /* the four properties the public site applies from an item style preset */
+    const THEME_PROPERTIES = ['fontFamily', 'fontSize', 'color', 'backgroundColor'];
+
+    /**
+     * Mirrors an item style preset on an editor so staff see the typography
+     * the public site will apply. The public site sets these four properties
+     * inline on the item wrapper and lets the content inherit; this does the
+     * same on the editor container (rte.css makes p/li/h2/h3 inherit from
+     * it). A bare number for fontSize is treated as pixels. Pass null, or an
+     * object with empty values, to restore the stylesheet defaults.
+     * @param id container element id
+     * @param theme { fontFamily, fontSize, color, backgroundColor } or null
+     * @returns boolean false when the container is not on the page
+     */
+    obj.set_theme = function (id, theme) {
+
+        const container = document.getElementById(id);
+
+        if (container === null) {
+            return false;
+        }
+
+        const values = theme || {};
+
+        THEME_PROPERTIES.forEach(function (property) {
+
+            let value = values[property];
+
+            if (value === undefined || value === null) {
+                value = '';
+            }
+
+            value = String(value).trim();
+
+            if (property === 'fontSize' && /^\d+(\.\d+)?$/.test(value)) {
+                value = value + 'px';
+            }
+
+            container.style[property] = value;
+        });
+
+        return true;
+    };
+
     /**
      * Renders stored rich text into a static read-only display box (no
      * editor). Used by details pages that show content without Quill —

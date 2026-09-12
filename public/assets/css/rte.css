@@ -20,7 +20,6 @@
     min-height: 120px;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 0.875rem;
 }
 
 /* title / subtitle / heading fields — visually one-to-two lines */
@@ -74,10 +73,98 @@
     min-height: 44px;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 0.875rem;
     margin-bottom: 0.75rem;
 }
 
 .rte-readonly > :last-child {
+    margin-bottom: 0;
+}
+
+/*
+ * Typography.
+ *
+ * The dashboard theme (style.css) styles bare elements for page chrome —
+ * p { Open Sans 16px #5A5A5A }, a { #5A5A5A }, h1-h6 { #40434D }, ul/ol
+ * { padding-left: 0 } — and an element selector matches every <p>/<a>/<h2>
+ * Quill renders inside the editor too. A rule matched ON an element beats
+ * anything it would inherit, so paragraphs took the theme's look while list
+ * items inherited the editor's (Helvetica 14px #212529): one field, two
+ * fonts. Give each rich text surface one typography and make the block
+ * elements inherit it. Links stay visibly links. No !important is needed —
+ * .rte-readonly p (0,1,1) and .rte-container .ql-editor a (0,2,1) already
+ * out-rank the theme's element rules (0,0,1) and Quill's .ql-snow a (0,1,1).
+ *
+ * rteModule.set_theme() overrides the surface values inline when an item
+ * style preset is mirrored, and everything below still inherits from it.
+ */
+.rte-container.ql-container,
+.rte-readonly {
+    font-family: "Open Sans", sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #212529;
+}
+
+.rte-container .ql-editor p,
+.rte-container .ql-editor li,
+.rte-container .ql-editor a,
+.rte-readonly p,
+.rte-readonly li,
+.rte-readonly a {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+.rte-container .ql-editor a,
+.rte-readonly a {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.rte-container .ql-editor a:hover,
+.rte-container .ql-editor a:focus,
+.rte-readonly a:hover,
+.rte-readonly a:focus {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* stored h2/h3 (the picker is gone, the format is kept): read as headings
+   in the surface's font and colour, at Quill's own relative sizes */
+.rte-container .ql-editor h2,
+.rte-container .ql-editor h3,
+.rte-readonly h2,
+.rte-readonly h3 {
+    font-family: inherit;
+    color: inherit;
+    line-height: 1.2;
+}
+
+.rte-readonly h2 {
+    font-size: 1.5em;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+.rte-readonly h3 {
+    font-size: 1.17em;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+/* the static box gets none of Quill's list rules; restore the indent the
+   theme's ul/ol reset removes (stored lists are real nested <ul>/<ol>) */
+.rte-readonly ul,
+.rte-readonly ol {
+    padding-left: 1.5em;
+    margin: 0 0 0.5rem;
+}
+
+.rte-readonly ul ul,
+.rte-readonly ol ol,
+.rte-readonly ul ol,
+.rte-readonly ol ul {
     margin-bottom: 0;
 }
