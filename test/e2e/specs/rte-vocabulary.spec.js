@@ -83,9 +83,11 @@ test.describe('RTE vocabulary — full profile (standard item text)', () => {
 
         expect(toolbar.hasHeadingPicker).toBe(false);
         expect(toolbar.controls).not.toContain('ql-header');
+        /* the "clean" (remove formatting) button went on 2026-09-15 */
+        expect(toolbar.controls).not.toContain('ql-clean');
         /* the rest of the toolbar is unchanged */
         expect(toolbar.controls).toEqual(
-            expect.arrayContaining(['ql-bold', 'ql-italic', 'ql-underline', 'ql-color', 'ql-link', 'ql-clean'])
+            expect.arrayContaining(['ql-bold', 'ql-italic', 'ql-underline', 'ql-color', 'ql-link', 'ql-list', 'ql-indent'])
         );
 
         /* a stored heading still round-trips */

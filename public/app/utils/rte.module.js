@@ -56,7 +56,10 @@ const rteModule = (function () {
             /*
              * No heading picker: staff author body prose, and the site's
              * heading structure comes from exhibit/item titles and heading
-             * items, not from inline headings inside a text field.
+             * items, not from inline headings inside a text field. No
+             * "clean" (remove formatting) button either, on request
+             * (2026-09-15) — it is a toolbar action, not a format, so
+             * nothing stored depends on it.
              *
              * `header` deliberately STAYS in `formats` below. Dropping it
              * would make Quill strip h2/h3 on load as well as on paste —
@@ -71,15 +74,13 @@ const rteModule = (function () {
                 [{color: DU_PALETTE}],
                 ['link'],
                 [{list: 'ordered'}, {list: 'bullet'}],
-                [{indent: '-1'}, {indent: '+1'}],
-                ['clean']
+                [{indent: '-1'}, {indent: '+1'}]
             ]
         },
         reduced: {
             formats: ['bold', 'italic', 'underline'],
             toolbar: [
-                ['bold', 'italic', 'underline'],
-                ['clean']
+                ['bold', 'italic', 'underline']
             ],
             /*
              * Reduced fields are single-line — they render inside <h*> tags on
@@ -283,7 +284,6 @@ const rteModule = (function () {
         'ql-link': 'Insert link',
         'ql-blockquote': 'Block quote',
         'ql-code-block': 'Code block',
-        'ql-clean': 'Remove formatting',
         'ql-list': 'List',
         'ql-indent': 'Indent'
     };
