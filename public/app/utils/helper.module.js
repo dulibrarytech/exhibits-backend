@@ -976,8 +976,9 @@ const helperModule = (function () {
      * the same layering the public site renders (Exhibit.svelte resolves
      * the item's preset key; Item.svelte applies it on the item wrapper,
      * which sits inside the template element carrying the template preset).
-     * A preset property that is empty falls through to the template's.
-     * @returns {Object|null} { fontFamily, fontSize, color, backgroundColor },
+     * A preset property that is empty falls through to the template's. The
+     * background is not part of it — the editor stays white (rteModule).
+     * @returns {Object|null} { fontFamily, fontSize, color },
      *   or null when nothing is bound or no preset is checked (→ defaults)
      */
     function resolve_item_style_theme() {
@@ -996,7 +997,7 @@ const helperModule = (function () {
         const base = item_style_theme.base || {};
         const theme = {};
 
-        ['fontFamily', 'fontSize', 'color', 'backgroundColor'].forEach(function (property) {
+        ['fontFamily', 'fontSize', 'color'].forEach(function (property) {
             const value = preset[property];
             theme[property] = (value !== undefined && value !== null && String(value).trim() !== '')
                 ? value
@@ -1064,6 +1065,164 @@ const helperModule = (function () {
         }
 
         obj.apply_item_style_theme();
+    };
+
+    /*
+     * "Embed item" governs "Pop-up Window Description". Embedded items never
+     * open the pop-up viewer, so the description is not in use while the box
+     * is checked. It is DISABLED, not hidden, and never cleared: the public
+     * search results and the search index still read it, and staff should see
+     * that their text survives the toggle. The state is carried by
+     * rteModule.set_enabled (contenteditable, aria-disabled, hidden toolbar),
+     * the note under the label, and a polite live region — the muted styling
+     * is a consequence, not the signal.
+     */
+    const EMBED_NOTE_TEXT = 'Not used while Embed item is checked. The saved text is kept and will be used again if you clear the box.';
+    const EMBED_NOTE_TEXT_DETAILS = 'Not used: this item is embedded, so it does not open the pop-up viewer. The saved text is kept.';
+    const EMBED_STATUS_ON = 'Pop-up Window Description is not used while Embed item is checked. The saved text is kept.';
+    const EMBED_STATUS_OFF = 'Pop-up Window Description is available again.';
+
+    /* one polite live region per page, created on first use */
+    function embed_status_region() {
+
+        let region = document.getElementById('embed-item-status');
+
+        if (region === null) {
+            region = document.createElement('div');
+            region.id = 'embed-item-status';
+            region.className = 'sr-only';
+            region.setAttribute('aria-live', 'polite');
+            document.body.appendChild(region);
+        }
+
+        return region;
+    }
+
+    /*
+     * The note sits under the field's label: before the toolbar when Quill
+     * has mounted, otherwise directly before the container (a toolbar that
+     * mounts later is inserted between the two, which is the same order).
+     */
+    function ensure_embed_note(container, text) {
+
+        const note_id = container.id + '-embed-note';
+        let note = document.getElementById(note_id);
+
+        if (note === null) {
+            note = document.createElement('small');
+            note.id = note_id;
+            note.className = 'form-text text-muted rte-embed-note';
+            note.hidden = true;
+
+            const previous = container.previousElementSibling;
+            const anchor = (previous !== null && previous.classList.contains('ql-toolbar')) ? previous : container;
+            container.parentNode.insertBefore(note, anchor);
+        }
+
+        note.textContent = text;
+
+        return note;
+    }
+
+    function set_described_by(element, id, on) {
+
+        const tokens = (element.getAttribute('aria-describedby') || '')
+            .split(/\s+/)
+            .filter(function (token) { return token.length > 0 && token !== id; });
+
+        if (on) {
+            tokens.push(id);
+        }
+
+        if (tokens.length > 0) {
+            element.setAttribute('aria-describedby', tokens.join(' '));
+        } else {
+            element.removeAttribute('aria-describedby');
+        }
+    }
+
+    /**
+     * Wires the Embed item checkbox to the Pop-up Window Description editor
+     * on the add/edit media forms: moves the checkbox (its whole form-group)
+     * above the description row so the cause reads before the effect, points
+     * aria-controls at the row, and disables the editor — with the in-place
+     * note and a live announcement — while the box is checked. Applies the
+     * current state immediately; the edit forms set the checkbox from the
+     * record and dispatch 'change', which is handled without an announcement.
+     * @param {string} checkbox_id - default 'embed-item'
+     * @param {string} editor_id - default 'item-description-input'
+     * @returns {boolean} false when either element is missing
+     */
+    obj.bind_embed_description = function (checkbox_id, editor_id) {
+
+        const checkbox = document.getElementById(checkbox_id || 'embed-item');
+        const container = document.getElementById(editor_id || 'item-description-input');
+
+        if (checkbox === null || container === null || typeof rteModule === 'undefined') {
+            return false;
+        }
+
+        const row = container.closest('#is-media-only-description') || container;
+        const group = document.getElementById('embed-item-group') || checkbox.closest('.form-group');
+
+        if (group !== null && row.parentNode !== null && group !== row) {
+            row.parentNode.insertBefore(group, row);
+        }
+
+        checkbox.setAttribute('aria-controls', row.id || container.id);
+
+        /* mounts the editor if init_all has not run yet, so the toolbar exists before the note is placed */
+        rteModule.set_enabled(container.id, !checkbox.checked);
+
+        const note = ensure_embed_note(container, EMBED_NOTE_TEXT);
+
+        const sync = function (event) {
+
+            const embedded = checkbox.checked;
+
+            rteModule.set_enabled(container.id, !embedded);
+            note.hidden = !embedded;
+
+            const editor = container.querySelector('.ql-editor');
+
+            if (editor !== null) {
+                set_described_by(editor, note.id, embedded);
+            }
+
+            /* a synthetic change (edit form restoring the record) is not news */
+            if (event && event.isTrusted === true) {
+                embed_status_region().textContent = embedded ? EMBED_STATUS_ON : EMBED_STATUS_OFF;
+            }
+        };
+
+        if (checkbox.dataset.embedBound !== '1') {
+            checkbox.dataset.embedBound = '1';
+            checkbox.addEventListener('change', sync);
+        }
+
+        sync(null);
+
+        return true;
+    };
+
+    /**
+     * Details-page counterpart: the description is a static box there, so
+     * only the explanation is needed.
+     * @param {string} editor_id - the .rte-readonly / disabled editor id
+     * @param {boolean} embedded - record.is_embedded === 1
+     */
+    obj.mark_embedded_description = function (editor_id, embedded) {
+
+        const container = document.getElementById(editor_id || 'item-description-input');
+
+        if (container === null) {
+            return false;
+        }
+
+        const note = ensure_embed_note(container, EMBED_NOTE_TEXT_DETAILS);
+        note.hidden = embedded !== true;
+
+        return true;
     };
 
     /**

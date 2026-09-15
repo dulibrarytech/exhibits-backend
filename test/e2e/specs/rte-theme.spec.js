@@ -40,7 +40,8 @@ const TIMELINE_UUID = '770e8400-e29b-41d4-a716-446655440100';
 
 /* paragraph, link, nested list, stored heading — every element type the gate keeps */
 const MIXED_TEXT = '<h2>Section</h2><p>Paragraph with <a href="https://du.edu">a link</a>.</p>'
-    + '<ul><li>first bullet<ul><li>nested bullet</li></ul></li></ul>';
+    + '<ul><li>first bullet<ul><li>nested bullet</li></ul></li></ul>'
+    + '<p class="ql-indent-1">indented paragraph</p>';
 
 const TYPOGRAPHY = ['fontFamily', 'fontSize', 'lineHeight', 'color'];
 
@@ -55,12 +56,18 @@ async function computed(page, root, selector) {
     }, [root, selector, TYPOGRAPHY]);
 }
 
-/* inline theme currently set on a container (what set_theme writes) */
+/* inline theme currently set on a container (what set_theme writes) — the
+   background is reported too, and must always be empty (2026-09-15) */
 async function inline_theme(page, id) {
     return page.evaluate((elementId) => {
         const s = document.getElementById(elementId).style;
         return { fontFamily: s.fontFamily, fontSize: s.fontSize, color: s.color, backgroundColor: s.backgroundColor };
     }, id);
+}
+
+/* the editing surface as painted */
+async function computed_background(page, id) {
+    return page.evaluate((elementId) => getComputedStyle(document.getElementById(elementId)).backgroundColor, id);
 }
 
 const PRESETS = {
@@ -69,6 +76,8 @@ const PRESETS = {
         item1: { backgroundColor: '#c2ced5', color: '#303030', fontFamily: 'IBM Plex Mono', fontSize: '19px' },
         /* fontSize left empty on purpose: it must fall through to the template's */
         item2: { backgroundColor: '#ffffff', color: '#4b0082', fontFamily: 'Courier New', fontSize: '' },
+        /* white-on-black: a real exhibit template; its text colour must not reach the white editor */
+        item3: { backgroundColor: '#000000', color: '#ffffff', fontFamily: 'Arial', fontSize: '18px' },
     },
 };
 
@@ -116,7 +125,7 @@ test.describe('RTE typography — one font per surface (4a)', () => {
         /* links: same font, visibly links */
         expect(a.fontFamily).toBe(p.fontFamily);
         expect(a.fontSize).toBe(p.fontSize);
-        expect(a.color).toBe('rgb(0, 123, 255)');
+        expect(a.color).toBe('rgb(0, 86, 179)');
         expect(await page.evaluate(() => getComputedStyle(document.querySelector('#item-text-input .ql-editor a')).textDecorationLine))
             .toBe('underline');
     });
@@ -143,7 +152,7 @@ test.describe('RTE typography — one font per surface (4a)', () => {
         expect(p.color).toBe('rgb(33, 37, 41)');
 
         /* the theme's a { color: #5A5A5A } used to win here (no Quill sheet applies) */
-        expect(a.color).toBe('rgb(0, 123, 255)');
+        expect(a.color).toBe('rgb(0, 86, 179)');
 
         /* the theme's ul, ol { padding-left: 0 } pushed bullets outside the box */
         const padding = await page.evaluate(() => {
@@ -156,6 +165,14 @@ test.describe('RTE typography — one font per surface (4a)', () => {
         });
         expect(padding.outer).toBeGreaterThan(0);
         expect(padding.nestedOffset).toBeGreaterThan(0);
+
+        /* an indented paragraph keeps its indent outside the editor too */
+        const indent = await page.evaluate(() => {
+            const el = document.querySelector('#item-text-input p.ql-indent-1');
+            return { count: document.querySelectorAll('#item-text-input p.ql-indent-1').length, padding: parseFloat(getComputedStyle(el).paddingLeft) };
+        });
+        expect(indent.count).toBe(1);
+        expect(indent.padding).toBeGreaterThanOrEqual(3 * 14);
     });
 });
 
@@ -178,13 +195,15 @@ test.describe('RTE theme — the selected item style preset is mirrored on the e
         await expect(page.locator('#item-styles-card')).toBeVisible();
         await expect(page.locator('#item-style-item2')).toBeChecked();
 
-        /* item2 leaves fontSize empty → the template's 15px is the base layer */
+        /* item2 leaves fontSize empty → the template's 15px is the base layer;
+           the background is never mirrored (2026-09-15) */
         await expect.poll(() => inline_theme(page, 'item-text-input')).toEqual({
             fontFamily: '"Courier New"',
             fontSize: '15px',
             color: 'rgb(75, 0, 130)',
-            backgroundColor: 'rgb(255, 255, 255)',
+            backgroundColor: '',
         });
+        expect(await computed_background(page, 'item-text-input')).toBe('rgb(255, 255, 255)');
 
         /* the point of 4a + 4b together: paragraphs AND bullets show the preset */
         const root = '#item-text-input .ql-editor';
@@ -213,16 +232,29 @@ test.describe('RTE theme — the selected item style preset is mirrored on the e
             fontFamily: '"IBM Plex Mono"',
             fontSize: '19px',
             color: 'rgb(48, 48, 48)',
-            backgroundColor: 'rgb(194, 206, 213)',
+            backgroundColor: '',
         });
+        /* the preset's lavender never reaches the editing surface */
+        expect(await computed_background(page, 'item-text-input')).toBe('rgb(255, 255, 255)');
 
         await page.check('#item-style-item2');
         await expect.poll(() => inline_theme(page, 'item-text-input')).toEqual({
             fontFamily: '"Courier New"',
             fontSize: '15px',
             color: 'rgb(75, 0, 130)',
-            backgroundColor: 'rgb(255, 255, 255)',
+            backgroundColor: '',
         });
+
+        /* white-on-black preset: font and size follow, the white text colour does not — it would vanish on white */
+        await page.check('#item-style-item3');
+        await expect.poll(() => inline_theme(page, 'item-text-input')).toEqual({
+            fontFamily: 'Arial',
+            fontSize: '18px',
+            color: '',
+            backgroundColor: '',
+        });
+        expect(await computed_background(page, 'item-text-input')).toBe('rgb(255, 255, 255)');
+        expect((await computed(page, '#item-text-input .ql-editor', 'p')).color).toBe('rgb(33, 37, 41)');
 
         /* and back */
         await page.check('#item-style-item1');
@@ -301,7 +333,7 @@ test.describe('RTE theme — the selected item style preset is mirrored on the e
             fontFamily: '"Courier New"',
             fontSize: '15px',
             color: 'rgb(75, 0, 130)',
-            backgroundColor: 'rgb(255, 255, 255)',
+            backgroundColor: '',
         });
     });
 });

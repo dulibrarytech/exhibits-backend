@@ -296,6 +296,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             if (embed_item_el) {
                 embed_item_el.checked = record.is_embedded === 1;
             }
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
 
             // Disable all form fields after population (details view is read-only)
             disable_all_fields();

@@ -728,30 +728,143 @@ const rteModule = (function () {
         }
     };
 
+    /*
+     * Like ensure(), but only mounts on a container declared as an editor
+     * (data-rte). Callers of set_enabled may name a details-page id that is
+     * a plain .rte-readonly box; mounting Quill there would be a bug.
+     */
+    function ensure_declared(id) {
+
+        if (instances[id] === undefined) {
+
+            const container = document.getElementById(id);
+
+            if (container === null || container.dataset.rte === undefined) {
+                return undefined;
+            }
+
+            obj.init(id);
+        }
+
+        return instances[id];
+    }
+
     /**
-     * Enables/disables editing (used while records are locked).
+     * Enables/disables editing (record locks, and fields that are not in
+     * use while another control is set — see helperModule.bind_embed_description).
+     *
+     * A disabled editor is one inert control: Quill drops contenteditable
+     * and ignores formatting, aria-disabled tells assistive tech, and the
+     * toolbar is hidden so keyboard users do not tab through buttons that
+     * do nothing (a disabled editor used to leave sixteen of them in the
+     * tab order). Editors mounted with data-rte-disabled have no toolbar.
      * @param id container element id
      * @param enabled boolean
+     * @returns boolean false when no editor is mounted on that id
      */
     obj.set_enabled = function (id, enabled) {
 
-        if (instances[id] !== undefined) {
-            instances[id].quill.enable(enabled === true);
+        const instance = ensure_declared(id);
+
+        if (instance === undefined) {
+            return false;
         }
+
+        const on = enabled === true;
+        const quill = instance.quill;
+
+        quill.enable(on);
+
+        if (on) {
+            quill.root.removeAttribute('aria-disabled');
+        } else {
+            quill.root.setAttribute('aria-disabled', 'true');
+        }
+
+        const toolbar_module = quill.getModule('toolbar');
+
+        if (toolbar_module && toolbar_module.container) {
+            toolbar_module.container.hidden = !on;
+        }
+
+        return true;
     };
 
     /* the four properties the public site applies from an item style preset */
-    const THEME_PROPERTIES = ['fontFamily', 'fontSize', 'color', 'backgroundColor'];
+    /*
+     * The three preset properties mirrored on an editor. backgroundColor is
+     * deliberately not one of them (dropped 2026-09-15 after staff testing):
+     * the editing surface stays the dashboard's white, whatever the exhibit
+     * theme paints behind the item publicly.
+     */
+    const THEME_PROPERTIES = ['fontFamily', 'fontSize', 'color'];
+
+    /* WCAG AA for normal text; the editor's text is 14px regular */
+    const MIN_CONTRAST_ON_WHITE = 4.5;
+
+    /*
+     * Parses #rgb / #rrggbb / rgb() / rgba() into [r, g, b]; anything else
+     * (named colours, hsl) yields null and the colour is not mirrored.
+     */
+    function parse_color(value) {
+
+        const hex = value.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+
+        if (hex !== null) {
+            const digits = hex[1].length === 3
+                ? hex[1].split('').map(function (d) { return d + d; }).join('')
+                : hex[1];
+            return [0, 2, 4].map(function (i) { return parseInt(digits.substr(i, 2), 16); });
+        }
+
+        const rgb = value.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
+
+        if (rgb !== null) {
+            return [rgb[1], rgb[2], rgb[3]].map(Number);
+        }
+
+        return null;
+    }
+
+    function relative_luminance(rgb) {
+
+        const channel = rgb.map(function (c) {
+            const v = c / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+
+        return 0.2126 * channel[0] + 0.7152 * channel[1] + 0.0722 * channel[2];
+    }
+
+    /*
+     * Because the background is not mirrored, a preset text colour designed
+     * for a dark background (white on black is a real exhibit template) must
+     * not be painted on the white editor. Keep it only when it reads on
+     * white at AA; otherwise the stylesheet's default text colour stays.
+     */
+    function readable_on_white(value) {
+
+        const rgb = parse_color(value);
+
+        if (rgb === null) {
+            return false;
+        }
+
+        const contrast = (1 + 0.05) / (relative_luminance(rgb) + 0.05);
+
+        return contrast >= MIN_CONTRAST_ON_WHITE;
+    }
 
     /**
      * Mirrors an item style preset on an editor so staff see the typography
-     * the public site will apply. The public site sets these four properties
-     * inline on the item wrapper and lets the content inherit; this does the
-     * same on the editor container (rte.css makes p/li/h2/h3 inherit from
-     * it). A bare number for fontSize is treated as pixels. Pass null, or an
-     * object with empty values, to restore the stylesheet defaults.
+     * the public site will apply — font family, size and text colour, inline
+     * on the editor container (rte.css makes p/li/h2/h3 inherit from it).
+     * The background is not mirrored (see THEME_PROPERTIES), and a text
+     * colour that would not read on white is skipped. A bare number for
+     * fontSize is treated as pixels. Pass null, or an object with empty
+     * values, to restore the stylesheet defaults.
      * @param id container element id
-     * @param theme { fontFamily, fontSize, color, backgroundColor } or null
+     * @param theme { fontFamily, fontSize, color } (backgroundColor is ignored) or null
      * @returns boolean false when the container is not on the page
      */
     obj.set_theme = function (id, theme) {
@@ -778,8 +891,15 @@ const rteModule = (function () {
                 value = value + 'px';
             }
 
+            if (property === 'color' && value !== '' && readable_on_white(value) === false) {
+                value = '';
+            }
+
             container.style[property] = value;
         });
+
+        /* never carried over from an earlier theme */
+        container.style.backgroundColor = '';
 
         return true;
     };

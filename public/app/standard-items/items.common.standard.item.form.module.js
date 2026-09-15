@@ -868,25 +868,11 @@ const itemsCommonStandardItemFormModule = (function () {
                     if (field) field.style.display = '';
                 });
 
-                const embed_group = document.querySelector('#embed-item-group');
-                const description_box = document.querySelector('#item-description-input');
-                if (embed_group && description_box) {
-                    description_box.insertAdjacentElement('afterend', embed_group);
-                }
-
-                // Disable the Pop-up Window Description while Embed Item is checked
-                // (embedded items do not open the pop-up). The edit form dispatches a
-                // 'change' event after loading so the initial state stays in sync.
-                const embed_checkbox = document.querySelector('#embed-item');
-                const description_field = document.querySelector('#item-description-input');
-                if (embed_checkbox && description_field) {
-                    const sync_description_state = () => {
-                        description_field.disabled = embed_checkbox.checked;
-                        description_field.style.opacity = embed_checkbox.checked ? '0.5' : '';
-                    };
-                    embed_checkbox.addEventListener('change', sync_description_state);
-                    sync_description_state();
-                }
+                // Embed Item governs the Pop-up Window Description: the checkbox moves
+                // above the field and disables it while checked (embedded items do not
+                // open the pop-up). The edit form dispatches 'change' after loading so
+                // the initial state stays in sync. Shared wiring — see helperModule.
+                helperModule.bind_embed_description('embed-item', 'item-description-input');
             }
 
             // Fetch and populate styles dropdown (both media and text paths)

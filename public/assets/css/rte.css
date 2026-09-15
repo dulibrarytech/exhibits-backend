@@ -58,6 +58,21 @@
     background-color: #e9ecef;
 }
 
+/* rteModule.set_enabled(false) hides the toolbar but leaves it in the DOM,
+   so Quill's toolbar + container border join would still remove the box's
+   top edge; restore it, as for editors mounted without a toolbar */
+.ql-toolbar.ql-snow[hidden] + .rte-container.ql-container.ql-snow {
+    border-top: 1px solid #ccc;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+/* the "not used while Embed item is checked" note under a field's label
+   (helperModule.bind_embed_description / mark_embedded_description) */
+.rte-embed-note {
+    margin: 0 0 0.5rem;
+}
+
 /* keep palette swatches visible against the toolbar background */
 .ql-snow .ql-color .ql-picker-options [data-value=""] {
     border: 1px solid #ccc;
@@ -117,9 +132,11 @@
     color: inherit;
 }
 
+/* Bootstrap's link blue (#007bff) measures 3.98:1 on white — under AA's
+   4.5:1 for normal text; its hover shade passes at 7.3:1 */
 .rte-container .ql-editor a,
 .rte-readonly a {
-    color: #007bff;
+    color: #0056b3;
     text-decoration: underline;
 }
 
@@ -127,7 +144,7 @@
 .rte-container .ql-editor a:focus,
 .rte-readonly a:hover,
 .rte-readonly a:focus {
-    color: #0056b3;
+    color: #003d80;
     text-decoration: underline;
 }
 
@@ -168,3 +185,15 @@
 .rte-readonly ol ul {
     margin-bottom: 0;
 }
+
+/* indented paragraphs are stored as <p class="ql-indent-N"> (the gate keeps
+   1-8); Quill only styles them under .ql-editor, so the static box needs the
+   same 3em steps */
+.rte-readonly .ql-indent-1 { padding-left: 3em; }
+.rte-readonly .ql-indent-2 { padding-left: 6em; }
+.rte-readonly .ql-indent-3 { padding-left: 9em; }
+.rte-readonly .ql-indent-4 { padding-left: 12em; }
+.rte-readonly .ql-indent-5 { padding-left: 15em; }
+.rte-readonly .ql-indent-6 { padding-left: 18em; }
+.rte-readonly .ql-indent-7 { padding-left: 21em; }
+.rte-readonly .ql-indent-8 { padding-left: 24em; }

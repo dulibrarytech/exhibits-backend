@@ -26,7 +26,7 @@ describe('rteModule.set_theme', () => {
         document.body.innerHTML = '<div id="item-text-input" class="rte-container ql-container ql-snow"><div class="ql-editor"><p>x</p></div></div>';
     });
 
-    it('writes the four preset properties inline on the container', () => {
+    it('writes font family, size and colour inline on the container — never the background', () => {
         const ok = globalThis.rteModule.set_theme('item-text-input', {
             fontFamily: 'IBM Plex Mono', fontSize: '19px', color: '#303030', backgroundColor: '#c2ced5',
         });
@@ -36,7 +36,40 @@ describe('rteModule.set_theme', () => {
         expect(style.fontFamily).toBe('"IBM Plex Mono"');
         expect(style.fontSize).toBe('19px');
         expect(style.color).toBe('rgb(48, 48, 48)');
-        expect(style.backgroundColor).toBe('rgb(194, 206, 213)');
+        /* the editing surface stays white whatever the exhibit theme paints (2026-09-15) */
+        expect(style.backgroundColor).toBe('');
+    });
+
+    it('clears a background an earlier theme left behind', () => {
+        const el = document.getElementById('item-text-input');
+        el.style.backgroundColor = '#000000';
+        globalThis.rteModule.set_theme('item-text-input', { color: '#303030' });
+        expect(el.style.backgroundColor).toBe('');
+    });
+
+    /*
+     * With no background mirrored, a colour designed for a dark background
+     * would vanish on the white editor. Kept only at AA contrast on white.
+     */
+    it('skips a text colour that would not read on white, keeps one that does', () => {
+        const el = document.getElementById('item-text-input');
+
+        globalThis.rteModule.set_theme('item-text-input', { color: '#ffffff' });
+        expect(el.style.color).toBe('');
+        globalThis.rteModule.set_theme('item-text-input', { color: 'rgb(255, 255, 0)' });
+        expect(el.style.color).toBe('');
+        /* #777777 is 4.48:1 — just under; #767676 is 4.54:1 — just over */
+        globalThis.rteModule.set_theme('item-text-input', { color: '#777777' });
+        expect(el.style.color).toBe('');
+        globalThis.rteModule.set_theme('item-text-input', { color: '#767676' });
+        expect(el.style.color).toBe('rgb(118, 118, 118)');
+        globalThis.rteModule.set_theme('item-text-input', { color: '#4b0082' });
+        expect(el.style.color).toBe('rgb(75, 0, 130)');
+        globalThis.rteModule.set_theme('item-text-input', { color: '#fff' });
+        expect(el.style.color).toBe('');
+        /* unparseable → not mirrored rather than guessed */
+        globalThis.rteModule.set_theme('item-text-input', { color: 'papayawhip' });
+        expect(el.style.color).toBe('');
     });
 
     it('treats a bare numeric fontSize as pixels', () => {
@@ -53,7 +86,7 @@ describe('rteModule.set_theme', () => {
     it('clears a property the theme leaves empty, and everything on null', () => {
         const el = document.getElementById('item-text-input');
         globalThis.rteModule.set_theme('item-text-input', {
-            fontFamily: 'Georgia', fontSize: '15px', color: '#111111', backgroundColor: '#fdfdfd',
+            fontFamily: 'Georgia', fontSize: '15px', color: '#111111',
         });
 
         globalThis.rteModule.set_theme('item-text-input', { fontFamily: 'Georgia', fontSize: '', color: null });

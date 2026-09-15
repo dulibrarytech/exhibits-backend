@@ -105,7 +105,7 @@ describe('helperModule item style preset mirroring (bind/apply_item_style_theme)
 
         // the builder default-checks the first preset
         expect(globalThis.rteModule.set_theme).toHaveBeenLastCalledWith('item-text-input', {
-            fontFamily: 'IBM Plex Mono', fontSize: '19px', color: '#303030', backgroundColor: '#c2ced5',
+            fontFamily: 'IBM Plex Mono', fontSize: '19px', color: '#303030',
         });
     });
 
@@ -115,7 +115,7 @@ describe('helperModule item style preset mirroring (bind/apply_item_style_theme)
         globalThis.helperModule.apply_item_style_theme();
 
         expect(globalThis.rteModule.set_theme).toHaveBeenLastCalledWith('item-text-input', {
-            fontFamily: 'Courier New', fontSize: '15px', color: '#4b0082', backgroundColor: '#ffffff',
+            fontFamily: 'Courier New', fontSize: '15px', color: '#4b0082',
         });
     });
 
@@ -176,5 +176,159 @@ describe('helperModule item style preset mirroring (bind/apply_item_style_theme)
         delete globalThis.rteModule;
         expect(() => globalThis.helperModule.apply_item_style_theme()).not.toThrow();
         expect(() => globalThis.helperModule.check_item_style_option('item1')).not.toThrow();
+    });
+});
+
+describe('helperModule.bind_embed_description (Embed item ↔ Pop-up Window Description)', () => {
+
+    const SET_ENABLED_CALLS = [];
+
+    beforeAll(() => {
+        const createDOMPurify = require('dompurify');
+        globalThis.DOMPurify = createDOMPurify(window);
+        const src = readFileSync(MODULE_PATH, 'utf8');
+        const patched = src.replace(/^const\s+helperModule\s*=/m, 'globalThis.helperModule =');
+        // eslint-disable-next-line no-eval
+        (0, eval)(patched);
+    });
+
+    beforeEach(() => {
+        SET_ENABLED_CALLS.length = 0;
+        // rteModule is a separate script; stand in for what set_enabled does to the DOM
+        globalThis.rteModule = {
+            set_enabled: vi.fn((id, enabled) => {
+                SET_ENABLED_CALLS.push([id, enabled]);
+                const editor = document.querySelector('#' + id + ' .ql-editor');
+                editor.setAttribute('contenteditable', enabled ? 'true' : 'false');
+                return true;
+            }),
+        };
+        // the media card as the partials + Quill leave it: text row, description row, embed group after
+        document.body.innerHTML = `
+            <div id="card">
+                <div id="text-row"><div id="item-text-input" data-rte="full"><div class="ql-editor" contenteditable="true"></div></div></div>
+                <div class="row" id="is-media-only-description">
+                    <div class="col-12"><div class="row form-group"><div class="col-12">
+                        <div class="form-text text-muted"><span id="item-description-input-label">Pop-up Window Description</span></div>
+                        <div class="ql-toolbar ql-snow"><button class="ql-bold"></button></div>
+                        <div id="item-description-input" class="rte-container ql-container" data-rte="full">
+                            <div class="ql-editor" contenteditable="true" role="textbox" aria-labelledby="item-description-input-label"><p>Kept text</p></div>
+                        </div>
+                    </div></div></div>
+                </div>
+                <div id="embed-item-group" class="form-group">
+                    <small class="form-text text-muted"><em>Embedded items do not open the item viewer (pop-up window)</em></small>
+                    <label for="embed-item">Embed item <input type="checkbox" id="embed-item" name="embed_item"></label>
+                </div>
+            </div>`;
+    });
+
+    afterEach(() => {
+        delete globalThis.rteModule;
+        const region = document.getElementById('embed-item-status');
+        if (region) region.remove();
+    });
+
+    const editor = () => document.querySelector('#item-description-input .ql-editor');
+    const note = () => document.getElementById('item-description-input-embed-note');
+    /*
+     * jsdom cannot dispatch a trusted event (isTrusted is unforgeable and
+     * always false here), so these tests drive the state machine with
+     * synthetic changes — the edit-form path — and leave "a real click
+     * announces" to the e2e spec, where the click is real.
+     */
+    const change = () => {
+        document.getElementById('embed-item').dispatchEvent(new window.Event('change', { bubbles: true }));
+    };
+
+    it('moves the checkbox above the description row and links them with aria-controls', () => {
+        expect(globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input')).toBe(true);
+
+        const ids = [...document.getElementById('card').children].map((el) => el.id);
+        expect(ids).toEqual(['text-row', 'embed-item-group', 'is-media-only-description']);
+        expect(document.getElementById('embed-item').getAttribute('aria-controls')).toBe('is-media-only-description');
+    });
+
+    it('leaves an unchecked box with an enabled editor and a hidden note', () => {
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+
+        expect(SET_ENABLED_CALLS.at(-1)).toEqual(['item-description-input', true]);
+        expect(editor().getAttribute('contenteditable')).toBe('true');
+        expect(note().hidden).toBe(true);
+        expect(editor().getAttribute('aria-describedby')).toBe(null);
+        // the note sits under the label, before the toolbar
+        expect(note().nextElementSibling.classList.contains('ql-toolbar')).toBe(true);
+    });
+
+    it('disables the editor and shows the note when the box becomes checked, and restores on uncheck', () => {
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+        document.getElementById('embed-item').checked = true;
+        change();
+
+        expect(SET_ENABLED_CALLS.at(-1)).toEqual(['item-description-input', false]);
+        expect(editor().getAttribute('contenteditable')).toBe('false');
+        expect(note().hidden).toBe(false);
+        expect(note().textContent).toMatch(/not used while embed item is checked/i);
+        expect(editor().getAttribute('aria-describedby')).toBe('item-description-input-embed-note');
+
+        // the value is untouched — search results and the index still read it
+        expect(editor().innerHTML).toBe('<p>Kept text</p>');
+
+        document.getElementById('embed-item').checked = false;
+        change();
+        expect(SET_ENABLED_CALLS.at(-1)).toEqual(['item-description-input', true]);
+        expect(editor().getAttribute('contenteditable')).toBe('true');
+        expect(note().hidden).toBe(true);
+        expect(editor().getAttribute('aria-describedby')).toBe(null);
+    });
+
+    it('does not announce a record-driven (synthetic) change — the edit form restoring is_embedded is not news', () => {
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+        document.getElementById('embed-item').checked = true;
+        change();
+
+        expect(editor().getAttribute('contenteditable')).toBe('false');
+        expect(note().hidden).toBe(false);
+        expect(document.getElementById('embed-item-status')).toBe(null);
+    });
+
+    it('binds once even when called twice (re-init on the same page)', () => {
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+        SET_ENABLED_CALLS.length = 0;
+        document.getElementById('embed-item').checked = true;
+        change();
+
+        expect(SET_ENABLED_CALLS.length).toBe(1);
+        expect(document.querySelectorAll('#item-description-input-embed-note').length).toBe(1);
+    });
+
+    it('keeps any existing aria-describedby tokens on the editor', () => {
+        editor().setAttribute('aria-describedby', 'some-hint');
+        globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input');
+        document.getElementById('embed-item').checked = true;
+        change();
+        expect(editor().getAttribute('aria-describedby')).toBe('some-hint item-description-input-embed-note');
+        document.getElementById('embed-item').checked = false;
+        change();
+        expect(editor().getAttribute('aria-describedby')).toBe('some-hint');
+    });
+
+    it('returns false when the page has no checkbox or no editor', () => {
+        document.getElementById('embed-item-group').remove();
+        expect(globalThis.helperModule.bind_embed_description('embed-item', 'item-description-input')).toBe(false);
+        expect(SET_ENABLED_CALLS.length).toBe(0);
+    });
+
+    it('mark_embedded_description shows the details-page note only for embedded records', () => {
+        document.body.innerHTML = '<div class="form-text"><span id="l">Pop-up Window Description</span></div><div id="item-description-input" class="rte-readonly"><p>Kept</p></div>';
+        globalThis.helperModule.mark_embedded_description('item-description-input', true);
+        const n = document.getElementById('item-description-input-embed-note');
+        expect(n.hidden).toBe(false);
+        expect(n.textContent).toMatch(/embedded/i);
+        expect(n.nextElementSibling.id).toBe('item-description-input');
+
+        globalThis.helperModule.mark_embedded_description('item-description-input', false);
+        expect(document.getElementById('item-description-input-embed-note').hidden).toBe(true);
     });
 });

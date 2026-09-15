@@ -165,6 +165,7 @@ const itemsDetailsGridItemModule = (function () {
 
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
         }
 
         // Set radio button selections
