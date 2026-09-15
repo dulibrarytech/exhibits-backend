@@ -1119,7 +1119,14 @@ const helperModule = (function () {
             container.parentNode.insertBefore(note, anchor);
         }
 
-        note.textContent = text;
+        /* same hint furniture as the Wrap Text / Embed item hints beside it:
+           the icon is decorative, so aria-describedby reads the text only */
+        note.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation-circle';
+        icon.setAttribute('aria-hidden', 'true');
+        note.appendChild(icon);
+        note.appendChild(document.createTextNode(' ' + text));
 
         return note;
     }
