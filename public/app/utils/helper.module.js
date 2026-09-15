@@ -1077,7 +1077,7 @@ const helperModule = (function () {
      * the note under the label, and a polite live region — the muted styling
      * is a consequence, not the signal.
      */
-    const EMBED_NOTE_TEXT = 'Not used while Embed item is checked. The saved text is kept and will be used again if you clear the box.';
+    const EMBED_NOTE_TEXT = 'Not used while Embed item is checked.';
     const EMBED_NOTE_TEXT_DETAILS = 'Not used: this item is embedded, so it does not open the pop-up viewer. The saved text is kept.';
     const EMBED_STATUS_ON = 'Pop-up Window Description is not used while Embed item is checked. The saved text is kept.';
     const EMBED_STATUS_OFF = 'Pop-up Window Description is available again.';
