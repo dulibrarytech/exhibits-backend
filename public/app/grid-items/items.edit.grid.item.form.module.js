@@ -372,10 +372,10 @@ const itemsEditGridItemFormModule = (function () {
          */
         const set_basic_fields = (record, elements) => {
             // Set title
-            rteModule.set_html('item-title-input', record.title ? helperModule.unescape(record.title) : '');
+            rteModule.set_html('item-title-input', record.title || '');
 
             // Set text
-            rteModule.set_html('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+            rteModule.set_html('item-text-input', record.text || '');
         };
 
         /**
@@ -591,7 +591,7 @@ const itemsEditGridItemFormModule = (function () {
                 itemsCommonGridItemFormModule.populate_media_previews(record);
 
                 // Populate optional Pop-up Window Description + Caption fields
-                rteModule.set_html('item-description-input', helperModule.unescape(record.description));
+                rteModule.set_html('item-description-input', record.description);
                 set_caption_value(helperModule.unescape(record.caption));
             }
 

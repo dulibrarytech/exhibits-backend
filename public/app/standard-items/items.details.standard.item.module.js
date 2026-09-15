@@ -155,9 +155,9 @@ const itemsDetailsStandardItemModule = (function () {
 
         // Set basic item data
         if (is_media_details) {
-            rteModule.render_static('item-text-input', helperModule.unescape(record.text));
+            rteModule.render_static('item-text-input', record.text);
         } else {
-            rteModule.set_html('item-text-input', helperModule.unescape(record.text));
+            rteModule.set_html('item-text-input', record.text);
         }
 
         // Populate media previews using the shared common module
@@ -167,7 +167,7 @@ const itemsDetailsStandardItemModule = (function () {
             // Surface the popup-related fields read-only. The common form module
             // (also init'd on this page) reveals/relocates them; here we fill in
             // their values and gate the Embed Item control to audio/video media.
-            rteModule.render_static('item-description-input', helperModule.unescape(record.description));
+            rteModule.render_static('item-description-input', record.description);
             set_caption_text(helperModule.unescape(record.caption));
 
             const embed_item_el = document.getElementById('embed-item');

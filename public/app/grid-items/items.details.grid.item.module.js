@@ -150,8 +150,8 @@ const itemsDetailsGridItemModule = (function () {
         }
 
         // Set basic item data
-        rteModule.render_static('item-title-input', helperModule.unescape(record.title));
-        rteModule.render_static('item-text-input', helperModule.unescape(record.text));
+        rteModule.render_static('item-title-input', record.title);
+        rteModule.render_static('item-text-input', record.text);
 
         // Populate media previews using the shared common module
         if (window.location.pathname.indexOf('media') !== -1) {
@@ -160,7 +160,7 @@ const itemsDetailsGridItemModule = (function () {
             // Surface the popup-related fields read-only. The common form module
             // (also init'd on this page) reveals/relocates them; here we fill in
             // their values and gate the Embed Item control to audio/video media.
-            rteModule.render_static('item-description-input', helperModule.unescape(record.description));
+            rteModule.render_static('item-description-input', record.description);
             set_caption_text(helperModule.unescape(record.caption));
 
             const embed_item_el = document.getElementById('embed-item');

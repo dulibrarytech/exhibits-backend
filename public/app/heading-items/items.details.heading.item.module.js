@@ -93,7 +93,7 @@ const itemsDetailsHeadingModule = (function () {
          * innerHTML — correct here, because the reduced gate legitimately
          * stores b/i/u markup that should display formatted, not literally.
          */
-        rteModule.render_static('item-heading-text-input', helperModule.unescape(record.text));
+        rteModule.render_static('item-heading-text-input', record.text);
         domModule.set_value('#item-heading-type-input', record.type);
 
         if (is_published === 1) {

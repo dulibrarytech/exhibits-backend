@@ -270,8 +270,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             }
 
             // Set basic form fields
-            rteModule.render_static('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-            rteModule.render_static('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+            rteModule.render_static('item-title-input', record.title || '');
+            rteModule.render_static('item-text-input', record.text || '');
 
             // Set date field (extract date portion from ISO string)
             if (record.date) {
@@ -287,7 +287,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
                 itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
                 // Surface the Pop-up Window Description + Caption read-only.
-                rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
+                rteModule.render_static('item-description-input', record.description || '');
                 set_caption_text(record.caption ? helperModule.unescape(record.caption) : '');
             }
 

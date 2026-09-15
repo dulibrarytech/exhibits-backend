@@ -20,11 +20,15 @@ const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
     stubStandardItemApi,
+    stubGridItemRecordApi,
     exhibitFixture,
+    standardItemRecordFixture,
+    gridItemRecordFixture,
 } = require('../fixtures/api-stubs');
 
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
+const ITEM_UUID = '880e8400-e29b-41d4-a716-446655440300';
 
 /* pastes html into the editor with the given id and returns the serialized value */
 async function paste(page, id, html) {
@@ -182,3 +186,55 @@ test.describe('RTE vocabulary — reduced profile (exhibit title)', () => {
         expect(value).not.toContain('</p><p>');
     });
 });
+
+/*
+ * Stored values are HTML, not entity-encoded text, so the load path must
+ * not decode them. Until 2026-09-15 every editor was populated through
+ * helperModule.unescape(): an author's literal "&lt;b&gt;" came back as
+ * "<b>", Quill read it as formatting, and the next save rewrote the prose
+ * as bold. These pin the raw load on an editor and on a static box.
+ */
+test.describe('RTE load path — stored HTML is loaded as-is, never entity-decoded', () => {
+
+    const LITERAL = '<p>Use the &lt;b&gt; tag for bold, and 2 &lt; 3.</p>';
+
+    test.beforeEach(async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+    });
+
+    test('an author\'s literal angle brackets survive an edit-page round trip', async ({ page }) => {
+        const state = await stubStandardItemApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: standardItemRecordFixture({ uuid: ITEM_UUID, item_type: 'text', text: LITERAL }),
+        });
+        await page.goto(`${APP_PATH}/items/standard/text/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`);
+
+        /* shown as text, not applied as formatting */
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Use the <b> tag for bold, and 2 < 3.');
+        await expect(page.locator('#item-text-input .ql-editor strong')).toHaveCount(0);
+        expect(await page.evaluate(() => rteModule.get_html('item-text-input'))).toBe(LITERAL);
+
+        /* and saved back byte-for-byte */
+        await page.click('#save-item-btn');
+        await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+        expect(state.lastUpdatePayload.text).toBe(LITERAL);
+    });
+
+    test('a static details box shows the brackets as text too', async ({ page }) => {
+        await stubGridItemRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            gridId: '770e8400-e29b-41d4-a716-446655440100',
+            record: gridItemRecordFixture({ uuid: '880e8400-e29b-41d4-a716-446655440200', item_type: 'text', text: LITERAL }),
+        });
+        await page.goto(
+            `${APP_PATH}/items/grid/item/text/details?exhibit_id=${EXHIBIT_UUID}`
+            + '&grid_id=770e8400-e29b-41d4-a716-446655440100&item_id=880e8400-e29b-41d4-a716-446655440200'
+        );
+        await expect(page.locator('#item-text-input')).toHaveText('Use the <b> tag for bold, and 2 < 3.');
+        await expect(page.locator('#item-text-input b, #item-text-input strong')).toHaveCount(0);
+    });
+});
+

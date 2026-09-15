@@ -348,14 +348,14 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
          * Set item title input value
          */
         const set_item_title = (title, element) => {
-            rteModule.set_html('item-title-input', title ? helperModule.unescape(title) : '');
+            rteModule.set_html('item-title-input', title || '');
         };
 
         /**
          * Set item text input value
          */
         const set_item_text = (text, element) => {
-            rteModule.set_html('item-text-input', text ? helperModule.unescape(text) : '');
+            rteModule.set_html('item-text-input', text || '');
         };
 
         /**
@@ -395,7 +395,7 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
             // Populate optional Pop-up Window Description + Caption fields
-            rteModule.set_html('item-description-input', record.description ? helperModule.unescape(record.description) : '');
+            rteModule.set_html('item-description-input', record.description || '');
             set_caption_value(record.caption ? helperModule.unescape(record.caption) : '');
         };
 
