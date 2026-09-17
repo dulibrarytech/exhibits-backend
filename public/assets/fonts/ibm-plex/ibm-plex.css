@@ -1,0 +1,23 @@
+/*
+ * IBM Plex Sans / IBM Plex Mono, self-hosted (SIL Open Font License 1.1).
+ * The exhibit style menu offers fourteen fonts; the public site
+ * (exhibits-frontend src/global.css) self-hosts these two, the rest fall
+ * back to whatever the viewer's machine has installed. Declared here so a
+ * mirrored item style preset (rteModule.set_theme) renders in the editor the
+ * way it renders publicly. Same files as the public site, regular weight
+ * only, as there.
+ */
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(files/IBMPlexSans-Regular.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(files/IBMPlexMono-Regular.ttf) format('truetype');
+}

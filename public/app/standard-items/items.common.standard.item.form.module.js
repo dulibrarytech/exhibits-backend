@@ -249,6 +249,10 @@ const itemsCommonStandardItemFormModule = (function () {
             if (display_el) display_el.value = '';
             group.style.display = 'none';
         }
+
+        // Bound media that has since been deleted from the library still has a
+        // name, so the group shows — flag it so staff know to replace it.
+        helperModule.toggle_media_deleted_warning('item-media-name-display', media);
     }
 
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
@@ -477,6 +481,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 kaltura_thumbnail_url: record.media_kaltura_thumbnail_url || null,
                 repo_uuid: record.media_repo_uuid || null,
                 thumbnail_path: record.media_thumbnail_path || null,
+                is_deleted: record.media_is_deleted ?? null,
                 alt_text: record.media_alt_text || null,
                 is_alt_text_decorative: record.media_is_alt_text_decorative ?? null
             };
@@ -598,7 +603,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
                 item.description = rteModule.get_html('item-description-input');
-                item.caption = rteModule.get_html('item-caption-input');
+                item.caption = getElementValue('#item-caption-input');
 
                 // Collect Embed Item flag (embedded audio/video skip the pop-up viewer).
                 const embed_item_el = document.querySelector('#embed-item');
@@ -693,29 +698,17 @@ const itemsCommonStandardItemFormModule = (function () {
                     if (field) field.style.display = '';
                 });
 
-                const embed_group = document.querySelector('#embed-item-group');
-                const description_box = document.querySelector('#item-description-input');
-                if (embed_group && description_box) {
-                    description_box.insertAdjacentElement('afterend', embed_group);
-                }
-
-                // Disable the Pop-up Window Description while Embed Item is checked
-                // (embedded items do not open the pop-up). The edit form dispatches a
-                // 'change' event after loading so the initial state stays in sync.
-                const embed_checkbox = document.querySelector('#embed-item');
-                const description_field = document.querySelector('#item-description-input');
-                if (embed_checkbox && description_field) {
-                    const sync_description_state = () => {
-                        description_field.disabled = embed_checkbox.checked;
-                        description_field.style.opacity = embed_checkbox.checked ? '0.5' : '';
-                    };
-                    embed_checkbox.addEventListener('change', sync_description_state);
-                    sync_description_state();
-                }
+                // Embed Item governs the Pop-up Window Description: the checkbox moves
+                // above the field and disables it while checked (embedded items do not
+                // open the pop-up). The edit form dispatches 'change' after loading so
+                // the initial state stays in sync. Shared wiring — see helperModule.
+                helperModule.bind_embed_description('embed-item', 'item-description-input');
             }
 
             // Fetch and populate styles dropdown (both media and text paths)
-            styles_promise = helperModule.load_style_presets();
+            // Mirror the preset on the Exhibit Text editor — the field the preset styles on the public site
+            // (description renders in the item viewer, outside the styled wrapper).
+            styles_promise = helperModule.load_style_presets({ theme_editor_ids: ['item-text-input'] });
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

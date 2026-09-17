@@ -28,8 +28,10 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
      */
     function populate(record) {
 
-        rteModule.render_static('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-        rteModule.render_static('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+        /* Stored HTML goes into the static boxes as-is: decoding it first turned
+           an author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.render_static('item-title-input', record.title || '');
+        rteModule.render_static('item-text-input', record.text || '');
 
         /* Set date field (extract date portion from ISO string) */
         if (record.date) {
@@ -45,8 +47,10 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
             /* Surface the Pop-up Window Description + Caption read-only. */
-            rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-            rteModule.render_static('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+            rteModule.render_static('item-description-input', record.description || '');
+            /* Caption is plain text: textContent, never innerHTML, so a stored
+               value containing markup displays literally. It keeps the decode. */
+            domModule.set_text('#item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
         }
 
         /* Set embed item checkbox from record */
@@ -55,6 +59,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
         if (embed_item_el) {
             embed_item_el.checked = record.is_embedded === 1;
         }
+        helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
     }
 
     const form = itemFormBaseModule.create({

@@ -47,7 +47,7 @@ const TIMELINE_ITEM_RTE_PROFILES = {
     title: 'reduced',
     text: 'full',
     description: 'full',
-    caption: 'full',
+    caption: 'linked_text',
     alt_text: 'plain',
     date: 'plain'
 };

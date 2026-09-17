@@ -66,7 +66,14 @@ const itemsEditHeadingFormModule = (function () {
 
         const dom_elements = cache_dom_elements();
 
-        rteModule.set_html('item-heading-text-input', record.text ? helperModule.unescape(record.text) : '');
+        /* Heading Text is a plain textarea, not an editor: the reduced gate
+           stores at most b/i/u markup, so the value goes in decoded. */
+        const input = document.querySelector('#item-heading-text-input');
+
+        if (input !== null) {
+            input.value = record.text ? helperModule.unescape(record.text) : '';
+        }
+
         set_heading_type(record.type, dom_elements.heading_type_input);
         set_published_status(record.is_published, dom_elements.is_published);
 

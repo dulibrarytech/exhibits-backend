@@ -277,6 +277,65 @@ test.describe('Media library list page (media.library.module.js — display_medi
         await expect(row).toContainText('Test Exhibit');
     });
 
+    test('Filter by Exhibit listbox overlays the table and filters the rows', async ({ page }) => {
+        // Regression: the WCAG reflow override (`overflow-x: auto` on the
+        // DataTable's Bootstrap layout cells) once matched the control-row
+        // column holding this combobox too, so the absolutely positioned
+        // listbox opened INSIDE a 57px overflow box — the options existed
+        // but were clipped and unreachable. The rule is now scoped to the
+        // table cell (`dt-table-cell`).
+        const EXHIBIT_A = '550e8400-e29b-41d4-a716-446655440000';
+        const EXHIBIT_B = '660e8400-e29b-41d4-a716-446655440001';
+        await stubExhibitsApi(page, {
+            records: [
+                exhibitFixture({ uuid: EXHIBIT_A, title: 'Test Exhibit' }),
+                exhibitFixture({ uuid: EXHIBIT_B, title: 'Other Exhibit' }),
+            ],
+        });
+        await stubMediaLibraryListApi(page, {
+            records: [
+                mediaRecordFixture({ uuid: 'm-a', name: 'In exhibit A', exhibits: [EXHIBIT_A] }),
+                mediaRecordFixture({ uuid: 'm-b', name: 'In exhibit B', exhibits: [EXHIBIT_B] }),
+                mediaRecordFixture({ uuid: 'm-none', name: 'Unassigned', exhibits: [] }),
+            ],
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await expect(page.locator('#media-data tr')).toHaveCount(3);
+
+        // The column wrapping the combobox must not clip; the table cell keeps
+        // its horizontal scroll (the reflow behaviour the rule exists for).
+        const filter_column = page.locator('#exhibit-filter-container').locator('..');
+        await expect(filter_column).toHaveCSS('overflow-y', 'visible');
+        await expect(page.locator('.dt-container > .row > .dt-table-cell')).toHaveCSS('overflow-x', 'auto');
+
+        // Open the list: every option must be the element actually under its
+        // own box (i.e. not covered/clipped by the column or the table header).
+        await page.locator('.exhibit-filter-caret').click();
+        const listbox = page.locator('#exhibit-filter-listbox');
+        await expect(listbox).toBeVisible();
+        const option_b = listbox.locator('.exhibit-filter-option', { hasText: 'Other Exhibit' });
+        await expect(option_b).toBeVisible();
+        const covered = await option_b.evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + 10, r.top + r.height / 2);
+            return hit !== el && !el.contains(hit);
+        });
+        expect(covered).toBe(false);
+
+        // Selecting an option filters the table to that exhibit's media
+        await option_b.click();
+        await expect(page.locator('#exhibit-filter-input')).toHaveValue('Other Exhibit');
+        await expect(listbox).toBeHidden();
+        await expect(page.locator('#media-data tr')).toHaveCount(1);
+        await expect(page.locator('#media-data tr').first()).toContainText('In exhibit B');
+
+        // Clearing restores the full list
+        await page.locator('.exhibit-filter-clear').click();
+        await expect(page.locator('#exhibit-filter-input')).toHaveValue('');
+        await expect(page.locator('#media-data tr')).toHaveCount(3);
+    });
+
     test('orders the list by Date Added, most recent first', async ({ page }) => {
         // Payload deliberately delivers oldest → newest so the assertion can
         // only pass if the DataTable order config does the work (index 3 =

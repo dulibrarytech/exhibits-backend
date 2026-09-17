@@ -194,6 +194,10 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             if (display_el) display_el.value = '';
             group.style.display = 'none';
         }
+
+        // Bound media that has since been deleted from the library still has a
+        // name, so the group shows — flag it so staff know to replace it.
+        helperModule.toggle_media_deleted_warning('item-media-name-display', media);
     }
 
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
@@ -415,7 +419,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 ingest_method: record.media_ingest_method || null,
                 kaltura_thumbnail_url: record.media_kaltura_thumbnail_url || null,
                 repo_uuid: record.media_repo_uuid || null,
-                thumbnail_path: record.media_thumbnail_path || null
+                thumbnail_path: record.media_thumbnail_path || null,
+                is_deleted: record.media_is_deleted ?? null
             };
 
             update_media_preview(
@@ -523,7 +528,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
                 item.description = rteModule.get_html('item-description-input');
-                item.caption = rteModule.get_html('item-caption-input');
+                item.caption = (document.querySelector('#item-caption-input') || {}).value || '';
 
             } else {
                 // Default to text type for non-media paths
@@ -598,25 +603,11 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                     if (field) field.style.display = '';
                 });
 
-                const embed_group = document.querySelector('#embed-item-group');
-                const description_box = document.querySelector('#item-description-input');
-                if (embed_group && description_box) {
-                    description_box.insertAdjacentElement('afterend', embed_group);
-                }
-
-                // Disable the Pop-up Window Description while Embed Item is checked
-                // (embedded items do not open the pop-up). The edit form dispatches a
-                // 'change' event after loading so the initial state stays in sync.
-                const embed_checkbox = document.querySelector('#embed-item');
-                const description_field = document.querySelector('#item-description-input');
-                if (embed_checkbox && description_field) {
-                    const sync_description_state = () => {
-                        description_field.disabled = embed_checkbox.checked;
-                        description_field.style.opacity = embed_checkbox.checked ? '0.5' : '';
-                    };
-                    embed_checkbox.addEventListener('change', sync_description_state);
-                    sync_description_state();
-                }
+                // Embed Item governs the Pop-up Window Description: the checkbox moves
+                // above the field and disables it while checked (embedded items do not
+                // open the pop-up). The edit form dispatches 'change' after loading so
+                // the initial state stays in sync. Shared wiring — see helperModule.
+                helperModule.bind_embed_description('embed-item', 'item-description-input');
             }
 
         } catch (error) {

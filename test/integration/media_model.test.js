@@ -48,6 +48,11 @@ const mockMediaTasks = mock_model([
 ]);
 jest.mock('../../media-library/tasks/media_record_tasks', () => jest.fn().mockImplementation(() => mockMediaTasks));
 
+/* The in-use guard on delete reads the item and exhibit tables through its
+   own task class; no references by default so the delete path proceeds. */
+const mockMediaReferenceTasks = mock_model({ get_media_references: [] });
+jest.mock('../../media-library/tasks/media_reference_tasks', () => jest.fn().mockImplementation(() => mockMediaReferenceTasks));
+
 jest.mock('../../media-library/uploads', () => ({
     get_media_type: jest.fn(),
     store_file: jest.fn(),
@@ -330,6 +335,24 @@ describe('Media Library Model', () => {
             expect(IIIF_CACHE.purge).toHaveBeenCalledWith(MEDIA_UUID);
             /* Soft delete never touches the file on disk. */
             expect(UPLOADS.delete_stored_file).not.toHaveBeenCalled();
+        });
+
+        test('refuses when an item or exhibit still binds the media, naming the dependents', async () => {
+            const references = [
+                { record_type: 'item', uuid: 'i1', role: 'media', exhibit_uuid: 'e1', exhibit_title: '<b>Latinx Poetry</b>', exhibit_is_deleted: 0 }
+            ];
+            mockMediaReferenceTasks.get_media_references.mockResolvedValueOnce(references);
+
+            const result = await MEDIA_MODEL.delete_media_record(MEDIA_UUID, 'ada');
+
+            expect(result.success).toBe(false);
+            expect(result.in_use).toBe(true);
+            expect(result.references).toEqual(references);
+            expect(result.message).toContain('Latinx Poetry');
+            expect(result.message).not.toContain('<b>');
+            /* Refused before the row is touched or the cache purged. */
+            expect(mockMediaTasks.delete_media_record).not.toHaveBeenCalled();
+            expect(IIIF_CACHE.purge).not.toHaveBeenCalled();
         });
 
         test('does not purge when the delete fails, and rejects an invalid id', async () => {

@@ -106,7 +106,8 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             helperModule.show_form();
 
             // Fetch and populate styles dropdown
-            styles_promise = helperModule.load_style_presets();
+            // Mirror the preset on the timeline text editor; the timeline wrapper carries the preset on the public site.
+            styles_promise = helperModule.load_style_presets({ theme_editor_ids: ['timeline-text-input'] });
 
         } catch (error) {
             // domModule.set_alert is a no-op if #message is absent, so a

@@ -50,7 +50,7 @@ const timeline_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 const ITEM_RTE_PROFILES = {
     text: 'full',
     description: 'full',
-    caption: 'full',
+    caption: 'linked_text',
     alt_text: 'plain'
 };
 

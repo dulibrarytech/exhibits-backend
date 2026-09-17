@@ -186,7 +186,8 @@ const itemsCommonStandardGridFormModule = (function () {
             helperModule.show_form();
 
             // Fetch and populate styles dropdown
-            styles_promise = helperModule.load_style_presets();
+            // Mirror the preset on the grid text editor; the grid wrapper carries the preset on the public site.
+            styles_promise = helperModule.load_style_presets({ theme_editor_ids: ['grid-text-input'] });
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

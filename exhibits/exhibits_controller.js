@@ -409,6 +409,10 @@ const EXHIBIT_STATE_CHANGES = {
             under_filled_grids: {
                 log: 'Publish failed - grids below minimum items',
                 message: (result) => result.message
+            },
+            deleted_media: {
+                log: 'Publish failed - content bound to deleted media',
+                message: (result) => result.message
             }
         }
     },

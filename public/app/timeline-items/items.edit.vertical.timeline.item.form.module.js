@@ -48,8 +48,10 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
      */
     function populate(record) {
 
-        rteModule.set_html('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-        rteModule.set_html('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+        /* Stored HTML goes into the editors as-is: decoding it first turned an
+           author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.set_html('item-title-input', record.title || '');
+        rteModule.set_html('item-text-input', record.text || '');
         set_item_date(record.date, document.querySelector('#item-date-input'));
 
         /* Media fields, on the media flavour of the form only */
@@ -58,8 +60,9 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
             /* Populate optional Pop-up Window Description + Caption fields */
-            rteModule.set_html('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-            rteModule.set_html('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+            rteModule.set_html('item-description-input', record.description || '');
+            /* Caption is a plain textarea, so it keeps the entity decode. */
+            domModule.set_value('#item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
         }
 
         /* Set embed item checkbox from record */

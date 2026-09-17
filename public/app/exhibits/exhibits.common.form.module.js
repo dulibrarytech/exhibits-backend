@@ -539,10 +539,12 @@ const exhibitsCommonFormModule = (function () {
 
         set_element_value('#is-published', record.is_published === 1);
 
-        rteModule.set_html('exhibit-title-input', helperModule.unescape(record.title || ''));
-        rteModule.set_html('exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
-        rteModule.set_html('exhibit-description-input', helperModule.unescape(record.description || ''));
-        rteModule.set_html('exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
+        /* Stored HTML goes into the editors as-is: decoding it first turned an
+           author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.set_html('exhibit-title-input', record.title || '');
+        rteModule.set_html('exhibit-sub-title-input', record.subtitle || '');
+        rteModule.set_html('exhibit-description-input', record.description || '');
+        rteModule.set_html('exhibit-about-the-curators-input', record.about_the_curators || '');
         set_element_value('#exhibit-owner', record.owner);
 
         set_checkbox_state('#is-featured', record.is_featured === 1);

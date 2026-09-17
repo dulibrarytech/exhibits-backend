@@ -81,7 +81,9 @@ const LIST_ALIASES = Object.freeze([
     'thumbnail_media_kaltura_thumbnail_url',
     'thumbnail_media_repo_uuid',
     'thumbnail_media_thumbnail_path',
-    'thumb_lib_uuid'
+    'thumb_lib_uuid',
+    'media_is_deleted',
+    'thumbnail_media_is_deleted'
 ]);
 
 const EDIT_ALIASES = Object.freeze([
@@ -99,7 +101,9 @@ const EDIT_ALIASES = Object.freeze([
     'thumbnail_media_name',
     'thumbnail_ingest_method',
     'thumbnail_repo_uuid',
-    'thumbnail_media_thumbnail_path'
+    'thumbnail_media_thumbnail_path',
+    'media_is_deleted',
+    'thumbnail_media_is_deleted'
 ]);
 
 const TIMELINE_EDIT_ALIASES = Object.freeze([
@@ -120,7 +124,9 @@ const TIMELINE_EDIT_ALIASES = Object.freeze([
     'thumb_ingest_method',
     'thumb_kaltura_thumbnail_url',
     'thumbnail_repo_uuid',
-    'thumb_thumbnail_path'
+    'thumb_thumbnail_path',
+    'media_is_deleted',
+    'thumbnail_media_is_deleted'
 ]);
 
 /**

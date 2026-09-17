@@ -50,8 +50,10 @@ const itemsDetailsGridItemModule = (function () {
             published_el.value = record.is_published === 1;
         }
 
-        rteModule.render_static('item-title-input', helperModule.unescape(record.title));
-        rteModule.render_static('item-text-input', helperModule.unescape(record.text));
+        /* Stored HTML goes into the static boxes as-is: decoding it first turned
+           an author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.render_static('item-title-input', record.title);
+        rteModule.render_static('item-text-input', record.text);
 
         /* Populate media previews using the shared common module */
         if (window.location.pathname.indexOf('media') !== -1) {
@@ -61,11 +63,14 @@ const itemsDetailsGridItemModule = (function () {
             /* Surface the popup-related fields read-only. The common form module
              * (also init'd on this page) reveals/relocates them; here we fill in
              * their values and gate the Embed Item control to audio/video media. */
-            rteModule.render_static('item-description-input', helperModule.unescape(record.description));
-            rteModule.render_static('item-caption-input', helperModule.unescape(record.caption));
+            rteModule.render_static('item-description-input', record.description);
+            /* Caption is plain text: textContent, never innerHTML, so a stored
+               value containing markup displays literally. It keeps the decode. */
+            domModule.set_text('#item-caption-input', helperModule.unescape(record.caption) || '');
 
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
         }
 
         set_radio_value('layout', record.layout);

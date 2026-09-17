@@ -177,8 +177,10 @@ const itemsEditGridItemFormModule = (function () {
 
         set_published_status(record.is_published, elements.is_published);
 
-        rteModule.set_html('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-        rteModule.set_html('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+        /* Stored HTML goes into the editors as-is: decoding it first turned an
+           author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.set_html('item-title-input', record.title || '');
+        rteModule.set_html('item-text-input', record.text || '');
 
         /* Populate media previews from record (media picker integration) */
         const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
@@ -188,8 +190,9 @@ const itemsEditGridItemFormModule = (function () {
             itemsCommonGridItemFormModule.populate_media_previews(record);
 
             /* Populate optional Pop-up Window Description + Caption fields */
-            rteModule.set_html('item-description-input', helperModule.unescape(record.description));
-            rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
+            rteModule.set_html('item-description-input', record.description);
+            /* Caption is a plain textarea, so it keeps the entity decode. */
+            domModule.set_value('#item-caption-input', helperModule.unescape(record.caption) || '');
         }
 
         set_layout_selection(record.layout, elements.layouts);

@@ -999,6 +999,11 @@ const helperModule = (function () {
      * @param {string} [options.container_selector='#item-style-options']
      * @param {string} [options.card_selector='#item-styles-card']
      * @param {Object} [options.labels] - explicit key -> label overrides
+     * @param {string[]} [options.theme_editor_ids] - rte container ids whose
+     *     content the chosen preset styles on the public site; when given, the
+     *     preset chooser is mirrored onto them (see bind_item_style_theme).
+     *     Handled here because the mirror needs the exhibit "template" preset
+     *     as its base layer, and only this function has the raw style root.
      * @returns {Promise<Object|null>} the discovered key -> style map, or null
      *     when the exhibit defines no usable presets
      */
@@ -1092,6 +1097,10 @@ const helperModule = (function () {
             });
 
             obj.build_item_style_swatch_options(container_selector, sorted_keys, style_map, labels);
+
+            if (Array.isArray(opts.theme_editor_ids) && opts.theme_editor_ids.length > 0) {
+                obj.bind_item_style_theme(style_map, style_root.template || null, opts.theme_editor_ids);
+            }
 
             const card_el = document.querySelector(card_selector);
 
@@ -1187,18 +1196,295 @@ const helperModule = (function () {
         }
 
         const target = value || '';
+        let checked = false;
 
         if (target) {
             for (let i = 0; i < radios.length; i++) {
                 if (radios[i].value === target) {
                     radios[i].checked = true;
-                    return;
+                    checked = true;
+                    break;
                 }
             }
         }
 
         // Empty or unknown value — fall back to the first preset.
-        radios[0].checked = true;
+        if (!checked) {
+            radios[0].checked = true;
+        }
+
+        // A programmatic check fires no change event; mirror the preset here.
+        obj.apply_item_style_theme();
+    };
+
+    /*
+     * Preset mirroring state, set by bind_item_style_theme: the exhibit's
+     * item presets, the exhibit "template" preset underneath them, and the
+     * editors that show the preset. Null until a form binds it, in which
+     * case apply_item_style_theme is a no-op and editors keep the rte.css
+     * defaults.
+     */
+    let item_style_theme = null;
+
+    /**
+     * Resolves the checked item style preset over the template preset —
+     * the same layering the public site renders (Exhibit.svelte resolves
+     * the item's preset key; Item.svelte applies it on the item wrapper,
+     * which sits inside the template element carrying the template preset).
+     * A preset property that is empty falls through to the template's. The
+     * background is not part of it — the editor stays white (rteModule).
+     * @returns {Object|null} { fontFamily, fontSize, color },
+     *   or null when nothing is bound or no preset is checked (→ defaults)
+     */
+    function resolve_item_style_theme() {
+
+        if (item_style_theme === null) {
+            return null;
+        }
+
+        const checked = document.querySelector('input[name="styles"]:checked');
+
+        if (checked === null) {
+            return null;
+        }
+
+        const preset = (item_style_theme.style_map && item_style_theme.style_map[checked.value]) || {};
+        const base = item_style_theme.base || {};
+        const theme = {};
+
+        ['fontFamily', 'fontSize', 'color'].forEach(function (property) {
+            const value = preset[property];
+            theme[property] = (value !== undefined && value !== null && String(value).trim() !== '')
+                ? value
+                : (base[property] || '');
+        });
+
+        return theme;
+    }
+
+    /**
+     * Applies the checked preset to the bound editors (rteModule.set_theme).
+     * Called on every change of the preset radios and after
+     * check_item_style_option re-checks a saved preset.
+     */
+    obj.apply_item_style_theme = function () {
+
+        if (item_style_theme === null || typeof rteModule === 'undefined') {
+            return;
+        }
+
+        const theme = resolve_item_style_theme();
+
+        item_style_theme.editor_ids.forEach(function (id) {
+            rteModule.set_theme(id, theme);
+        });
+    };
+
+    /**
+     * Mirrors the item style preset chooser on the given editors: applies the
+     * currently checked preset now and again whenever the choice changes.
+     * Call once, after build_item_style_swatch_options.
+     * @param {Object} style_map - preset key → { backgroundColor, color, fontFamily, fontSize }
+     * @param {Object|null} base - the exhibit "template" preset, or null
+     * @param {string[]} editor_ids - rte container ids whose content the
+     *   preset styles on the public site (item text, grid/timeline text)
+     */
+    obj.bind_item_style_theme = function (style_map, base, editor_ids) {
+
+        const container = document.querySelector('#item-style-options');
+
+        /*
+         * The theme follows the preset chooser. Details pages run the same
+         * common form init (and so fetch the presets) but render no chooser
+         * and a disabled editor — without this guard the template preset
+         * would land on the read-only box.
+         */
+        if (container === null) {
+            item_style_theme = null;
+            return;
+        }
+
+        item_style_theme = {
+            style_map: style_map || {},
+            base: base || null,
+            editor_ids: Array.isArray(editor_ids) ? editor_ids : [],
+        };
+
+        if (container.dataset.themeBound !== '1') {
+            container.dataset.themeBound = '1';
+            container.addEventListener('change', function (event) {
+                if (event.target && event.target.name === 'styles') {
+                    obj.apply_item_style_theme();
+                }
+            });
+        }
+
+        obj.apply_item_style_theme();
+    };
+
+    /*
+     * "Embed item" governs "Pop-up Window Description". Embedded items never
+     * open the pop-up viewer, so the description is not in use while the box
+     * is checked. It is DISABLED, not hidden, and never cleared: the public
+     * search results and the search index still read it, and staff should see
+     * that their text survives the toggle. The state is carried by
+     * rteModule.set_enabled (contenteditable, aria-disabled, hidden toolbar),
+     * the note under the label, and a polite live region — the muted styling
+     * is a consequence, not the signal.
+     */
+    const EMBED_NOTE_TEXT = 'Not used while Embed item is checked.';
+    const EMBED_NOTE_TEXT_DETAILS = 'Not used: this item is embedded, so it does not open the pop-up viewer. The saved text is kept.';
+    const EMBED_STATUS_ON = 'Pop-up Window Description is not used while Embed item is checked. The saved text is kept.';
+    const EMBED_STATUS_OFF = 'Pop-up Window Description is available again.';
+
+    /* one polite live region per page, created on first use */
+    function embed_status_region() {
+
+        let region = document.getElementById('embed-item-status');
+
+        if (region === null) {
+            region = document.createElement('div');
+            region.id = 'embed-item-status';
+            region.className = 'sr-only';
+            region.setAttribute('aria-live', 'polite');
+            document.body.appendChild(region);
+        }
+
+        return region;
+    }
+
+    /*
+     * The note sits under the field's label: before the toolbar when Quill
+     * has mounted, otherwise directly before the container (a toolbar that
+     * mounts later is inserted between the two, which is the same order).
+     */
+    function ensure_embed_note(container, text) {
+
+        const note_id = container.id + '-embed-note';
+        let note = document.getElementById(note_id);
+
+        if (note === null) {
+            note = document.createElement('small');
+            note.id = note_id;
+            note.className = 'form-text text-muted rte-embed-note';
+            note.hidden = true;
+
+            const previous = container.previousElementSibling;
+            const anchor = (previous !== null && previous.classList.contains('ql-toolbar')) ? previous : container;
+            container.parentNode.insertBefore(note, anchor);
+        }
+
+        /* same hint furniture as the Wrap Text / Embed item hints beside it:
+           the icon is decorative, so aria-describedby reads the text only */
+        note.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation-circle';
+        icon.setAttribute('aria-hidden', 'true');
+        note.appendChild(icon);
+        note.appendChild(document.createTextNode(' ' + text));
+
+        return note;
+    }
+
+    function set_described_by(element, id, on) {
+
+        const tokens = (element.getAttribute('aria-describedby') || '')
+            .split(/\s+/)
+            .filter(function (token) { return token.length > 0 && token !== id; });
+
+        if (on) {
+            tokens.push(id);
+        }
+
+        if (tokens.length > 0) {
+            element.setAttribute('aria-describedby', tokens.join(' '));
+        } else {
+            element.removeAttribute('aria-describedby');
+        }
+    }
+
+    /**
+     * Wires the Embed item checkbox to the Pop-up Window Description editor
+     * on the add/edit media forms: moves the checkbox (its whole form-group)
+     * above the description row so the cause reads before the effect, points
+     * aria-controls at the row, and disables the editor — with the in-place
+     * note and a live announcement — while the box is checked. Applies the
+     * current state immediately; the edit forms set the checkbox from the
+     * record and dispatch 'change', which is handled without an announcement.
+     * @param {string} checkbox_id - default 'embed-item'
+     * @param {string} editor_id - default 'item-description-input'
+     * @returns {boolean} false when either element is missing
+     */
+    obj.bind_embed_description = function (checkbox_id, editor_id) {
+
+        const checkbox = document.getElementById(checkbox_id || 'embed-item');
+        const container = document.getElementById(editor_id || 'item-description-input');
+
+        if (checkbox === null || container === null || typeof rteModule === 'undefined') {
+            return false;
+        }
+
+        const row = container.closest('#is-media-only-description') || container;
+        const group = document.getElementById('embed-item-group') || checkbox.closest('.form-group');
+
+        if (group !== null && row.parentNode !== null && group !== row) {
+            row.parentNode.insertBefore(group, row);
+        }
+
+        checkbox.setAttribute('aria-controls', row.id || container.id);
+
+        /* mounts the editor if init_all has not run yet, so the toolbar exists before the note is placed */
+        rteModule.set_enabled(container.id, !checkbox.checked);
+
+        const note = ensure_embed_note(container, EMBED_NOTE_TEXT);
+
+        const sync = function (event) {
+
+            const embedded = checkbox.checked;
+
+            rteModule.set_enabled(container.id, !embedded);
+            note.hidden = !embedded;
+
+            const editor = container.querySelector('.ql-editor');
+
+            if (editor !== null) {
+                set_described_by(editor, note.id, embedded);
+            }
+
+            /* a synthetic change (edit form restoring the record) is not news */
+            if (event && event.isTrusted === true) {
+                embed_status_region().textContent = embedded ? EMBED_STATUS_ON : EMBED_STATUS_OFF;
+            }
+        };
+
+        if (checkbox.dataset.embedBound !== '1') {
+            checkbox.dataset.embedBound = '1';
+            checkbox.addEventListener('change', sync);
+        }
+
+        sync(null);
+
+        return true;
+    };
+
+    /**
+     * Details-page counterpart: the description is a static box there, so
+     * only the explanation is needed.
+     * @param {string} editor_id - the .rte-readonly / disabled editor id
+     * @param {boolean} embedded - record.is_embedded === 1
+     */
+    obj.mark_embedded_description = function (editor_id, embedded) {
+
+        const container = document.getElementById(editor_id || 'item-description-input');
+
+        if (container === null) {
+            return false;
+        }
+
+        const note = ensure_embed_note(container, EMBED_NOTE_TEXT_DETAILS);
+        note.hidden = embedded !== true;
+
+        return true;
     };
 
     /**
@@ -1217,6 +1503,22 @@ const helperModule = (function () {
         } catch (error) {
             console.error('Error in remove_field_hints:', error.message);
         }
+    };
+
+    /**
+     * Shows or hides the "deleted media" warning that sits under a media
+     * name display (views/partials/media-name-display.ejs). A media object
+     * carries is_deleted only when it came from an item record's media
+     * library join; picker selections never do, so picking new media clears it.
+     * @param {string} input_id - The partial's input_id (e.g. 'item-media-name-display')
+     * @param {Object|null} media - Media object, or null to hide
+     */
+    obj.toggle_media_deleted_warning = function (input_id, media) {
+        const warning_el = document.getElementById(`${input_id}-deleted`);
+        if (!warning_el) return;
+
+        const is_deleted = Boolean(media) && (media.is_deleted === 1 || media.is_deleted === true || media.is_deleted === '1');
+        warning_el.style.display = is_deleted ? '' : 'none';
     };
 
     obj.init = function () {

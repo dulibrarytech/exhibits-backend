@@ -64,7 +64,11 @@ const MEDIA_LIBRARY_PROJECTIONS = Object.freeze({
         {kaltura: 'thumb_lib', as: 'thumbnail_media_kaltura_thumbnail_url'},
         ['thumb_lib.repo_uuid', 'thumbnail_media_repo_uuid'],
         ['thumb_lib.thumbnail_path', 'thumbnail_media_thumbnail_path'],
-        ['thumb_lib.uuid', 'thumb_lib_uuid']
+        ['thumb_lib.uuid', 'thumb_lib_uuid'],
+        /* Soft-delete flags: a deleted asset must not be served, indexed, or
+           shown as bound. The indexer reads both (indexer_helper media flags). */
+        ['media_lib.is_deleted', 'media_is_deleted'],
+        ['thumb_lib.is_deleted', 'thumbnail_media_is_deleted']
     ]),
 
     /* Item edit/details and grid item edit/details. Note `thumbnail_repo_uuid`
@@ -84,7 +88,11 @@ const MEDIA_LIBRARY_PROJECTIONS = Object.freeze({
         ['thumb_lib.name', 'thumbnail_media_name'],
         ['thumb_lib.ingest_method', 'thumbnail_ingest_method'],
         ['thumb_lib.repo_uuid', 'thumbnail_repo_uuid'],
-        ['thumb_lib.thumbnail_path', 'thumbnail_media_thumbnail_path']
+        ['thumb_lib.thumbnail_path', 'thumbnail_media_thumbnail_path'],
+        /* Soft-delete flags: a deleted asset must not be served, indexed, or
+           shown as bound. The indexer reads both (indexer_helper media flags). */
+        ['media_lib.is_deleted', 'media_is_deleted'],
+        ['thumb_lib.is_deleted', 'thumbnail_media_is_deleted']
     ]),
 
     /* Timeline item edit/details. Adds the original filenames and uses
@@ -106,7 +114,11 @@ const MEDIA_LIBRARY_PROJECTIONS = Object.freeze({
         ['thumb_lib.ingest_method', 'thumb_ingest_method'],
         {kaltura: 'thumb_lib', as: 'thumb_kaltura_thumbnail_url'},
         ['thumb_lib.repo_uuid', 'thumbnail_repo_uuid'],
-        ['thumb_lib.thumbnail_path', 'thumb_thumbnail_path']
+        ['thumb_lib.thumbnail_path', 'thumb_thumbnail_path'],
+        /* Soft-delete flags: a deleted asset must not be served, indexed, or
+           shown as bound. The indexer reads both (indexer_helper media flags). */
+        ['media_lib.is_deleted', 'media_is_deleted'],
+        ['thumb_lib.is_deleted', 'thumbnail_media_is_deleted']
     ])
 });
 

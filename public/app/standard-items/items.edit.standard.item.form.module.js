@@ -53,7 +53,9 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         /* Set basic item data */
-        rteModule.set_html('item-text-input', helperModule.unescape(record.text));
+        /* Stored HTML goes into the editors as-is: decoding it first turned an
+           author's literal "&lt;b&gt;" into bold on the next save. */
+        rteModule.set_html('item-text-input', record.text);
 
         /* Handle media-specific fields */
         if (is_media_path) {
@@ -61,8 +63,9 @@ const itemsEditStandardItemFormModule = (function () {
             itemsCommonStandardItemFormModule.populate_media_previews(record);
 
             /* Populate optional Pop-up Window Description + Caption fields */
-            rteModule.set_html('item-description-input', helperModule.unescape(record.description));
-            rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
+            rteModule.set_html('item-description-input', record.description);
+            /* Caption is a plain textarea, so it keeps the entity decode. */
+            domModule.set_value('#item-caption-input', helperModule.unescape(record.caption) || '');
 
             /* Populate the Embed Item flag and sync the description's enabled
              * state (dispatch 'change' so the common module's listener runs). */

@@ -28,7 +28,7 @@ const itemsEditGridFormModule = (function () {
      */
     async function populate(record) {
 
-        rteModule.set_html('grid-text-input', helperModule.unescape(record.text));
+        rteModule.set_html('grid-text-input', record.text);
 
         /* Legacy grids predate internal_name (nullable column) — leave the
          * required field empty so the save-time validation forces a value. */
