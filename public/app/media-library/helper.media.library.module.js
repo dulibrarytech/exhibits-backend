@@ -369,7 +369,7 @@ const helperMediaLibraryModule = (function() {
      * doomed request. Mirrors get_thumbnail_url_for_media's token guard.
      *
      * @param {string} thumbnail_path - Relative staged thumbnail path
-     * @returns {string|null} Staged thumbnail URL (token in query) or null
+     * @returns {string|null} Staged thumbnail URL or null
      */
     obj.build_uploaded_thumbnail_url = (thumbnail_path) => {
         if (!thumbnail_path) return null;
@@ -381,15 +381,9 @@ const helperMediaLibraryModule = (function() {
             return null;
         }
 
-        const token = authModule.get_user_token();
-
-        if (!token || token === false) {
-            return null;
-        }
-
-        return endpoints.upload.get.endpoint +
-            '?path=' + encodeURIComponent(thumbnail_path) +
-            '&token=' + encodeURIComponent(token);
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
+        return endpoints.upload.get.endpoint + '?path=' + encodeURIComponent(thumbnail_path);
     };
 
     /**
@@ -424,9 +418,6 @@ const helperMediaLibraryModule = (function() {
             return repoServiceModule.get_repo_tn_url(uuid);
         }
 
-        const token = authModule.get_user_token();
-        if (!token) return '';
-
         const endpoints = get_endpoints();
 
         if (!endpoints?.repo_thumbnail?.get?.endpoint) {
@@ -434,8 +425,10 @@ const helperMediaLibraryModule = (function() {
             return '';
         }
 
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
         const endpoint = endpoints.repo_thumbnail.get.endpoint;
-        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
+        return endpoint + '?uuid=' + encodeURIComponent(uuid);
     };
 
     /**
@@ -460,17 +453,13 @@ const helperMediaLibraryModule = (function() {
         };
 
         if ((media_type === 'image' || media_type === 'pdf') && uuid) {
-            const token = authModule.get_user_token();
-            // Without a token the server-generated thumbnail returns
-            // 401, leaving the placeholder fallback to the inline
-            // <img onerror>. Skip the doomed request and fall through
-            // to the placeholder directly. Mirrors get_repo_thumbnail_url.
-            if (!token) {
-                return placeholder_for(media_type);
-            }
+            // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+            // cookie for authentication, so the JWT is never embedded in
+            // <img src>. A signed-out request 401s into the inline <img onerror>
+            // placeholder fallback.
             const thumbnail_url = obj.build_thumbnail_url(uuid);
             if (thumbnail_url) {
-                return thumbnail_url + '?token=' + encodeURIComponent(token);
+                return thumbnail_url;
             }
         }
 

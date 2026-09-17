@@ -238,8 +238,8 @@ const kalturaModalsModule = (function() {
         // Name field (required) - pre-populated from Kaltura title
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label">Name <span class="badge badge-required">Required</span></label>';
-        html += '<input type="text" class="form-control kaltura-name" name="name" value="' + title + '" required>';
+        html += '<label class="form-label" for="kaltura-name-0">Name <span class="badge badge-required">Required</span></label>';
+        html += '<input type="text" class="form-control kaltura-name" id="kaltura-name-0" name="name" value="' + title + '" required aria-required="true">';
         html += '<div class="invalid-feedback">Name is required</div>';
         html += '</div></div>';
 

@@ -251,8 +251,8 @@ const itemsListDisplayModule = (function() {
     const build_media_library_thumbnail_url = (opts) => {
         if (!opts || !opts.uuid) return null;
 
-        const token = authModule.get_user_token();
-        if (!token) return null;
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
 
         // Kaltura assets use their own thumbnail URL
         if (opts.ingest_method === 'kaltura' && opts.kaltura_thumbnail_url) {
@@ -265,12 +265,12 @@ const itemsListDisplayModule = (function() {
 
         // Repository imports: repo thumbnail endpoint
         if (opts.ingest_method === 'repository' && opts.repo_uuid) {
-            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(opts.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(opts.repo_uuid)}`;
         }
 
         // Uploaded files: media library thumbnail endpoint
         if (opts.thumbnail_path) {
-            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(opts.uuid)}?token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(opts.uuid)}`;
         }
 
         return null;

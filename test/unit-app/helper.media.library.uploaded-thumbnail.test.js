@@ -42,15 +42,23 @@ describe('helperMediaLibraryModule.build_uploaded_thumbnail_url', () => {
 
     const REL = 'thumbnails/01/5a/015acaca-7811-470e-b8bf-a1ff0f5ad03b_thumb.jpg';
 
-    it('builds the staged URL with the encoded path and token', () => {
+    it('builds the staged URL with the encoded path', () => {
         const url = helperMediaLibraryModule.build_uploaded_thumbnail_url(REL);
-        expect(url).toBe(
-            UPLOAD_TN_ENDPOINT +
-            '?path=' + encodeURIComponent(REL) +
-            '&token=' + encodeURIComponent('unit-test-token')
-        );
+        expect(url).toBe(UPLOAD_TN_ENDPOINT + '?path=' + encodeURIComponent(REL));
         // Must NOT be the record-keyed endpoint (the bug being fixed).
         expect(url).not.toContain('/thumbnail/');
+    });
+
+    /*
+     * The route authenticates from the HttpOnly cookie, which the verifier
+     * reads before any query parameter. A token in the URL was therefore never
+     * used — only leaked into access logs and history. Pin that it stays out
+     * even when a session token is sitting in localStorage.
+     */
+    it('never puts the session JWT in the URL', () => {
+        const url = helperMediaLibraryModule.build_uploaded_thumbnail_url(REL);
+        expect(url).not.toMatch(/[?&]token=/);
+        expect(url).not.toContain('unit-test-token');
     });
 
     it('returns null when no thumbnail_path is given', () => {
@@ -59,9 +67,10 @@ describe('helperMediaLibraryModule.build_uploaded_thumbnail_url', () => {
         expect(helperMediaLibraryModule.build_uploaded_thumbnail_url(null)).toBeNull();
     });
 
-    it('returns null when there is no auth token (caller falls back to placeholder)', () => {
+    it('builds the URL whether or not a token is in localStorage (the cookie carries auth)', () => {
         globalThis.authModule = { get_user_token: () => false };
-        expect(helperMediaLibraryModule.build_uploaded_thumbnail_url(REL)).toBeNull();
+        expect(helperMediaLibraryModule.build_uploaded_thumbnail_url(REL))
+            .toBe(UPLOAD_TN_ENDPOINT + '?path=' + encodeURIComponent(REL));
     });
 
     it('returns null and warns when the upload thumbnail endpoint is not configured', () => {

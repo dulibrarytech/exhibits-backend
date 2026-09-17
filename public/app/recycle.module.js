@@ -83,7 +83,7 @@ const recycleModule = (function () {
         }
     }
 
-    function build_title_cell(record, token) {
+    function build_title_cell(record) {
 
         const td = document.createElement('td');
         const label = display_label(record);
@@ -93,10 +93,12 @@ const recycleModule = (function () {
         const cell = document.createElement('div');
         cell.className = 'recycle-cell';
 
-        if (thumb_uuid && token) {
+        if (thumb_uuid) {
+            // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+            // cookie for authentication, so the JWT is never embedded in <img src>.
             const img = document.createElement('img');
             img.className = 'recycle-thumb';
-            img.src = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(thumb_uuid)}?token=${encodeURIComponent(token)}`;
+            img.src = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(thumb_uuid)}`;
             img.alt = '';
             img.loading = 'lazy';
             const fallback = `${APP_PATH}/static/images/image-tn.png`;
@@ -142,12 +144,12 @@ const recycleModule = (function () {
         return td;
     }
 
-    function build_row(record, token) {
+    function build_row(record) {
 
         const exhibit_id = exhibit_id_of(record);
         const tr = document.createElement('tr');
 
-        tr.appendChild(build_title_cell(record, token));
+        tr.appendChild(build_title_cell(record));
 
         const td_owner = document.createElement('td');
         td_owner.textContent = record.created_by || '—';
@@ -276,8 +278,7 @@ const recycleModule = (function () {
 
         const start_index = (current_page - 1) * PAGE_SIZE;
         const slice = all_records.slice(start_index, start_index + PAGE_SIZE);
-        const token = authModule.get_user_token();
-        slice.forEach((record) => tbody.appendChild(build_row(record, token)));
+        slice.forEach((record) => tbody.appendChild(build_row(record)));
 
         render_pager(pages, start_index, slice.length);
     }

@@ -335,29 +335,46 @@ describe('helperMediaLibraryModule', () => {
             expect(spy).toHaveBeenCalledWith('repo-uuid');
         });
 
-        it('falls back to a direct URL build using endpoint + token', () => {
+        it('falls back to a direct URL build from the endpoint', () => {
             // No repoServiceModule available — fallback path runs.
             const out = helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid');
-            expect(out).toBe(
-                `${MEDIA_BASE}/repo/thumbnail?uuid=repo-uuid&token=unit-test-token`
-            );
+            expect(out).toBe(`${MEDIA_BASE}/repo/thumbnail?uuid=repo-uuid`);
         });
 
-        it('returns empty string when uuid or token is missing', () => {
-            expect(helperMediaLibraryModule.get_repo_thumbnail_url('')).toBe('');
+        /*
+         * The route authenticates from the HttpOnly cookie, which the verifier
+         * reads before any query parameter. The session JWT must never ride in
+         * the URL, and its absence from localStorage must not suppress the
+         * request — a signed-out <img> 401s into its onerror placeholder.
+         */
+        it('never puts the session JWT in the URL, with or without one in localStorage', () => {
+            expect(helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid')).not.toMatch(/[?&]token=/);
 
             globalThis.authModule = { get_user_token: () => '' };
-            expect(helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid')).toBe('');
+            expect(helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid'))
+                .toBe(`${MEDIA_BASE}/repo/thumbnail?uuid=repo-uuid`);
+        });
+
+        it('returns empty string when uuid is missing', () => {
+            expect(helperMediaLibraryModule.get_repo_thumbnail_url('')).toBe('');
         });
     });
 
     describe('get_thumbnail_url_for_media', () => {
         it('uses the server-generated thumbnail endpoint for image/pdf with uuid', () => {
             const out = helperMediaLibraryModule.get_thumbnail_url_for_media('image', 'uuid-1');
-            expect(out).toBe(`${MEDIA_BASE}/thumbnail/uuid-1?token=unit-test-token`);
+            expect(out).toBe(`${MEDIA_BASE}/thumbnail/uuid-1`);
 
             const pdf_out = helperMediaLibraryModule.get_thumbnail_url_for_media('pdf', 'uuid-2');
-            expect(pdf_out).toBe(`${MEDIA_BASE}/thumbnail/uuid-2?token=unit-test-token`);
+            expect(pdf_out).toBe(`${MEDIA_BASE}/thumbnail/uuid-2`);
+        });
+
+        it('never puts the session JWT in the URL, and a missing one does not force the placeholder', () => {
+            expect(helperMediaLibraryModule.get_thumbnail_url_for_media('image', 'uuid-1')).not.toMatch(/[?&]token=/);
+
+            globalThis.authModule = { get_user_token: () => '' };
+            expect(helperMediaLibraryModule.get_thumbnail_url_for_media('image', 'uuid-1'))
+                .toBe(`${MEDIA_BASE}/thumbnail/uuid-1`);
         });
 
         it('falls back to static placeholders by media type', () => {

@@ -118,7 +118,7 @@ describe('mediaModalsModule — staged thumbnail preview', () => {
         return img ? img.getAttribute('src') : null;
     };
 
-    it('points the preview at the staged endpoint with the encoded path + token', () => {
+    it('points the preview at the staged endpoint with the encoded path', () => {
         mediaModalsModule.open_uploaded_media_modal([make_file()], () => {});
         const src = preview_src();
         expect(src).not.toBeNull();
@@ -126,15 +126,29 @@ describe('mediaModalsModule — staged thumbnail preview', () => {
         expect(src).toContain(
             'path=' + encodeURIComponent('thumbnails/01/5a/015acaca-7811-470e-b8bf-a1ff0f5ad03b_thumb.jpg')
         );
-        expect(src).toContain('&token=' + encodeURIComponent('unit-test-token'));
         // Must NOT use the record-keyed endpoint (the bug being fixed).
         expect(src).not.toContain('/thumbnail/015acaca');
     });
 
-    it('falls back to the static placeholder when there is no auth token', () => {
+    /*
+     * The route authenticates from the HttpOnly cookie, which the verifier
+     * reads before any query parameter, so a token in the <img src> was never
+     * used — only leaked into access logs and history. Pin that it stays out
+     * even with a session token in localStorage, and that a missing token no
+     * longer suppresses the request (a signed-out request 401s into the
+     * onerror placeholder instead).
+     */
+    it('never puts the session JWT in the preview URL', () => {
+        mediaModalsModule.open_uploaded_media_modal([make_file()], () => {});
+        const src = preview_src();
+        expect(src).not.toMatch(/[?&]token=/);
+        expect(src).not.toContain('unit-test-token');
+    });
+
+    it('still points at the staged endpoint when no token is in localStorage', () => {
         globalThis.authModule = { get_user_token: () => false, logout: () => {} };
         mediaModalsModule.open_uploaded_media_modal([make_file()], () => {});
-        expect(preview_src()).toBe(PLACEHOLDER);
+        expect(preview_src().startsWith(STAGED_ENDPOINT + '?path=')).toBe(true);
     });
 
     it('falls back to the static placeholder when the file has no thumbnail_path', () => {

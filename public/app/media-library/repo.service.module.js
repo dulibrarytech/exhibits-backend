@@ -59,22 +59,17 @@ const repoServiceModule = (function() {
             return '';
         }
 
-        // Get the token for authentication
-        const token = authModule.get_user_token();
-        if (!token) {
-            return '';
-        }
-
         // Validate endpoint configuration
         if (!EXHIBITS_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
             console.warn('Repo thumbnail endpoint not configured');
             return '';
         }
 
-        // Build URL with uuid and token as query parameters
-        // This URL returns binary image data directly (not JSON)
+        // This URL returns binary image data directly (not JSON). Same-origin
+        // thumbnail requests rely on the HttpOnly exhibits_token cookie for
+        // authentication, so the JWT is never embedded in <img src>.
         const endpoint = EXHIBITS_ENDPOINTS.repo_thumbnail.get.endpoint;
-        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
+        return endpoint + '?uuid=' + encodeURIComponent(uuid);
     };
 
     /**

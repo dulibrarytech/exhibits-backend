@@ -33,8 +33,7 @@ const mediaModalsModule = (function() {
      * The record-keyed thumbnail endpoint 404s here because no media record
      * exists until Save, so serve the just-generated staged thumbnail by its
      * storage-relative path instead. Returns null when there is nothing to
-     * serve or no way to authenticate the <img src> (caller then falls back
-     * to the static placeholder).
+     * serve (caller then falls back to the static placeholder).
      * @param {string} thumbnail_path - Relative staged thumbnail path
      * @returns {string|null}
      */
@@ -46,13 +45,9 @@ const mediaModalsModule = (function() {
         if (!endpoint) {
             return null;
         }
-        const token = authModule.get_user_token();
-        if (!token || token === false) {
-            return null;
-        }
-        return endpoint +
-            '?path=' + encodeURIComponent(thumbnail_path) +
-            '&token=' + encodeURIComponent(token);
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
+        return endpoint + '?path=' + encodeURIComponent(thumbnail_path);
     };
 
     // Module state
