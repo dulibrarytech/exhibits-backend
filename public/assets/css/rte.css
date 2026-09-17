@@ -73,11 +73,6 @@
     margin: 0 0 0.5rem;
 }
 
-/* keep palette swatches visible against the toolbar background */
-.ql-snow .ql-color .ql-picker-options [data-value=""] {
-    border: 1px solid #ccc;
-}
-
 /* static read-only rich text display (details pages without an editor);
    populated by rteModule.render_static() */
 .rte-readonly {

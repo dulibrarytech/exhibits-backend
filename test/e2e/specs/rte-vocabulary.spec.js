@@ -89,14 +89,27 @@ test.describe('RTE vocabulary — full profile (standard item text)', () => {
         expect(toolbar.controls).not.toContain('ql-header');
         /* the "clean" (remove formatting) button went on 2026-09-15 */
         expect(toolbar.controls).not.toContain('ql-clean');
+        /* the colour picker went on 2026-09-17 — no picker of any kind remains */
+        expect(toolbar.controls).not.toContain('ql-color');
+        expect(await page.evaluate(() => document.querySelectorAll('.ql-toolbar .ql-picker').length)).toBe(0);
         /* the rest of the toolbar is unchanged */
         expect(toolbar.controls).toEqual(
-            expect.arrayContaining(['ql-bold', 'ql-italic', 'ql-underline', 'ql-color', 'ql-link', 'ql-list', 'ql-indent'])
+            expect.arrayContaining(['ql-bold', 'ql-italic', 'ql-underline', 'ql-link', 'ql-list', 'ql-indent'])
         );
 
         /* a stored heading still round-trips */
         expect(await paste(page, 'item-text-input', '<h2>Beacon Printing</h2><p>body</p>'))
             .toBe('<h2>Beacon Printing</h2><p>body</p>');
+    });
+
+    /*
+     * `color` stays in `formats` for the same reason `header` does: dropping
+     * it would strip the palette colour from stored content on load, and
+     * the next save would persist the loss.
+     */
+    test('offers no colour picker, but still preserves a stored palette colour', async ({ page }) => {
+        expect(await paste(page, 'item-text-input', '<p>a <span style="color: #8b2332">crimson</span> word</p>'))
+            .toBe('<p>a <span style="color: rgb(139, 35, 50);">crimson</span> word</p>');
     });
 
     test('leaves h2 and h3 untouched', async ({ page }) => {

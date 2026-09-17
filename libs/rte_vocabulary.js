@@ -49,8 +49,10 @@ const CREATEDOMPURIFY = require('dompurify'),
     DOMPURIFY = CREATEDOMPURIFY(WINDOW);
 
 /*
- * DU palette — keep in sync with DU_PALETTE in public/app/utils/rte.module.js
- * and the migration color map in tools/migrate-rte-content.js.
+ * DU palette — keep in sync with the migration color map in
+ * tools/migrate-rte-content.js. The editor toolbar no longer offers a colour
+ * picker (2026-09-17); this set now only decides which colours in stored or
+ * pasted content survive.
  */
 const ALLOWED_COLORS = new Set(['#181818', '#8b2332', '#3c7896', '#139aa1', '#6c757d']);
 

@@ -24,10 +24,11 @@
  * and instantiated by rteModule.init_all() (or rteModule.init(id)).
  *
  * Profiles:
- *   full    — bold/italic/underline, DU-palette text color, links,
- *             ordered/bullet lists, indent. No heading control: headings
- *             cannot be authored, but pasted h1-h6 are remapped into the
- *             h2/h3 the gate allows, and existing headings are preserved.
+ *   full    — bold/italic/underline, links, ordered/bullet lists, indent.
+ *             No heading control and no colour picker: neither can be
+ *             authored, but pasted h1-h6 are remapped into the h2/h3 the
+ *             gate allows, and existing headings and palette colours in
+ *             stored content are preserved (both stay in `formats`).
  *   reduced — bold/italic/underline only (titles, subtitles, headings —
  *             fields rendered inside <h*> tags on the public site)
  *
@@ -42,13 +43,6 @@ const rteModule = (function () {
 
     /* editor registry keyed by container element id */
     const instances = {};
-
-    /*
-     * DU palette swatches. Empty string = "remove color" swatch.
-     * Keep in sync with the server-side allow-list in libs/rte_vocabulary.js
-     * and the migration color map in tools/migrate-rte-content.js.
-     */
-    const DU_PALETTE = ['', '#181818', '#8B2332', '#3C7896', '#139AA1', '#6C757D'];
 
     const PROFILES = {
         full: {
@@ -68,10 +62,15 @@ const rteModule = (function () {
              * loss. Keeping it means the 19 stored values that already carry
              * a heading survive, and pasted headings still route through
              * HEADING_LEVEL_MAP into the h2/h3 the gate allows.
+             *
+             * The colour picker went the same way on 2026-09-17: `color`
+             * stays in `formats` so stored palette colours survive load and
+             * save, but nothing on the toolbar authors one. The server gate
+             * (libs/rte_vocabulary.js ALLOWED_COLORS) still decides which
+             * colours may be stored, so pasted colour is palette-only.
              */
             toolbar: [
                 ['bold', 'italic', 'underline'],
-                [{color: DU_PALETTE}],
                 ['link'],
                 [{list: 'ordered'}, {list: 'bullet'}],
                 [{indent: '-1'}, {indent: '+1'}]
@@ -258,24 +257,14 @@ const rteModule = (function () {
     /*
      * Accessible names for the Quill toolbar (WCAG 4.1.2 Name, Role, Value).
      *
-     * Quill 2.x labels its <button> controls itself but leaves the picker
-     * dropdowns — <span class="ql-picker-label" role="button"> and the
-     * <span class="ql-picker-item" role="button"> options inside them —
-     * with no accessible name at all. These maps are keyed by the
-     * ql-<format> class Quill puts on the control so a name can be derived
-     * without reading the (SVG-only) content.
-     *
-     * Names are only applied where the control has none; Quill's own labels
-     * are never overwritten.
+     * Quill 2.x labels its <button> controls itself in most builds but not
+     * all, so names are derived from the ql-<format> class it puts on each
+     * control rather than from the (SVG-only) content. Names are only
+     * applied where the control has none; Quill's own labels are never
+     * overwritten. The toolbars are buttons only — the picker dropdowns
+     * (heading, colour) and their label map went with them (2026-09-10,
+     * 2026-09-17).
      */
-    const PICKER_LABELS = {
-        'ql-color': 'Text color',
-        'ql-background': 'Background color',
-        'ql-align': 'Text alignment',
-        'ql-font': 'Font',
-        'ql-size': 'Text size'
-    };
-
     const BUTTON_LABELS = {
         'ql-bold': 'Bold',
         'ql-italic': 'Italic',
@@ -371,36 +360,6 @@ const rteModule = (function () {
             }
         });
 
-        container.querySelectorAll('.ql-picker').forEach(function (picker) {
-
-            const key = format_class(picker);
-            const picker_name = PICKER_LABELS[key] || 'Formatting options';
-            const picker_label = picker.querySelector('.ql-picker-label');
-
-            if (picker_label !== null && has_name(picker_label) === false) {
-                picker_label.setAttribute('aria-label', picker_name);
-            }
-
-            picker.querySelectorAll('.ql-picker-item').forEach(function (item) {
-
-                if (has_name(item) === true) {
-                    return;
-                }
-
-                const value = item.getAttribute('data-value') || '';
-
-                if (key === 'ql-color' || key === 'ql-background') {
-                    item.setAttribute('aria-label', value.length > 0
-                        ? picker_name + ' ' + value
-                        : 'Remove ' + picker_name.toLowerCase());
-                    return;
-                }
-
-                item.setAttribute('aria-label', value.length > 0
-                    ? picker_name + ' ' + value
-                    : picker_name + ' default');
-            });
-        });
     }
 
     /*
