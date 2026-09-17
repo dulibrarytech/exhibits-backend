@@ -20,6 +20,19 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — set textContent, never innerHTML, so a
+     * stored value containing markup displays literally instead of rendering.
+     */
+    function set_caption_text(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.textContent = value || '';
+        }
+    }
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -257,8 +270,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             }
 
             // Set basic form fields
-            rteModule.render_static('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-            rteModule.render_static('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+            rteModule.render_static('item-title-input', record.title || '');
+            rteModule.render_static('item-text-input', record.text || '');
 
             // Set date field (extract date portion from ISO string)
             if (record.date) {
@@ -274,8 +287,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
                 itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
                 // Surface the Pop-up Window Description + Caption read-only.
-                rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-                rteModule.render_static('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+                rteModule.render_static('item-description-input', record.description || '');
+                set_caption_text(record.caption ? helperModule.unescape(record.caption) : '');
             }
 
             // Set embed item checkbox from record
@@ -283,6 +296,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             if (embed_item_el) {
                 embed_item_el.checked = record.is_embedded === 1;
             }
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
 
             // Disable all form fields after population (details view is read-only)
             disable_all_fields();

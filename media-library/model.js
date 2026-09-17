@@ -23,6 +23,7 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
+const MEDIA_REFERENCE_TASKS = require('./tasks/media_reference_tasks');
 const UPLOADS = require('./uploads');
 const IIIF_CACHE = require('./iiif-cache');
 const REINDEX_COALESCER = require('../exhibits/reindex_coalescer');
@@ -33,6 +34,7 @@ const MEDIA_CREATE_SCHEMA = require('./schemas/media_create_record_schema')();
 // Initialize task instances
 const helper_task = new HELPER();
 const media_task = new MEDIA_TASKS(DB, TABLES);
+const media_reference_task = new MEDIA_REFERENCE_TASKS(DB, TABLES);
 const validate_create_media = new VALIDATOR(MEDIA_CREATE_SCHEMA);
 
 // Constants for response building
@@ -42,6 +44,7 @@ const STATUS_CODES = {
     NO_CONTENT: 204,
     BAD_REQUEST: 400,
     NOT_FOUND: 404,
+    CONFLICT: 409,
     INTERNAL_ERROR: 500
 };
 
@@ -661,6 +664,68 @@ exports.remove_exhibit_from_media_record = async (media_id, exhibit_uuid, media_
     }
 };
 
+/*
+ * Staff-facing summary of where a media record is still used, grouped by
+ * exhibit. Titles are rich text in the DB, so tags are stripped for the
+ * plain-text alert. Recycled containers/exhibits are called out: they are
+ * hidden in the dashboard, but restoring them brings the reference back.
+ */
+const strip_tags = (value) => String(value || '').replace(/<[^>]*>/g, '').trim();
+
+const KIND_LABELS = {
+    item: 'item',
+    grid_item: 'grid item',
+    timeline_item: 'timeline item'
+};
+
+const describe_media_references = (references) => {
+
+    const by_exhibit = new Map();
+
+    for (const reference of references) {
+        const key = reference.exhibit_uuid || 'unknown';
+
+        if (!by_exhibit.has(key)) {
+            by_exhibit.set(key, {
+                title: strip_tags(reference.exhibit_title) || 'an untitled exhibit',
+                recycled: reference.exhibit_is_deleted === 1,
+                counts: new Map()
+            });
+        }
+
+        const group = by_exhibit.get(key);
+        let label;
+
+        if (reference.record_type === 'exhibit') {
+            label = reference.role === 'hero_image' ? 'the hero image' : 'the exhibit thumbnail';
+        } else {
+            label = KIND_LABELS[reference.record_type] || 'item';
+            label += reference.role === 'thumbnail' ? ' (as thumbnail)' : '';
+            label += reference.container_is_deleted === 1 ? ' in a recycled grid or timeline' : '';
+        }
+
+        group.counts.set(label, (group.counts.get(label) || 0) + 1);
+    }
+
+    const parts = [];
+
+    for (const group of by_exhibit.values()) {
+        const uses = Array.from(group.counts.entries()).map(([label, count]) => {
+            if (label.startsWith('the ')) {
+                return label;
+            }
+            return count === 1
+                ? `1 ${label}`
+                : `${count} ${label.replace(/^(item|grid item|timeline item)/, '$1s')}`;
+        });
+
+        parts.push(`"${group.title}"${group.recycled ? ' (in the recycle bin)' : ''}: ${uses.join(', ')}`);
+    }
+
+    return `This media is still in use and cannot be deleted. It is used by ${parts.join('; ')}. ` +
+        'Select different media for those items (or remove it from them) first, then delete it.';
+};
+
 /**
  * Deletes a media record (soft delete)
  * @param {string} media_id - Media record UUID
@@ -684,6 +749,25 @@ exports.delete_media_record = async (media_id, username = null) => {
             if (user_result.success && user_result.full_name) {
                 deleted_by = user_result.full_name;
             }
+        }
+
+        /*
+         * In-use guard. A soft-deleted media record is refused by every public
+         * IIIF route, so deleting one that an item or exhibit still binds ships
+         * a broken viewer (the reference survives in the item row and in the
+         * search index). Refuse and name the dependents instead; staff re-point
+         * or remove the item media first. A failed lookup also refuses — the
+         * guard fails closed.
+         */
+        const references = await media_reference_task.get_media_references(media_id);
+
+        if (references.length > 0) {
+            LOGGER.module().warn(`WARNING: [/media-library/model (delete_media_record)] Delete refused, media record in use: ${media_id} (${references.length} reference(s))`);
+
+            return build_response(false, describe_media_references(references), {
+                in_use: true,
+                references
+            });
         }
 
         const result = await media_task.delete_media_record(media_id, deleted_by);

@@ -37,7 +37,28 @@
                                 <span id="item-heading-text-input-label">Heading Text <span class="badge badge-required">Required</span></span>
                             </div>
                             <span id="item-heading-text-error" class="is-error"></span>
-                            <div id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="rte-container rte-single-line" data-rte="reduced" data-rte-disabled="<%= (typeof is_details !== 'undefined' && is_details) ? 'true' : 'false' %>"></div>
+                            <%
+                            /*
+                             * Heading Text is authored as plain text — no editor.
+                             * The server gate stays at the `reduced` profile, so the
+                             * b/i/u and <br> already present in ~170 headings survive
+                             * and keep rendering on the public site; staff simply see
+                             * that markup literally in the textarea.
+                             *
+                             * The details view renders the stored markup (not literal
+                             * tags) via rteModule.render_static(), which sanitizes and
+                             * sets innerHTML. role="group" lets the div carry
+                             * aria-labelledby.
+                             */
+                            %>
+                            <% if (typeof is_details !== 'undefined' && is_details) { %>
+                            <div id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" role="group" class="rte-readonly"></div>
+                            <% } else { %>
+                            <textarea id="item-heading-text-input"
+                                      aria-labelledby="item-heading-text-input-label"
+                                      class="form-control"
+                                      rows="2"></textarea>
+                            <% } %>
                         </div>
                     </div>
                 </div>

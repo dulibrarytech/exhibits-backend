@@ -302,6 +302,98 @@ const normalize_empty_to_null = (obj) => {
     return result;
 };
 
+/*
+ * Media library join fields carried on item and exhibit records, keyed by the
+ * prefix each role uses. When the joined media row is soft-deleted every field
+ * derived from it is blanked so the record indexes exactly like one whose
+ * media_uuid points nowhere: no media_iiif, no Kaltura/repo derivation, no
+ * media name. The item's own columns (legacy `media`/`thumbnail` filenames,
+ * media_uuid) are left untouched.
+ */
+const DELETED_MEDIA_ROLES = [
+    {
+        flag: 'media_is_deleted',
+        fields: [
+            'media_lib_uuid', 'media_name', 'media_ingest_method', 'media_repo_uuid',
+            'kaltura_entry_id', 'media_kaltura_thumbnail_url', 'media_thumbnail_path',
+            'media_alt_text', 'media_is_alt_text_decorative', 'ml_media_width',
+            'ml_media_height', 'ml_media_type', 'ml_media_filename',
+            'media_topics_subjects', 'media_genre_form_subjects', 'media_places_subjects'
+        ]
+    },
+    {
+        flag: 'thumbnail_media_is_deleted',
+        fields: [
+            'thumb_lib_uuid', 'thumbnail_media_name', 'thumbnail_ingest_method',
+            'thumb_ingest_method', 'thumbnail_media_repo_uuid', 'thumbnail_repo_uuid',
+            'thumbnail_media_kaltura_thumbnail_url', 'thumbnail_media_thumbnail_path'
+        ]
+    },
+    {
+        flag: 'hero_media_is_deleted',
+        fields: [
+            'hero_lib_uuid', 'hero_media_name', 'hero_ingest_method', 'hero_repo_uuid',
+            'hero_kaltura_entry_id', 'hero_kaltura_thumbnail_url', 'hero_media_width',
+            'hero_media_height', 'hero_thumbnail_path', 'hero_topics_subjects',
+            'hero_genre_form_subjects', 'hero_places_subjects'
+        ]
+    },
+    {
+        flag: 'thumb_media_is_deleted',
+        fields: [
+            'thumb_lib_uuid', 'thumb_ingest_method', 'thumb_repo_uuid', 'thumb_thumbnail_path',
+            'thumb_topics_subjects', 'thumb_genre_form_subjects', 'thumb_places_subjects'
+        ]
+    }
+];
+
+/**
+ * Returns a copy of the record with every media-library-derived field blanked
+ * for each role whose media row is soft-deleted. Records without the flags
+ * (older callers, tests) pass through unchanged.
+ * @param {Object} record - Item or exhibit record with media library join fields
+ * @returns {Object} Record safe to build IIIF/Kaltura data from
+ */
+const strip_deleted_media = (record) => {
+
+    const stripped = {...record};
+
+    for (const role of DELETED_MEDIA_ROLES) {
+        if (Number(stripped[role.flag]) !== 1) {
+            continue;
+        }
+        for (const field of role.fields) {
+            if (field in stripped) {
+                stripped[field] = null;
+            }
+        }
+    }
+
+    return stripped;
+};
+
+/**
+ * Logs one warning per deleted media binding found on a record, so a rebuild
+ * leaves a trace of every item that will index without its media.
+ * @param {Object} record - Item or exhibit record
+ * @param {string} record_kind - 'item' | 'exhibit' (log wording only)
+ * @returns {Array<string>} The deleted-media flags found (empty when none)
+ */
+const warn_deleted_media = (record, record_kind) => {
+
+    const flagged = DELETED_MEDIA_ROLES
+        .filter((role) => Number(record[role.flag]) === 1)
+        .map((role) => role.flag);
+
+    for (const flag of flagged) {
+        LOGGER.module().warn(
+            `WARNING: [/indexer/indexer_helper] ${record_kind} ${record.uuid} is bound to deleted media (${flag}); indexing it without that media`
+        );
+    }
+
+    return flagged;
+};
+
 // ─── Index record constructors ──────────────────────────────────────────────
 
 /**
@@ -314,6 +406,10 @@ const construct_exhibit_index_record = (record) => {
     if (!record) {
         throw new Error('Invalid record provided');
     }
+
+    // Deleted hero/thumbnail media is indexed as absent (see strip_deleted_media)
+    warn_deleted_media(record, 'exhibit');
+    record = strip_deleted_media(record);
 
     // Build IIIF URLs from hero and thumbnail media library UUIDs; repository
     // imports resolve to the external repo IIIF endpoints instead
@@ -415,6 +511,13 @@ const construct_item_index_record = (record) => {
     if (!record) {
         throw new Error('Invalid record provided');
     }
+
+    // A soft-deleted media library row is refused by every public IIIF route,
+    // so its URLs must not reach the index: the item is indexed as having no
+    // media at all (see strip_deleted_media). The item itself stays indexed —
+    // the publish gate is what keeps such items from going live.
+    warn_deleted_media(record, 'item');
+    record = strip_deleted_media(record);
 
     // Repository imports resolve to the external repo IIIF endpoints; all other
     // media resolves to this app's IIIF service via the media library UUID.
@@ -925,6 +1028,8 @@ const index_container_records = async (config) => {
 };
 
 module.exports = {
+    strip_deleted_media,
+    warn_deleted_media,
     CLIENT,
     CONSTANTS,
     is_valid_uuid,

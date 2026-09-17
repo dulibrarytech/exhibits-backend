@@ -11,8 +11,10 @@
  *   - decodes legacy entity-escaped values (VALIDATOR.escape era)
  *   - h1 → h2; center/div → p; button → unwrapped text
  *   - snaps inline colors to the nearest DU palette color
- *   - converts bare newlines in tag-free values to <p>/<br> markup
- * Then each value runs through its field profile (full/reduced/plain).
+ *   - converts bare newlines in tag-free values to <p>/<br> markup (FULL profile only)
+ * Then each value runs through its field profile (full/reduced/plain), and a
+ * whitespace tidy pass clears the blank runs and stranded spacer <br>s that
+ * unwrapping legacy layout markup leaves behind.
  *
  * Dry run (default):  node tools/migrate-rte-content.js
  *                     (writes a diff report to tools/rte-migration-report.txt)
@@ -44,14 +46,33 @@ const DB = knex({
 });
 
 /*
- * Field → profile per table; mirrors the model-layer RTE profile maps.
+ * Field → profile per table. This is a PARTIAL mirror of the model-layer RTE
+ * profile maps — six plain-profile fields the models sanitize are absent:
+ * tbl_standard_items.alt_text, tbl_grid_items.alt_text,
+ * tbl_timeline_items.alt_text, tbl_timeline_items.date,
+ * tbl_grids.internal_name and tbl_timelines.internal_name.
+ *
+ * alt_text is included at the `plain` profile, which is a SANITIZER binding,
+ * not an editor — the field has no RTE and must never get one, since it is
+ * accessibility text rendered into an HTML attribute where markup cannot
+ * work. It is here because 73 values carried VALIDATOR.escape-era entities
+ * (&#x27;, &quot;) — no markup, just escaped apostrophes and quotes — and
+ * nothing downstream decoded them: alt_text is absent from the frontend's
+ * htmlFieldsExhibitItem list, and Svelte assigns the attribute with
+ * setAttribute, which does not parse entities, so assistive tech read
+ * "Dr. Max Lowenstein&#x27;s" verbatim. sanitize_plain returns textContent,
+ * which resolves the entities at the source.
+ *
+ * Still absent, and harmless: tbl_grids.internal_name,
+ * tbl_timelines.internal_name and tbl_timeline_items.date — all three scan
+ * clean, so adding them would be a no-op today.
  */
 const TARGETS = [
     {table: 'tbl_exhibits', key: 'id', fields: {title: 'reduced', subtitle: 'reduced', description: 'full', about_the_curators: 'full', alert_text: 'plain'}},
     {table: 'tbl_heading_items', key: 'id', fields: {text: 'reduced'}},
-    {table: 'tbl_standard_items', key: 'id', fields: {text: 'full', description: 'full', caption: 'full'}},
-    {table: 'tbl_grid_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'full'}},
-    {table: 'tbl_timeline_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'full'}},
+    {table: 'tbl_standard_items', key: 'id', fields: {text: 'full', description: 'full', caption: 'linked_text', alt_text: 'plain'}},
+    {table: 'tbl_grid_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'linked_text', alt_text: 'plain'}},
+    {table: 'tbl_timeline_items', key: 'id', fields: {title: 'reduced', text: 'full', description: 'full', caption: 'linked_text', alt_text: 'plain'}},
     {table: 'tbl_grids', key: 'id', fields: {text: 'full'}},
     {table: 'tbl_timelines', key: 'id', fields: {text: 'full'}},
     {table: 'tbl_media_library', key: 'id', fields: {name: 'plain', description: 'full', alt_text: 'plain'}}
@@ -63,6 +84,7 @@ const PALETTE = ['#181818', '#8b2332', '#3c7896', '#139aa1', '#6c757d'];
 const PROFILE_FN = {
     full: RTE_VOCABULARY.sanitize_rich_full,
     reduced: RTE_VOCABULARY.sanitize_rich_reduced,
+    linked_text: RTE_VOCABULARY.sanitize_linked_text,
     plain: RTE_VOCABULARY.sanitize_plain
 };
 
@@ -70,21 +92,65 @@ const PROFILE_FN = {
  * Decodes the legacy VALIDATOR.escape entity set exactly once. Applied only
  * when the value contains no raw markup but does contain escaped markup, so
  * already-decoded values are never double-processed.
+ *
+ * `&amp;` is the one entity whose handling depends on the profile, because
+ * the correct storage differs by destination:
+ *
+ *   full / reduced — the value is rendered as HTML, where `&amp;` IS the
+ *     correct encoding of a literal ampersand, and the vocabulary gate emits
+ *     exactly that. Decoding it on sight fights the gate and makes the
+ *     migration non-idempotent (a second run un-escaped what the first had
+ *     correctly escaped). So it is decoded only alongside `&lt;`/`&gt;`,
+ *     which mark a genuinely escape-era value.
+ *
+ *   plain — the value is rendered into an HTML *attribute* (alt text, media
+ *     names) via setAttribute, which does not parse entities, and nothing
+ *     upstream decodes it either. A stored `&amp;` is therefore read out
+ *     literally by assistive tech, so it must be resolved here. This stays
+ *     idempotent: sanitize_plain neither decodes nor re-encodes a bare `&`,
+ *     so the decoded form is a fixed point.
+ *
+ * The quote/apostrophe/slash entities never appear in gate output for text,
+ * so they are always safe to decode.
+ *
+ * @param {string} value
+ * @param {string} profile - full | reduced | plain
  */
-function decode_legacy_entities(value) {
+function decode_legacy_entities(value, profile) {
 
-    if (value.includes('<') || /&(lt|gt|amp|quot|#x27|#x2F|#39);/i.test(value) === false) {
+    if (value.includes('<')) {
         return value;
     }
 
-    return value
+    const has_escaped_tags = /&(lt|gt);/i.test(value);
+    const decode_ampersand = has_escaped_tags === true || profile === 'plain';
+
+    const trigger = decode_ampersand === true
+        ? /&(lt|gt|amp|quot|#x27|#x2F|#39);/i
+        : /&(lt|gt|quot|#x27|#x2F|#39);/i;
+
+    if (trigger.test(value) === false) {
+        return value;
+    }
+
+    let decoded = value
         .replace(/&#x2F;/gi, '/')
         .replace(/&#x27;/g, '\'')
         .replace(/&#39;/g, '\'')
-        .replace(/&quot;/g, '"')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&amp;/g, '&');
+        .replace(/&quot;/g, '"');
+
+    /* tags before the ampersand, so `&amp;lt;` never becomes `<` */
+    if (has_escaped_tags === true) {
+        decoded = decoded
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+    }
+
+    if (decode_ampersand === true) {
+        decoded = decoded.replace(/&amp;/g, '&');
+    }
+
+    return decoded;
 }
 
 function hex_to_rgb(hex) {
@@ -206,6 +272,91 @@ function normalize_structure(document) {
     });
 }
 
+/*
+ * Block elements in the editor vocabulary. Whitespace between two of these
+ * is layout noise the browser collapses anyway; whitespace around inline
+ * elements is a real word boundary and must survive.
+ */
+const BLOCK_ELEMENTS = new Set(['P', 'H2', 'H3', 'UL', 'OL', 'LI', 'BLOCKQUOTE']);
+
+function is_block(node) {
+    return node !== null && node.nodeType === 1 && BLOCK_ELEMENTS.has(node.tagName);
+}
+
+/*
+ * True when a node sits at a block boundary — between block elements, or at
+ * the start/end of its container. Whitespace and spacer <br>s in those
+ * positions carry no meaning once the wrapper markup is gone.
+ */
+function at_block_boundary(node) {
+
+    const before = node.previousSibling;
+    const after = node.nextSibling;
+
+    return (before === null || is_block(before)) && (after === null || is_block(after));
+}
+
+/*
+ * Tidies the whitespace left behind when the vocabulary gate unwraps legacy
+ * layout markup. Unwrapping <div class="container"><div class="row"> nesting
+ * leaves the newlines and indentation that separated those tags as text
+ * nodes, so a migrated value arrives full of blank runs, and legacy spacer
+ * <br>s end up stranded between paragraphs.
+ *
+ * The whitespace pass is text-equivalent: HTML already collapses whitespace
+ * and ignores it between blocks, and whitespace between inline elements is
+ * preserved as a single space, so no word is lost or joined. The <br> and
+ * empty-block passes go slightly further — a spacer <br> stranded between
+ * paragraphs does render as vertical space, and removing it closes that gap.
+ * That is the intent (Quill cannot produce such a spacer, so it could never
+ * be re-authored), but it is a visible change, not a purely cosmetic one.
+ */
+function tidy_whitespace(html) {
+
+    const dom = new JSDOM(`<body>${html}</body>`);
+    const document = dom.window.document;
+
+    /* whitespace-only text: drop at block boundaries, otherwise one space */
+    const walker = document.createTreeWalker(document.body, dom.window.NodeFilter.SHOW_TEXT);
+    const text_nodes = [];
+
+    while (walker.nextNode() !== null) {
+        text_nodes.push(walker.currentNode);
+    }
+
+    for (const node of text_nodes) {
+
+        if (node.nodeValue.trim().length === 0) {
+
+            if (at_block_boundary(node)) {
+                node.remove();
+            } else {
+                node.nodeValue = ' ';
+            }
+
+            continue;
+        }
+
+        node.nodeValue = node.nodeValue.replace(/\s+/g, ' ');
+    }
+
+    /* legacy spacer <br> stranded between blocks */
+    document.querySelectorAll('br').forEach((br) => {
+        if (at_block_boundary(br)) {
+            br.remove();
+        }
+    });
+
+    /* blocks emptied out by the gate */
+    document.querySelectorAll('p, h2, h3, li').forEach((block) => {
+        if (block.textContent.trim().length === 0 && block.children.length === 0) {
+            block.remove();
+        }
+    });
+
+    return document.body.innerHTML.trim();
+}
+
 /* converts a tag-free multi-line value into <p>/<br> markup */
 function newlines_to_markup(value) {
 
@@ -229,6 +380,12 @@ function newlines_to_markup(value) {
 
 /**
  * Full transformation pipeline for one value.
+ *
+ * Whitespace tidying rides along only with values the migration is already
+ * rewriting, and only for the FULL profile — the reduced and plain gates
+ * collapse whitespace themselves. Tidying every value instead would turn
+ * ~470 otherwise-untouched rows into writes for a render-identical result.
+ *
  * @param {string} value
  * @param {string} profile - full | reduced | plain
  * @returns {string}
@@ -239,7 +396,19 @@ function transform(value, profile) {
         return value;
     }
 
-    let working = decode_legacy_entities(value);
+    const migrated = migrate_value(value, profile);
+
+    if (migrated === value || profile !== 'full') {
+        return migrated;
+    }
+
+    return tidy_whitespace(migrated);
+}
+
+/* the migration pipeline proper, before whitespace tidying */
+function migrate_value(value, profile) {
+
+    let working = decode_legacy_entities(value, profile);
 
     if (profile === 'plain') {
         return RTE_VOCABULARY.sanitize_plain(working);

@@ -20,6 +20,18 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
     'use strict';
 
+    /*
+     * Caption is plain text (no RTE) — write it into the textarea directly.
+     */
+    function set_caption_value(value) {
+
+        const caption = document.querySelector('#item-caption-input');
+
+        if (caption !== null) {
+            caption.value = value || '';
+        }
+    }
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -336,14 +348,14 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
          * Set item title input value
          */
         const set_item_title = (title, element) => {
-            rteModule.set_html('item-title-input', title ? helperModule.unescape(title) : '');
+            rteModule.set_html('item-title-input', title || '');
         };
 
         /**
          * Set item text input value
          */
         const set_item_text = (text, element) => {
-            rteModule.set_html('item-text-input', text ? helperModule.unescape(text) : '');
+            rteModule.set_html('item-text-input', text || '');
         };
 
         /**
@@ -383,8 +395,8 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
             // Populate optional Pop-up Window Description + Caption fields
-            rteModule.set_html('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-            rteModule.set_html('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+            rteModule.set_html('item-description-input', record.description || '');
+            set_caption_value(record.caption ? helperModule.unescape(record.caption) : '');
         };
 
         /**

@@ -159,7 +159,9 @@ const itemsEditHeadingFormModule = (function () {
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
 
-            // Rich text editors are div-based and not caught by the selector above
+            // Heading Text is a plain textarea now and IS caught by the selector
+            // above; this remains only as a guard for any div-based editor a
+            // future field on this page might introduce.
             if (typeof rteModule !== 'undefined') {
                 rteModule.set_all_enabled(false);
             }
@@ -360,7 +362,12 @@ const itemsEditHeadingFormModule = (function () {
      * Set heading text input value
      */
     function set_heading_text(text, element) {
-        rteModule.set_html('item-heading-text-input', text ? helperModule.unescape(text) : '');
+
+        const input = document.querySelector('#item-heading-text-input');
+
+        if (input !== null) {
+            input.value = text ? helperModule.unescape(text) : '';
+        }
     }
 
     /**

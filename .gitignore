@@ -87,3 +87,8 @@ public/assets/dist/%
 test/e2e/live/.auth/
 test/e2e/live/.storage/
 test-results
+
+# Generated dry-run diff from tools/migrate-rte-content.js. Regenerated on
+# every run, and it embeds full exhibit prose, so it does not belong in
+# history. Review it in place, then delete or leave it — either is fine.
+tools/rte-migration-report.txt

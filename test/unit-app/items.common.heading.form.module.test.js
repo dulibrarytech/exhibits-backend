@@ -200,7 +200,13 @@ describe('itemsCommonHeadingFormModule', () => {
         });
 
         it('returns false and alerts when an unexpected error is thrown', () => {
-            globalThis.rteModule.get_html = vi.fn(() => {
+            /*
+             * Heading Text is a plain textarea now, so the module no longer
+             * calls rteModule.get_html. clear_field_error runs first and is
+             * still a collaborator, so it stands in as the thrower — the
+             * point of the test is the catch/alert path, not which call fails.
+             */
+            globalThis.domModule.clear_field_error = vi.fn(() => {
                 throw new Error('boom');
             });
 

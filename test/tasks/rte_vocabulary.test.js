@@ -44,16 +44,99 @@ describe('libs/rte_vocabulary — full profile', () => {
     test('link hygiene: safe schemes only, rel forced on target=_blank', () => {
         expect(vocabulary.sanitize_rich_full('<a href="https://du.edu" target="_blank">x</a>'))
             .toBe('<a href="https://du.edu" target="_blank" rel="noopener noreferrer">x</a>');
-        expect(vocabulary.sanitize_rich_full('<a href="javascript:alert(1)">x</a>'))
-            .toBe('<a>x</a>');
         expect(vocabulary.sanitize_rich_full('<a href="mailto:a@du.edu">x</a>'))
             .toBe('<a href="mailto:a@du.edu">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="/exhibits/1">x</a>'))
+            .toBe('<a href="/exhibits/1">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="#section">x</a>'))
+            .toBe('<a href="#section">x</a>');
+    });
+
+    /*
+     * Quill resolves a scheme-less value against the dashboard origin to test
+     * its protocol, so "www.example.com" passes its whitelist and is stored
+     * verbatim. Dropping it here is what made staff links vanish on save.
+     */
+    test('adds https:// to scheme-less hosts instead of dropping the link', () => {
+        expect(vocabulary.sanitize_rich_full('<a href="www.example.com">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="du.edu">x</a>'))
+            .toBe('<a href="https://du.edu">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="libguides.du.edu/c.php?g=629200">x</a>'))
+            .toBe('<a href="https://libguides.du.edu/c.php?g=629200">x</a>');
+        expect(vocabulary.sanitize_rich_full('<a href="  www.example.com  ">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+    });
+
+    /*
+     * A dangling <a> still picks up the crimson underlined link styling on
+     * the public site, so it reads as a broken link rather than plain text.
+     */
+    test('unwraps anchors whose href cannot be made usable', () => {
+        expect(vocabulary.sanitize_rich_full('<a href="javascript:alert(1)">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="data:text/html,x">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="//evil.test">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a href="about:blank">x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<a>x</a>')).toBe('x');
+        expect(vocabulary.sanitize_rich_full('<p>see <a href="not a url">this</a> now</p>'))
+            .toBe('<p>see this now</p>');
+    });
+
+    /*
+     * Blocks outside the vocabulary are unwrapped, so their boundaries have
+     * to survive as whitespace or adjacent words run together.
+     */
+    test('keeps a word boundary where an out-of-vocabulary block is dropped', () => {
+        expect(vocabulary.sanitize_rich_full('<div>First line</div><div>Second line</div>'))
+            .toBe('First line Second line');
+        /*
+         * h1 is remapped rather than dropped now — blockquote still drops.
+         * The separator appears on BOTH sides of the unwrapped text; the
+         * trailing one is invisible when rendered (a block follows) but keeps
+         * the rule uniform, and is what stops "<p>a</p>b" joining.
+         */
+        expect(vocabulary.sanitize_rich_full('<p>a</p><blockquote>Quoted</blockquote><p>b</p>'))
+            .toBe('<p>a</p> Quoted <p>b</p>');
+        expect(vocabulary.sanitize_rich_full('<table><tr><td>one</td><td>two</td></tr></table>'))
+            .toBe('one two');
     });
 
     test('strips out-of-vocabulary structure but keeps content', () => {
         expect(vocabulary.sanitize_rich_full('<button style="color:#fff">CLICK</button>')).toBe('CLICK');
-        expect(vocabulary.sanitize_rich_full('<h1>big</h1>')).toBe('big');
+        expect(vocabulary.sanitize_rich_full('<section>chunk</section>')).toBe('chunk');
         expect(vocabulary.sanitize_rich_full('<table><tr><td>cell</td></tr></table>')).toBe('cell');
+        /* headings are the exception — they are remapped, not stripped */
+        expect(vocabulary.sanitize_rich_full('<h1>big</h1>')).toBe('<h2>big</h2>');
+    });
+
+    /*
+     * Quill remaps these at the clipboard boundary, so this covers the paths
+     * that never touch an editor — imports and direct API writes. Without it
+     * an h1 arriving that way is flattened to plain text.
+     */
+    test('remaps out-of-vocabulary headings instead of flattening them', () => {
+        expect(vocabulary.sanitize_rich_full('<h1>Section</h1><p>body</p>'))
+            .toBe('<h2>Section</h2><p>body</p>');
+        expect(vocabulary.sanitize_rich_full('<h4>A</h4><h5>B</h5><h6>C</h6>'))
+            .toBe('<h3>A</h3><h3>B</h3><h3>C</h3>');
+        expect(vocabulary.sanitize_rich_full('<h2>Two</h2><h3>Three</h3>'))
+            .toBe('<h2>Two</h2><h3>Three</h3>');
+        expect(vocabulary.sanitize_rich_full('<div><h1>Inside a div</h1></div>'))
+            .toBe('<h2>Inside a div</h2>');
+    });
+
+    test('remapped headings keep their content and still lose bad attributes', () => {
+        expect(vocabulary.sanitize_rich_full('<h1>Text with <strong>bold</strong></h1>'))
+            .toBe('<h2>Text with <strong>bold</strong></h2>');
+        expect(vocabulary.sanitize_rich_full('<h1 class="ql-indent-2 junk" style="color: #8B2332">S</h1>'))
+            .toBe('<h2 class="ql-indent-2" style="color: #8b2332">S</h2>');
+        expect(vocabulary.sanitize_rich_full('<h1 style="font-size: 40px" onclick="evil()">B</h1>'))
+            .toBe('<h2>B</h2>');
+    });
+
+    test('reduced and plain still flatten every heading level', () => {
+        expect(vocabulary.sanitize_rich_reduced('<h1>x</h1><h4>y</h4>')).toBe('x y');
+        expect(vocabulary.sanitize_plain('<h1>x</h1><h4>y</h4>')).toBe('x y');
     });
 
     test('removes script/style entirely', () => {
@@ -76,6 +159,78 @@ describe('libs/rte_vocabulary — reduced profile', () => {
         expect(vocabulary.sanitize_rich_reduced('<a href="https://x.test">t</a>')).toBe('t');
         expect(vocabulary.sanitize_rich_reduced('<p>para</p>')).toBe('para');
     });
+
+    /*
+     * Pressing Enter in a reduced editor, or pasting multi-line text into
+     * one, produces block markup the profile has to flatten — the words on
+     * either side of the boundary must not be joined.
+     */
+    test('flattens block boundaries to a single space', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+        expect(vocabulary.sanitize_rich_reduced('<ol><li>one</li><li>two</li></ol>'))
+            .toBe('one two');
+        expect(vocabulary.sanitize_rich_reduced('<div>a</div><div>b</div><div>c</div>'))
+            .toBe('a b c');
+        expect(vocabulary.sanitize_rich_reduced('<p><strong>Bold</strong></p><p>plain</p>'))
+            .toBe('<strong>Bold</strong> plain');
+    });
+
+    /*
+     * The first version of boundary_hook inserted a space only BEFORE a
+     * dropped block, which handles "<p>a</p><p>b</p>" (the next block's
+     * leading space separates them) but silently joined anything that
+     * FOLLOWED one.
+     */
+    test('separates a dropped block from whatever follows it', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>First</p>Second')).toBe('First Second');
+        expect(vocabulary.sanitize_rich_reduced('<h2>Head</h2><strong>bold</strong>'))
+            .toBe('Head <strong>bold</strong>');
+        expect(vocabulary.sanitize_plain('<ul><li>one</li></ul>after')).toBe('one after');
+        expect(vocabulary.sanitize_plain('<div><p>a</p></div>b')).toBe('a b');
+    });
+
+    test('does not introduce padding around already-flat content', () => {
+        expect(vocabulary.sanitize_rich_reduced('<p>Only one line</p>')).toBe('Only one line');
+        expect(vocabulary.sanitize_rich_reduced('  spaced  out  ')).toBe('spaced out');
+    });
+});
+
+describe('libs/rte_vocabulary — linked_text profile', () => {
+
+    /*
+     * Captions are authored in a plain <textarea>, so no new formatting can
+     * be created — but existing captions carry photo-credit and source links
+     * whose destination URL is unrecoverable if the anchor is stripped.
+     */
+    test('keeps hyperlinks and strips everything else', () => {
+        expect(vocabulary.sanitize_linked_text('Credit: <a href="https://du.edu">DU</a>.'))
+            .toBe('Credit: <a href="https://du.edu">DU</a>.');
+        expect(vocabulary.sanitize_linked_text('Book cover. <i>Courtesy</i> of DU.'))
+            .toBe('Book cover. Courtesy of DU.');
+        expect(vocabulary.sanitize_linked_text('<h2>Head</h2><strong>b</strong><ul><li>x</li></ul>'))
+            .toBe('Head b x');
+    });
+
+    test('applies the same anchor hygiene as the full profile', () => {
+        expect(vocabulary.sanitize_linked_text('<a href="www.example.com">x</a>'))
+            .toBe('<a href="https://www.example.com">x</a>');
+        expect(vocabulary.sanitize_linked_text('see <a href="javascript:alert(1)">this</a> now'))
+            .toBe('see this now');
+        expect(vocabulary.sanitize_linked_text('<a href="https://du.edu" target="_blank">x</a>'))
+            .toBe('<a href="https://du.edu" target="_blank" rel="noopener noreferrer">x</a>');
+    });
+
+    test('flattens block boundaries to a single space, like plain', () => {
+        expect(vocabulary.sanitize_linked_text('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+    });
+
+    test('removes script and event handlers', () => {
+        expect(vocabulary.sanitize_linked_text('a<script>alert(1)</script>b')).toBe('ab');
+        expect(vocabulary.sanitize_linked_text('<a href="https://du.edu" onclick="evil()">x</a>'))
+            .toBe('<a href="https://du.edu">x</a>');
+    });
 });
 
 describe('libs/rte_vocabulary — plain profile', () => {
@@ -83,6 +238,14 @@ describe('libs/rte_vocabulary — plain profile', () => {
     test('strips all markup, keeps text', () => {
         expect(vocabulary.sanitize_plain('<b>bold</b> text')).toBe('bold text');
         expect(vocabulary.sanitize_plain('plain')).toBe('plain');
+    });
+
+    test('flattens block boundaries to a single space', () => {
+        expect(vocabulary.sanitize_plain('<p>First line</p><p>Second line</p>'))
+            .toBe('First line Second line');
+        expect(vocabulary.sanitize_plain('a<br>b')).toBe('a b');
+        expect(vocabulary.sanitize_plain('<div>Portrait</div><div>1921</div>'))
+            .toBe('Portrait 1921');
     });
 });
 

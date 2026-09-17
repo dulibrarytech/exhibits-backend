@@ -231,13 +231,16 @@ const itemsDetailsGridFormModule = (function () {
                 return;
             }
 
-            const unescaped_text = text ? helperModule.unescape(text) : '';
-
-            /* the text field is a rich text editor; internal name is a plain input */
+            /*
+             * The text field is a rich text editor: stored HTML goes in as-is
+             * (decoding it first turned an author's literal "&lt;b&gt;" into
+             * bold on the next save). Internal name is a plain input and keeps
+             * the entity decode.
+             */
             if (element.dataset.rte !== undefined) {
-                rteModule.set_html(element.id, unescaped_text);
+                rteModule.set_html(element.id, text || '');
             } else {
-                element.value = unescaped_text;
+                element.value = text ? helperModule.unescape(text) : '';
             }
         };
 
