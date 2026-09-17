@@ -48,44 +48,6 @@ const repoServiceModule = (function() {
     };
 
     /**
-     * Build the thumbnail URL for a repository item
-     * Uses the repo_thumbnail endpoint with UUID and token
-     * The endpoint returns binary image data directly for use in img src
-     * @param {string} uuid - Repository item UUID
-     * @returns {string} Thumbnail URL or empty string if no uuid
-     */
-    const build_thumbnail_url = (uuid) => {
-        if (!uuid) {
-            return '';
-        }
-
-        // Validate endpoint configuration
-        if (!EXHIBITS_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
-            console.warn('Repo thumbnail endpoint not configured');
-            return '';
-        }
-
-        // This URL returns binary image data directly (not JSON). Same-origin
-        // thumbnail requests rely on the HttpOnly exhibits_token cookie for
-        // authentication, so the JWT is never embedded in <img src>.
-        const endpoint = EXHIBITS_ENDPOINTS.repo_thumbnail.get.endpoint;
-        return endpoint + '?uuid=' + encodeURIComponent(uuid);
-    };
-
-    /**
-     * Get the thumbnail URL for a repository item
-     * Public method to build thumbnail URL for external use
-     * @param {string} uuid - Repository item UUID
-     * @returns {string} Thumbnail URL or empty string if invalid
-     */
-    obj.get_repo_tn_url = function(uuid) {
-        if (!uuid || typeof uuid !== 'string' || uuid.trim().length === 0) {
-            return '';
-        }
-        return build_thumbnail_url(uuid.trim());
-    };
-
-    /**
      * Show loading indicator
      */
     const show_loading = () => {
@@ -320,9 +282,9 @@ const repoServiceModule = (function() {
         const creator = escape_html(item.creator || '');
         const is_checked = selected_items.has(item.uuid);
 
-        // Build thumbnail URL using the repo thumbnail endpoint
-        // Falls back to placeholder if thumbnail cannot be fetched
-        const thumbnail_url = build_thumbnail_url(item.uuid);
+        // The shared builder in helperMediaLibraryModule; the <img> below
+        // falls back to the placeholder if the thumbnail cannot be fetched.
+        const thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url(item.uuid);
 
         // Build thumbnail HTML with inline styles for reliability.
         // Uses the repo thumbnail endpoint URL with a CSP-safe fallback:

@@ -83,11 +83,6 @@ describe('helperMediaLibraryModule', () => {
             build: build_endpoint,
         });
         globalThis.authModule = auth_stub('unit-test-token');
-        // repoServiceModule is optional — only get_repo_thumbnail_url's
-        // delegation branch reads it. Default to undefined so the
-        // fallback branch runs.
-        delete globalThis.repoServiceModule;
-
         document.body.innerHTML = '';
         window.localStorage.clear();
     });
@@ -326,17 +321,7 @@ describe('helperMediaLibraryModule', () => {
     });
 
     describe('get_repo_thumbnail_url', () => {
-        it('delegates to repoServiceModule.get_repo_tn_url when present', () => {
-            const spy = vi.fn(() => '/delegated-url');
-            globalThis.repoServiceModule = { get_repo_tn_url: spy };
-
-            const out = helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid');
-            expect(out).toBe('/delegated-url');
-            expect(spy).toHaveBeenCalledWith('repo-uuid');
-        });
-
-        it('falls back to a direct URL build from the endpoint', () => {
-            // No repoServiceModule available — fallback path runs.
+        it('builds the URL from the repo thumbnail endpoint', () => {
             const out = helperMediaLibraryModule.get_repo_thumbnail_url('repo-uuid');
             expect(out).toBe(`${MEDIA_BASE}/repo/thumbnail?uuid=repo-uuid`);
         });

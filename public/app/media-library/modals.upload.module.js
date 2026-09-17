@@ -28,27 +28,13 @@ const mediaModalsModule = (function() {
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
-    /**
-     * Build the preview URL for a staged (not-yet-saved) upload thumbnail.
-     * The record-keyed thumbnail endpoint 404s here because no media record
-     * exists until Save, so serve the just-generated staged thumbnail by its
-     * storage-relative path instead. Returns null when there is nothing to
-     * serve (caller then falls back to the static placeholder).
-     * @param {string} thumbnail_path - Relative staged thumbnail path
-     * @returns {string|null}
+    /*
+     * Staged (not-yet-saved) upload previews are served by storage-relative
+     * path, because the record-keyed thumbnail endpoint 404s until Save. The
+     * builder lives in the helper alongside every other thumbnail URL; this
+     * module had carried a verbatim copy.
      */
-    const build_staged_thumbnail_url = (thumbnail_path) => {
-        if (!thumbnail_path) {
-            return null;
-        }
-        const endpoint = EXHIBITS_ENDPOINTS?.upload?.get?.endpoint;
-        if (!endpoint) {
-            return null;
-        }
-        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
-        // cookie for authentication, so the JWT is never embedded in <img src>.
-        return endpoint + '?path=' + encodeURIComponent(thumbnail_path);
-    };
+    const build_uploaded_thumbnail_url = helperMediaLibraryModule.build_uploaded_thumbnail_url;
 
     // Module state
     let uploaded_files_data = [];
@@ -194,7 +180,7 @@ const mediaModalsModule = (function() {
             // These files are staged (not yet saved), so the record-keyed
             // thumbnail endpoint would 404. Prefer the staged thumbnail served
             // by its on-disk path; fall back to the static placeholder.
-            const thumb_url = build_staged_thumbnail_url(file_data.thumbnail_path)
+            const thumb_url = build_uploaded_thumbnail_url(file_data.thumbnail_path)
                 || get_thumbnail_url_for_media(media_type, file_data.uuid);
             preview_html = '<img src="' + thumb_url + '" alt="' + display_name + '" style="max-width:100%;max-height:100%;object-fit:cover;" onerror="this.onerror=null; this.parentNode.innerHTML=\'<i class=\\\'fa ' + type_icon + ' file-icon\\\' aria-hidden=\\\'true\\\'></i>\';">';
         } else {

@@ -36,6 +36,8 @@ function fresh_helper() {
         format_file_size: () => '1 KB',
         clean_filename_for_title: (s) => s,
         build_media_url: () => '',
+        // The module aliases the helper's staged-thumbnail builder at load.
+        build_uploaded_thumbnail_url: () => null,
         get_thumbnail_url_for_media: () => '/ph.png',
         HTTP_STATUS: { OK: 200, CREATED: 201, BAD_REQUEST: 400, FORBIDDEN: 403, NOT_FOUND: 404 },
         show_bootstrap_modal: () => {},

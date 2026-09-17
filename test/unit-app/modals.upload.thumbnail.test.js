@@ -39,6 +39,12 @@ function fresh_helper() {
         format_file_size: () => '97.9 KB',
         clean_filename_for_title: (s) => s,
         build_media_url: () => '',
+        // The module aliases the helper's staged-thumbnail builder; mirror
+        // its contract (path-keyed staged endpoint, null when there is no
+        // path) so the preview assertions below exercise the real shape.
+        build_uploaded_thumbnail_url: (thumbnail_path) => (
+            thumbnail_path ? STAGED_ENDPOINT + '?path=' + encodeURIComponent(thumbnail_path) : null
+        ),
         // Sentinel placeholder so fallback is unambiguous in assertions.
         get_thumbnail_url_for_media: () => PLACEHOLDER,
         HTTP_STATUS: { OK: 200, CREATED: 201, BAD_REQUEST: 400, FORBIDDEN: 403, NOT_FOUND: 404 },

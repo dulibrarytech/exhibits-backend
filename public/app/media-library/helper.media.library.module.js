@@ -406,17 +406,14 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
-     * Get repository thumbnail URL for repo-ingested media
-     * Delegates to repoServiceModule when available, with direct fallback
+     * Get repository thumbnail URL for repo-ingested media. The one builder for
+     * this URL: the media list, the edit/repo modals and the repo search
+     * results all render it from here.
      * @param {string} uuid - Repository item UUID (repo_uuid)
      * @returns {string} Thumbnail URL or empty string
      */
     obj.get_repo_thumbnail_url = (uuid) => {
         if (!uuid) return '';
-
-        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.get_repo_tn_url === 'function') {
-            return repoServiceModule.get_repo_tn_url(uuid);
-        }
 
         const endpoints = get_endpoints();
 
