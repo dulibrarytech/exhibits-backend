@@ -66,12 +66,6 @@ const itemsEditGridFormModule = (function () {
         }
     });
 
-    /**
-     * Update grid record
-     * @returns {Promise<boolean>}
-     */
-    obj.update_grid_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

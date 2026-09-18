@@ -60,11 +60,10 @@ function navigate(pathname) {
 describe('itemsCommonGridItemFormModule', () => {
 
     beforeAll(() => {
-        // The module reads window.localStorage.getItem('exhibits_app_path')
-        // at IIFE-definition time. vitest's jsdom env exposes localStorage
-        // as a bare {} (no getItem), so install a working stub before eval.
+        // vitest's jsdom env exposes localStorage as a bare {} (no getItem);
+        // install a working stub before eval.
         const fake_storage = (() => {
-            const store = new Map([['exhibits_app_path', APP_PATH]]);
+            const store = new Map();
             return {
                 getItem: (k) => (store.has(k) ? store.get(k) : null),
                 setItem: (k, v) => store.set(k, String(v)),
@@ -78,7 +77,7 @@ describe('itemsCommonGridItemFormModule', () => {
         });
 
         // The module captures `const APP_PATH = endpointsModule.get_app_path()` at
-        // eval time; stub it to resolve from the fake localStorage seeded above.
+        // eval time; stub it.
         globalThis.endpointsModule = endpoints_stub();
 
         load_browser_module(

@@ -208,28 +208,6 @@ describe('helperMediaLibraryModule', () => {
         });
     });
 
-    describe('get_app_path', () => {
-        it('returns the value seeded in localStorage', () => {
-            window.localStorage.setItem('exhibits_app_path', '/custom-base');
-            expect(helperMediaLibraryModule.get_app_path()).toBe('/custom-base');
-        });
-
-        it('falls back to /exhibits-dashboard when not seeded', () => {
-            // localStorage was cleared in beforeEach.
-            expect(helperMediaLibraryModule.get_app_path()).toBe('/exhibits-dashboard');
-        });
-
-        it('falls back to /exhibits-dashboard when localStorage throws', () => {
-            const original = window.localStorage.getItem;
-            window.localStorage.getItem = () => { throw new Error('blocked'); };
-            try {
-                expect(helperMediaLibraryModule.get_app_path()).toBe('/exhibits-dashboard');
-            } finally {
-                window.localStorage.getItem = original;
-            }
-        });
-    });
-
     describe('get_media_type_icon', () => {
         it('returns the type-specific Font Awesome icon', () => {
             expect(helperMediaLibraryModule.get_media_type_icon('image')).toBe('fa-file-image-o');

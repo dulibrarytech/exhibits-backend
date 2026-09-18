@@ -105,12 +105,6 @@ const itemsEditHeadingFormModule = (function () {
         }
     });
 
-    /**
-     * Update item heading record
-     * @returns {Promise<boolean>}
-     */
-    obj.update_item_heading_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

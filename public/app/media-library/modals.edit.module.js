@@ -579,21 +579,6 @@ const mediaEditModalModule = (function() {
         console.debug('Edit media modal opened for UUID:', uuid);
     };
 
-    /**
-     * Close the edit media modal (public method)
-     */
-    obj.close_edit_media_modal = function() {
-        close_edit_modal();
-    };
-
-    /**
-     * Initialize the edit modal module
-     */
-    obj.init = function() {
-        console.debug('Media edit modal module initialized');
-        return true;
-    };
-
     return obj;
 
 }());

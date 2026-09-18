@@ -29,6 +29,36 @@ const FIELDS = require('../../config/exhibit_fields');
  * (`set_publish_method`), so its name must never change; it has no static
  * call site to catch a rename.
  */
+/* Column defaults applied on create (a request may override any of them). */
+const GRID_DEFAULTS = Object.freeze({
+    type: 'grid',
+    columns: 4,
+    order: 0,
+    is_published: 0,
+    is_deleted: 0,
+    owner: 0
+});
+
+const GRID_ITEM_DEFAULTS = Object.freeze({
+    item_type: 'image',
+    type: 'item',
+    layout: 'media_top',
+    wrap_text: 1,
+    media_width: 50,
+    media_padding: 1,
+    is_alt_text_decorative: 0,
+    pdf_open_to_page: 1,
+    order: 0,
+    is_repo_item: 0,
+    is_kaltura_item: 0,
+    is_embedded: 0,
+    is_published: 0,
+    is_locked: 0,
+    locked_by_user: 0,
+    is_deleted: 0,
+    owner: 0
+});
+
 const PUBLISH_OPS = Object.freeze([
     {
         method: 'set_to_publish', table: 'grid_records', status: 1,
@@ -90,188 +120,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
 
     // ==================== GRID-SPECIFIC HELPERS ====================
 
-    /**
-     * Sets default values for grid item fields
-     * @param {Object} data - Data object to set defaults on
-     * @private
-     */
-    _set_grid_item_defaults(data) {
-        this._apply_defaults(data, {
-            item_type: 'image',
-            type: 'item',
-            layout: 'media_top',
-            wrap_text: 1,
-            media_width: 50,
-            media_padding: 1,
-            is_alt_text_decorative: 0,
-            pdf_open_to_page: 1,
-            order: 0,
-            is_repo_item: 0,
-            is_kaltura_item: 0,
-            is_embedded: 0,
-            is_published: 0,
-            is_locked: 0,
-            locked_by_user: 0,
-            is_deleted: 0,
-            owner: 0
-        });
-    }
-
-    /**
-     * Sets default values for grid fields
-     * @param {Object} data - Data object to set defaults on
-     * @private
-     */
-    _set_grid_defaults(data) {
-        this._apply_defaults(data, {
-            type: 'grid',
-            columns: 4,
-            order: 0,
-            is_published: 0,
-            is_deleted: 0,
-            owner: 0
-        });
-    }
-
-    // ==================== COMMON OPERATIONS (overrides) ====================
-
-    /**
-     * Generic update publish status for any table
-     * @param {string} table_name - Table name
-     * @param {Object} where_clause - Where conditions
-     * @param {number} status - 0 or 1
-     * @param {string} [updated_by=null] - User ID
-     * @returns {Promise<Object>} Update result
-     * @private
-     */
-    async _update_publish_status(table_name, where_clause, status, updated_by = null) {
-        this._validate_database();
-        this._validate_table(table_name);
-
-        if (![0, 1].includes(status)) {
-            throw new Error('Status must be 0 or 1');
-        }
-
-        // Check existing records
-        const existing_count = await this.DB(this.TABLE[table_name])
-            .count('id as count')
-            .where({
-                ...where_clause,
-                is_deleted: 0
-            })
-            .timeout(this.QUERY_TIMEOUT);
-
-        const total_records = existing_count?.[0]?.count ? parseInt(existing_count[0].count, 10) : 0;
-
-        if (total_records === 0) {
-            return {
-                success: true,
-                affected_rows: 0,
-                total_records: 0,
-                message: `No records found to ${status === 1 ? 'publish' : 'suppress'}`
-            };
-        }
-
-        const update_data = {
-            is_published: status,
-            updated: this.DB.fn.now()
-        };
-
-        if (updated_by) {
-            update_data.updated_by = updated_by;
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({
-                ...where_clause,
-                is_deleted: 0
-            })
-            .update(update_data)
-            .timeout(this.QUERY_TIMEOUT);
-
-        return {
-            success: true,
-            affected_rows,
-            total_records,
-            status: status === 1 ? 'published' : 'suppressed',
-            updated_by,
-            message: `${affected_rows} record(s) ${status === 1 ? 'published' : 'suppressed'} successfully`
-        };
-    }
-
-    /**
-     * Generic update single record publish status
-     * @param {string} table_name - Table name
-     * @param {string} uuid - Record UUID
-     * @param {number} status - 0 or 1
-     * @param {string} [updated_by=null] - User ID
-     * @returns {Promise<Object>} Update result
-     * @private
-     */
-    async _update_single_publish_status(table_name, uuid, status, updated_by = null) {
-        this._validate_database();
-        this._validate_table(table_name);
-
-        const uuid_trimmed = this._validate_uuid(uuid, `${table_name} UUID`);
-
-        if (![0, 1].includes(status)) {
-            throw new Error('Status must be 0 or 1');
-        }
-
-        // Check if record exists
-        const existing = await this.DB(this.TABLE[table_name])
-            .select('id', 'uuid', 'is_published', 'is_deleted')
-            .where({uuid: uuid_trimmed})
-            .first()
-            .timeout(this.QUERY_TIMEOUT);
-
-        if (!existing) {
-            throw new Error(`${table_name} record not found`);
-        }
-
-        if (existing.is_deleted === 1) {
-            throw new Error(`Cannot ${status === 1 ? 'publish' : 'suppress'} deleted ${table_name} record`);
-        }
-
-        if (existing.is_published === status) {
-            return {
-                success: true,
-                already_set: true,
-                uuid: uuid_trimmed,
-                message: `${table_name} was already ${status === 1 ? 'published' : 'suppressed'}`
-            };
-        }
-
-        const update_data = {
-            is_published: status,
-            updated: this.DB.fn.now()
-        };
-
-        if (updated_by) {
-            update_data.updated_by = updated_by;
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({
-                uuid: uuid_trimmed,
-                is_deleted: 0
-            })
-            .update(update_data)
-            .timeout(this.QUERY_TIMEOUT);
-
-        if (affected_rows === 0) {
-            throw new Error(`Failed to ${status === 1 ? 'publish' : 'suppress'} ${table_name} record: No rows affected`);
-        }
-
-        return {
-            success: true,
-            uuid: uuid_trimmed,
-            affected_rows,
-            updated_by,
-            message: `${table_name} record ${status === 1 ? 'published' : 'suppressed'} successfully`
-        };
-    }
-
     // ==================== GRID RECORDS ====================
 
     /**
@@ -298,7 +146,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
             }
 
             // Set defaults
-            this._set_grid_defaults(sanitized_data);
+            this._apply_defaults(sanitized_data, GRID_DEFAULTS);
 
             // Add timestamps and metadata
             sanitized_data.created = this.DB.fn.now();
@@ -648,7 +496,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
             const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
 
             // Set defaults
-            this._set_grid_item_defaults(sanitized_data);
+            this._apply_defaults(sanitized_data, GRID_ITEM_DEFAULTS);
 
             if (created_by) {
                 sanitized_data.created_by = created_by;
@@ -962,9 +810,8 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      *
      * The nine publish/suppress methods are generated from PUBLISH_OPS at the
      * top of this file. All nine resolve the result object and throw via
-     * _handle_error, exactly as before. The grid overrides of
-     * _update_publish_status / _update_single_publish_status above still
-     * apply — the generator calls whichever the instance resolves.
+     * _handle_error, exactly as before. Both publish-status helpers come
+     * from Base_tasks; this class no longer overrides them.
      */
 
     // ==================== REORDERING ====================
@@ -1036,5 +883,8 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
 };
 
 Base_tasks.define_publish_ops(Exhibit_grid_record_tasks, PUBLISH_OPS);
+
+/* Exposed for the task tests; production code reads the constants above. */
+Exhibit_grid_record_tasks.DEFAULTS = Object.freeze({ grid: GRID_DEFAULTS, grid_item: GRID_ITEM_DEFAULTS });
 
 module.exports = Exhibit_grid_record_tasks;

@@ -839,7 +839,7 @@ const Base_tasks = class {
         }
 
         const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({uuid: uuid_trimmed})
+            .where({uuid: uuid_trimmed, is_deleted: 0})
             .update(update_data)
             .timeout(this.QUERY_TIMEOUT);
 
@@ -851,7 +851,6 @@ const Base_tasks = class {
             success: true,
             uuid: uuid_trimmed,
             affected_rows,
-            updated_by,
             message: `${table_name} record ${status === 1 ? 'published' : 'suppressed'} successfully`
         };
     }
@@ -918,8 +917,6 @@ const Base_tasks = class {
  *   scope    - bulk only: the WHERE column the validated uuid goes in
  *   label    - bulk only: uuid label for the validation error message
  *   log_key  - key the uuid is logged under (default 'uuid')
- *   contract - 'result'  : resolve the result object, throw via _handle_error
- *              'boolean' : resolve true, log-and-resolve false on error
  *
  * @param {Function} target_class - Task class whose prototype gains the methods
  * @param {Array<Object>} specs - Spec table
@@ -930,7 +927,7 @@ const define_publish_ops = (target_class, specs) => {
 
         const {
             method, table, status, log, mode = 'bulk',
-            scope = null, label = 'UUID', log_key = 'uuid', contract = 'result'
+            scope = null, label = 'UUID', log_key = 'uuid'
         } = spec;
 
         const operation = async function (uuid, updated_by = null) {
@@ -957,15 +954,9 @@ const define_publish_ops = (target_class, specs) => {
                     affected_rows: result.affected_rows
                 });
 
-                return contract === 'boolean' ? true : result;
+                return result;
 
             } catch (error) {
-
-                if (contract === 'boolean') {
-                    LOGGER.module().error(`Failed to ${status === 1 ? 'publish' : 'suppress'} ${spec.record_label} record: ` + error.message);
-                    return false;
-                }
-
                 this._handle_error(error, method, {uuid});
             }
         };

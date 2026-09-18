@@ -1526,14 +1526,6 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Get current DataTable instance
-     * @returns {DataTable|null} DataTable instance or null
-     */
-    obj.get_data_table = function() {
-        return media_data_table;
-    };
-
-    /**
      * Wait for a dependency to be available
      * @param {Function} check_fn - Function that returns true when dependency is ready
      * @param {number} max_attempts - Maximum number of attempts (default: 50)

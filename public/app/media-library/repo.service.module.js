@@ -616,14 +616,6 @@ const repoServiceModule = (function() {
     };
 
     /**
-     * Get selected items count
-     * @returns {number} Number of selected items
-     */
-    obj.get_selected_count = function() {
-        return selected_items.size;
-    };
-
-    /**
      * Clear all selections
      */
     obj.clear_selections = function() {

@@ -5,7 +5,7 @@
 // (Phase 1 DRY, cluster C8).
 //
 // Loader mirrors endpoints.module.version.test.js: install a deterministic
-// Storage before eval because the module probes localStorage once at load.
+// A working Storage stub before eval (vitest's jsdom exposes a bare {}).
 
 'use strict';
 

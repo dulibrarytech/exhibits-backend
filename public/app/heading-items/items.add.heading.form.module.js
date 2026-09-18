@@ -35,12 +35,6 @@ const itemsAddHeadingFormModule = (function () {
         }
     });
 
-    /**
-     * Create item heading record
-     * @returns {Promise<boolean>}
-     */
-    obj.create_heading_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

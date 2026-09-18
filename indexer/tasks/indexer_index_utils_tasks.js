@@ -177,23 +177,6 @@ const Indexer_index_utils_tasks = class extends Es_base_tasks {
         }
     }
 
-    /**
-     * Validates mappings file exists synchronously (for quick checks)
-     * @returns {boolean} True if file exists and is readable
-     */
-    validate_mappings_file() {
-        try {
-            FS_SYNC.accessSync(this.MAPPINGS_PATH, FS_SYNC.constants.R_OK);
-            return true;
-        } catch (error) {
-            LOGGER.module().error('Mappings file validation failed', {
-                path: this.MAPPINGS_PATH,
-                error: error.message
-            });
-            return false;
-        }
-    }
-
     // ==================== INDEX OPERATIONS ====================
 
     /**

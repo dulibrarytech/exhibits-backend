@@ -595,31 +595,6 @@ const mediaModalsModule = (function() {
         console.debug('Uploaded media modal opened with ' + uploaded_files_data.length + ' files');
     };
 
-    /**
-     * Close the uploaded media modal
-     */
-    obj.close_uploaded_media_modal = function() {
-        close_modal();
-        uploaded_files_data = [];
-        saved_files_count = 0;
-        removed_indices.clear();
-        on_complete_callback = null;
-    };
-
-    /**
-     * Get count of saved files
-     */
-    obj.get_saved_count = function() {
-        return saved_files_count;
-    };
-
-    /**
-     * Get uploaded files data
-     */
-    obj.get_files_data = function() {
-        return uploaded_files_data;
-    };
-
     // ============================================
     // VIEW MEDIA MODAL FUNCTIONS
     // ============================================
@@ -683,13 +658,6 @@ const mediaModalsModule = (function() {
                 }
             }
         });
-    };
-
-    /**
-     * Close the view media modal (public method)
-     */
-    obj.close_view_media_modal = function() {
-        viewMediaModalModule.close();
     };
 
     /**

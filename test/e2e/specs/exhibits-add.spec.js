@@ -56,6 +56,9 @@ test.describe('Add Exhibit modal', () => {
     test('POSTs payload and closes modal on success', async ({ page }) => {
         await openModal(page, 'add-exhibit-modal');
 
+        const page_errors = [];
+        page.on('pageerror', (e) => page_errors.push(e.message));
+
         // The exhibit form gates submission on a styles-required check
         // covering 5 sections × 4 fields (template/introduction/navigation/
         // heading1/item1 × bg-color/font-color/font-size/font). This test
@@ -88,40 +91,7 @@ test.describe('Add Exhibit modal', () => {
         // success rather than calling .modal('hide'); waitForModalHidden
         // resolves either way (the element is gone after navigation).
         await waitForModalHidden(page, 'add-exhibit-modal');
-    });
-
-    test('submits successfully even when every endpoints cache layer is cleared (storage-free endpoint map)', async ({ page }) => {
-        // Regression lineage: the form once captured get_exhibits_endpoints()
-        // at page load, and a cold/cleared cache made submit throw "Cannot
-        // read properties of null (reading 'exhibits')" (hit in production).
-        // Endpoints are now resolved from build-time templates generated from
-        // the server endpoint modules — storage cannot make them null, so a
-        // fully cleared cache must not affect submission at all.
-        await openModal(page, 'add-exhibit-modal');
-
-        await page.evaluate(() => {
-            exhibitsStylesModule.validate_required = () => ({ valid: true });
-            exhibitsStylesModule.get_styles = () => ({});
-            // The worst possible cache state: no localStorage copy, no
-            // in-memory copy.
-            window.localStorage.removeItem('exhibits_endpoints');
-            endpointsModule.refresh_cache();
-        });
-
-        const page_errors = [];
-        page.on('pageerror', (e) => page_errors.push(e.message));
-
-        const postPromise = page.waitForRequest((req) => {
-            const u = new URL(req.url());
-            return u.pathname === `${APP_PATH}/api/v1/exhibits` && req.method() === 'POST';
-        });
-
-        await page.fill('#exhibit-title-input .ql-editor', 'Cold cache exhibit');
-        await page.fill('#exhibit-description-input .ql-editor', 'A description');
-        await page.click('#save-exhibit-btn');
-
-        const request = await postPromise;
-        expect(request.postDataJSON().title).toBe('<p>Cold cache exhibit</p>');
         expect(page_errors).toEqual([]);
     });
+
 });

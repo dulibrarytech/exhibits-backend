@@ -35,12 +35,6 @@ const itemsAddGridFormModule = (function () {
         }
     });
 
-    /**
-     * Create grid record
-     * @returns {Promise<boolean>}
-     */
-    obj.create_grid_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

@@ -122,13 +122,16 @@ describe('dropped `title` column — container task paths never reference it', (
 
     // ---- grid containers (tbl_grids) ----
 
-    test('grid: publishing a grid container does not select `title`', async () => {
+    test('grid: publishing a grid container does not reference `title`', async () => {
         const { db, calls } = createRecordingDb();
         const task = new GridTasks(db, TABLE);
-        // set_grid_to_publish → _update_single_publish_status('grid_records', …)
+        // set_grid_to_publish → Base_tasks._update_single_publish_status: one
+        // UPDATE by uuid, no SELECT first (the grid override that used to
+        // pre-select the row is gone).
         const result = await task._update_single_publish_status('grid_records', RECORD_UUID, 1);
         expect(result.success).toBe(true);
-        expect(calls.selects.length).toBeGreaterThan(0);
+        expect(calls.selects.length).toBe(0);
+        expect(calls.updates.length).toBeGreaterThan(0);
         expectNoTitle(calls);
     });
 

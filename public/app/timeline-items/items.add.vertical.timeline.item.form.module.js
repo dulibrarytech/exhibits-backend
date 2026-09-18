@@ -36,12 +36,6 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
         }
     });
 
-    /**
-     * Create timeline item record
-     * @returns {Promise<boolean>}
-     */
-    obj.create_timeline_item_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

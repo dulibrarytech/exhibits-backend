@@ -340,13 +340,6 @@ const mediaDeleteModalModule = (function() {
         console.debug('Delete media modal opened for: ' + name);
     };
 
-    /**
-     * Close the delete media modal (public method)
-     */
-    obj.close_delete_media_modal = function() {
-        close_delete_modal();
-    };
-
     return obj;
 
 }());

@@ -267,27 +267,6 @@ describe('viewMediaModalModule', () => {
             expect(hidden).toHaveLength(2);
         });
 
-        it('removes the repository handle hint on close', () => {
-            viewMediaModalModule.open(base_ctx());
-
-            const hint = document.createElement('p');
-            hint.className = 'repo-handle-hint';
-            document.getElementById('view-media-container').parentNode.appendChild(hint);
-
-            viewMediaModalModule.close();
-            expect(document.querySelectorAll('.repo-handle-hint')).toHaveLength(0);
-        });
-
-        it('runs the active strategy\'s on_close hook', () => {
-            const ctx = base_ctx();
-            ctx.strategy.on_close = vi.fn();
-
-            viewMediaModalModule.open(ctx);
-            viewMediaModalModule.close();
-
-            expect(ctx.strategy.on_close).toHaveBeenCalledTimes(1);
-        });
-
         it('Edit closes the preview and opens the edit modal for the stashed uuid', async () => {
             vi.useFakeTimers();
             globalThis.mediaEditModalModule = { open_edit_media_modal: vi.fn() };

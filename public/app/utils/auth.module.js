@@ -20,11 +20,8 @@ const authModule = (function () {
 
     'use strict';
 
-    // App path comes from endpoints.module (the single source). get_app_path()
-    // resolves the localStorage cache with a hardcoded fallback, so APP_PATH is never
-    // null even on a cold cache (first login) — no broken `null/...` redirects.
+    /* App path comes from endpoints.module (the single source). */
     const APP_PATH = endpointsModule.get_app_path();
-    const init_endpoints = endpointsModule.init();
     let obj = {};
 
     obj.get_user_token = function () {
@@ -158,7 +155,7 @@ const authModule = (function () {
             }
 
             // Construct URL with validated parameters
-            const url = `${init_endpoints.authenticate}?id=${encodeURIComponent(parsed_id)}`;
+            const url = `${endpointsModule.get_authenticate_endpoint()}?id=${encodeURIComponent(parsed_id)}`;
 
             // Make authenticated request
             const response = await httpModule.req({
@@ -1044,8 +1041,6 @@ const authModule = (function () {
     obj.logout = function () {
         window.location.replace(APP_PATH + '/logout');
     };
-
-    obj.init = function () {};
 
     return obj;
 

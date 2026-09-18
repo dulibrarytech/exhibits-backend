@@ -365,18 +365,6 @@ const viewMediaModalModule = (function() {
         return true;
     };
 
-    /**
-     * Closes the dialog (public entry point for the dispatch modules).
-     */
-    obj.close = function() {
-        close_view_modal();
-    };
-
-    obj.init = function() {
-        console.debug('View media modal module initialized');
-        return true;
-    };
-
     return obj;
 
 }());

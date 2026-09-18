@@ -198,22 +198,6 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Get icon for item type
-     */
-    const get_item_type_icon = (item_type) => {
-        const icon_map = {
-            'text': 'fa fa-file-text-o',
-            'image': 'fa fa-image',
-            'video': 'fa fa-file-video-o',
-            'audio': 'fa fa-file-audio-o',
-            'pdf': 'fa fa-file-pdf-o'
-        };
-
-        const icon_class = icon_map[item_type] || 'fa fa-file-o';
-        return create_icon(icon_class);
-    };
-
-    /**
      * Get thumbnail URL for media type
      */
     const get_thumbnail_url = (media_type) => {
@@ -1712,14 +1696,6 @@ const itemsListDisplayModule = (function() {
             }
         }
 
-        return true;
-    };
-
-    /**
-     * Initialize module
-     */
-    obj.init = function() {
-        console.debug('Items list displays module initialized');
         return true;
     };
 

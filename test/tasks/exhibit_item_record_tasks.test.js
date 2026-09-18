@@ -179,11 +179,11 @@ describe('Exhibit_item_record_tasks', () => {
             });
         });
 
-        describe('_set_item_defaults', () => {
+        describe('item defaults (DEFAULTS.item via _apply_defaults)', () => {
             test('should set default values for missing fields', () => {
                 const data = { title: 'Test Item' };
                 // Method modifies data in-place, doesn't return anything
-                itemTasks._set_item_defaults(data);
+                itemTasks._apply_defaults(data, Exhibit_item_record_tasks.DEFAULTS.item);
                 expect(data.type).toBe('item');
                 expect(data.layout).toBe('media_right');
                 expect(data.order).toBe(0);
@@ -191,13 +191,13 @@ describe('Exhibit_item_record_tasks', () => {
 
             test('should not override existing values', () => {
                 const data = { title: 'Test', order: 10 };
-                itemTasks._set_item_defaults(data);
+                itemTasks._apply_defaults(data, Exhibit_item_record_tasks.DEFAULTS.item);
                 expect(data.order).toBe(10);
             });
 
             test('should set all expected default fields', () => {
                 const data = { title: 'Test' };
-                itemTasks._set_item_defaults(data);
+                itemTasks._apply_defaults(data, Exhibit_item_record_tasks.DEFAULTS.item);
                 expect(data.type).toBe('item');
                 expect(data.layout).toBe('media_right');
                 expect(data.wrap_text).toBe(1);
@@ -562,25 +562,23 @@ describe('Exhibit_item_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(1);
 
                 const result = await itemTasks.set_item_to_publish(itemUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, uuid: itemUUID }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await itemTasks.set_item_to_publish(itemUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_item_to_publish(itemUUID)).rejects.toThrow('DB Error');
             });
 
-            test('should return false when no rows affected', async () => {
+            test('should throw when no rows affected', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockResolvedValue(0);
 
-                const result = await itemTasks.set_item_to_publish(itemUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_item_to_publish(itemUUID)).rejects.toThrow('No item_records record found or updated');
             });
         });
 
@@ -610,25 +608,23 @@ describe('Exhibit_item_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(1);
 
                 const result = await itemTasks.set_item_to_suppress(itemUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, uuid: itemUUID }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await itemTasks.set_item_to_suppress(itemUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_item_to_suppress(itemUUID)).rejects.toThrow('DB Error');
             });
 
-            test('should return false when no rows affected', async () => {
+            test('should throw when no rows affected', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockResolvedValue(0);
 
-                const result = await itemTasks.set_item_to_suppress(itemUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_item_to_suppress(itemUUID)).rejects.toThrow('No item_records record found or updated');
             });
         });
     });

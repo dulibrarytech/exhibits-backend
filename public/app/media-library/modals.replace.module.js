@@ -353,13 +353,6 @@ const mediaReplaceModalModule = (function() {
         console.debug('Replace media modal opened for: ' + record.name);
     };
 
-    /**
-     * Close the replace media modal (public method)
-     */
-    obj.close_replace_media_modal = function() {
-        close_replace_modal();
-    };
-
     return obj;
 
 }());

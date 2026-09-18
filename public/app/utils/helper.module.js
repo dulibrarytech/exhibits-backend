@@ -399,19 +399,6 @@ const helperModule = (function () {
     };
 
     /**
-     * Gets current year
-     */
-    obj.get_current_year = function () {
-
-        try {
-            const cdate = new Date().getFullYear();
-            domModule.html('#cdate', DOMPurify.sanitize(cdate));
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-
-    /**
      * Formats date
      * @param date
      */
@@ -426,348 +413,38 @@ const helperModule = (function () {
     };
 
     /**
-     * Show form cards by making them visible
-     *
-     * @param {number} delay - Delay in milliseconds before showing (default: 0)
-     * @param {string} selector - CSS selector for cards (default: '.card')
-     * @param {boolean} use_animation - Whether to use fade-in animation (default: false)
-     * @returns {boolean} True if successful, false otherwise
+     * Reveals the page's cards once their data is in place. Every caller
+     * uses what used to be the defaults (all `.card` elements, no delay, no
+     * animation), so this is the whole of it.
+     * @returns {boolean} True when at least one card was found
      */
-    obj.show_form = function (delay = 0, selector = '.card', use_animation = false) {
+    obj.show_form = function () {
 
-        try {
-            // Validate delay parameter
-            const show_delay = validate_delay(delay);
+        const cards = document.querySelectorAll('.card');
 
-            // Get form cards
-            const form_cards = get_form_cards(selector);
-
-            // Check if any cards found
-            if (!form_cards || form_cards.length === 0) {
-                console.warn(`No elements found with selector: ${selector}`);
-                return false;
-            }
-
-            // Show cards immediately if no delay
-            if (show_delay === 0) {
-                show_cards(form_cards, use_animation);
-                return true;
-            }
-
-            // Show cards after delay
-            setTimeout(() => {
-                show_cards(form_cards, use_animation);
-            }, show_delay);
-
-            return true;
-
-        } catch (error) {
-            console.error('Error showing form:', error);
-
-            // Display safe error message
-            const message_element = document.querySelector('#message');
-            if (message_element) {
-                display_error_message(
-                    message_element,
-                    error.message || 'Unable to show form'
-                );
-            }
-
+        if (cards.length === 0) {
+            console.warn('No elements found with selector: .card');
             return false;
         }
-    };
 
-    /**
-     * Validate delay parameter
-     *
-     * @param {number} delay - Delay value to validate
-     * @returns {number} Valid delay (0 or positive integer)
-     */
-    function validate_delay(delay) {
-        // Convert to number if string
-        const delay_number = typeof delay === 'string' ? parseInt(delay, 10) : delay;
-
-        // Validate is number
-        if (typeof delay_number !== 'number' || isNaN(delay_number)) {
-            console.warn('Invalid delay, using 0');
-            return 0;
-        }
-
-        // Ensure non-negative
-        if (delay_number < 0) {
-            console.warn('Negative delay not allowed, using 0');
-            return 0;
-        }
-
-        // Cap at reasonable maximum (10 seconds)
-        if (delay_number > 10000) {
-            console.warn('Delay too large, capping at 10 seconds');
-            return 10000;
-        }
-
-        return Math.floor(delay_number);
-    }
-
-    /**
-     * Get form cards using selector
-     *
-     * @param {string} selector - CSS selector
-     * @returns {Array<HTMLElement>} Array of elements
-     */
-    function get_form_cards(selector) {
-
-        try {
-
-            // Validate selector
-            if (!selector || typeof selector !== 'string') {
-                console.error('Invalid selector');
-                return [];
-            }
-
-            // Try querySelectorAll (more flexible)
-            const elements = document.querySelectorAll(selector);
-
-            if (!elements) {
-                return [];
-            }
-
-            // Convert NodeList to Array
-            return Array.from(elements);
-
-        } catch (error) {
-            console.error('Error getting form cards:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Show cards by making them visible
-     *
-     * @param {Array<HTMLElement>} cards - Array of card elements
-     * @param {boolean} use_animation - Whether to use fade-in animation
-     */
-    function show_cards(cards, use_animation = false) {
-        if (!cards || cards.length === 0) {
-            return;
-        }
-
-        // Use requestAnimationFrame for smooth rendering
         requestAnimationFrame(() => {
-            cards.forEach(card => {
-                if (!card || !(card instanceof HTMLElement)) {
-                    console.warn('Invalid card element, skipping');
-                    return;
+            cards.forEach((card) => {
+
+                card.classList.remove('hidden');
+                card.style.visibility = 'visible';
+
+                if (card.style.display === 'none') {
+                    card.style.display = '';
                 }
 
-                try {
-                    if (use_animation) {
-                        // Add fade-in animation class
-                        show_card_with_animation(card);
-                    } else {
-                        // Simple visibility change
-                        show_card_simple(card);
-                    }
-                } catch (error) {
-                    console.error('Error showing card:', error);
+                if (card.style.opacity === '0') {
+                    card.style.opacity = '1';
                 }
             });
         });
-    }
 
-    /**
-     * Show card with simple visibility change
-     *
-     * @param {HTMLElement} card - Card element
-     */
-    function show_card_simple(card) {
-        // Remove hidden class if present
-        if (card.classList.contains('hidden')) {
-            card.classList.remove('hidden');
-        }
-
-        // Set visibility to visible
-        card.style.visibility = 'visible';
-
-        // Also ensure display is not none
-        if (card.style.display === 'none') {
-            card.style.display = '';
-        }
-
-        // Set opacity to 1 if it was 0
-        if (card.style.opacity === '0') {
-            card.style.opacity = '1';
-        }
-    }
-
-    /**
-     * Show card with fade-in animation
-     *
-     * @param {HTMLElement} card - Card element
-     */
-    function show_card_with_animation(card) {
-        // Set initial state
-        card.style.visibility = 'visible';
-        card.style.opacity = '0';
-        card.style.transition = 'opacity 0.3s ease-in';
-
-        // Remove display none if present
-        if (card.style.display === 'none') {
-            card.style.display = '';
-        }
-
-        // Trigger reflow to ensure transition works
-        void card.offsetHeight;
-
-        // Fade in
-        requestAnimationFrame(() => {
-            card.style.opacity = '1';
-        });
-
-        // Remove hidden class if present
-        if (card.classList.contains('hidden')) {
-            card.classList.remove('hidden');
-        }
-    }
-
-    /**
-     * Hide form cards (opposite of show_form)
-     *
-     * @param {string} selector - CSS selector for cards (default: '.card')
-     * @param {boolean} use_animation - Whether to use fade-out animation (default: false)
-     * @returns {boolean} True if successful, false otherwise
-     */
-    obj.hide_form = function (selector = '.card', use_animation = false) {
-
-        try {
-
-            const form_cards = get_form_cards(selector);
-
-            if (!form_cards || form_cards.length === 0) {
-                console.warn(`No elements found with selector: ${selector}`);
-                return false;
-            }
-
-            hide_cards(form_cards, use_animation);
-            return true;
-
-        } catch (error) {
-            console.error('Error hiding form:', error);
-            return false;
-        }
+        return true;
     };
-
-    /**
-     * Hide cards
-     *
-     * @param {Array<HTMLElement>} cards - Array of card elements
-     * @param {boolean} use_animation - Whether to use fade-out animation
-     */
-    function hide_cards(cards, use_animation = false) {
-        if (!cards || cards.length === 0) {
-            return;
-        }
-
-        requestAnimationFrame(() => {
-            cards.forEach(card => {
-                if (!card || !(card instanceof HTMLElement)) {
-                    return;
-                }
-
-                try {
-                    if (use_animation) {
-                        hide_card_with_animation(card);
-                    } else {
-                        hide_card_simple(card);
-                    }
-                } catch (error) {
-                    console.error('Error hiding card:', error);
-                }
-            });
-        });
-    }
-
-    /**
-     * Hide card with simple visibility change
-     *
-     * @param {HTMLElement} card - Card element
-     */
-    function hide_card_simple(card) {
-        card.style.visibility = 'hidden';
-    }
-
-    /**
-     * Hide card with fade-out animation
-     *
-     * @param {HTMLElement} card - Card element
-     */
-    function hide_card_with_animation(card) {
-        card.style.transition = 'opacity 0.3s ease-out';
-        card.style.opacity = '0';
-
-        // Set visibility hidden after animation completes
-        setTimeout(() => {
-            card.style.visibility = 'hidden';
-        }, 300);
-    }
-
-    /**
-     * Toggle form visibility
-     *
-     * @param {string} selector - CSS selector for cards (default: '.card')
-     * @param {boolean} use_animation - Whether to use animation (default: false)
-     * @returns {boolean} True if shown, false if hidden
-     */
-    obj.toggle_form = function (selector = '.card', use_animation = false) {
-
-        try {
-
-            const form_cards = get_form_cards(selector);
-
-            if (!form_cards || form_cards.length === 0) {
-                console.warn(`No elements found with selector: ${selector}`);
-                return false;
-            }
-
-            // Check if first card is visible to determine action
-            const first_card = form_cards[0];
-            const is_visible = first_card.style.visibility !== 'hidden' &&
-                getComputedStyle(first_card).visibility !== 'hidden';
-
-            if (is_visible) {
-                hide_cards(form_cards, use_animation);
-                return false;
-            } else {
-                show_cards(form_cards, use_animation);
-                return true;
-            }
-
-        } catch (error) {
-            console.error('Error toggling form:', error);
-            return false;
-        }
-    };
-
-    function display_error_message(element, message) {
-        if (!element) {
-            return;
-        }
-
-        element.textContent = '';
-
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger';
-        alert_div.setAttribute('role', 'alert');
-
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation';
-        icon.setAttribute('aria-hidden', 'true');
-        alert_div.appendChild(icon);
-
-        const text = document.createTextNode(` ${message}`);
-        alert_div.appendChild(text);
-
-        element.appendChild(alert_div);
-    }
 
     obj.get_user_name = function () {
 

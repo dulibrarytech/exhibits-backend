@@ -30,8 +30,6 @@ const { auth_stub } = require('./helpers/stubs');
 const APP_PATH = '/exhibits-dashboard';
 
 function setup_module_globals() {
-    window.localStorage.setItem('exhibits_app_path', APP_PATH);
-
     // helperModule — the display_* functions only use these two.
     // Identity functions are sufficient for the assertions; we don't
     // care about HTML escaping in this layer (it's covered by
@@ -51,7 +49,7 @@ function setup_module_globals() {
     // dereferenced (legacy image-thumbnail path); seed it so that
     // branch doesn't TypeError if a future test exercises it.
     globalThis.endpointsModule = {
-        get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+        get_app_path: () => APP_PATH,
         get_exhibits_endpoints: () => ({
             exhibits: {
                 exhibit_media: {
@@ -378,12 +376,6 @@ describe('itemsListDisplayModule', () => {
         });
     });
 
-    describe('init', () => {
-        it('returns true and is safe to call repeatedly', () => {
-            expect(itemsListDisplayModule.init()).toBe(true);
-            expect(itemsListDisplayModule.init()).toBe(true);
-        });
-    });
 });
 
 // ───────────────────── get_row_type / build_actions_cell / update_actions_cell ─────────────────────

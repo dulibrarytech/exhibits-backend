@@ -214,11 +214,11 @@ describe('Exhibit_heading_record_tasks', () => {
             });
         });
 
-        describe('_set_heading_defaults', () => {
+        describe('heading defaults (DEFAULTS.heading via _apply_defaults)', () => {
             test('should set default values for missing fields', () => {
                 const data = { text: 'Test Heading' };
                 // Method modifies data in-place, doesn't return anything
-                headingTasks._set_heading_defaults(data);
+                headingTasks._apply_defaults(data, Exhibit_heading_record_tasks.DEFAULTS.heading);
                 expect(data.is_visible).toBe(1);
                 expect(data.is_anchor).toBe(1);
                 expect(data.type).toBe('heading');
@@ -226,13 +226,13 @@ describe('Exhibit_heading_record_tasks', () => {
 
             test('should not override existing values', () => {
                 const data = { text: 'Test', is_visible: 0 };
-                headingTasks._set_heading_defaults(data);
+                headingTasks._apply_defaults(data, Exhibit_heading_record_tasks.DEFAULTS.heading);
                 expect(data.is_visible).toBe(0);
             });
 
             test('should set all default fields', () => {
                 const data = {};
-                headingTasks._set_heading_defaults(data);
+                headingTasks._apply_defaults(data, Exhibit_heading_record_tasks.DEFAULTS.heading);
                 expect(data.type).toBe('heading');
                 expect(data.order).toBe(0);
                 expect(data.is_visible).toBe(1);
@@ -510,25 +510,23 @@ describe('Exhibit_heading_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(1);
 
                 const result = await headingTasks.set_heading_to_publish(headingUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, uuid: headingUUID }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await headingTasks.set_heading_to_publish(headingUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_heading_to_publish(headingUUID)).rejects.toThrow('DB Error');
             });
 
-            test('should return false when no rows affected', async () => {
+            test('should throw when no rows affected', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockResolvedValue(0);
 
-                const result = await headingTasks.set_heading_to_publish(headingUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_heading_to_publish(headingUUID)).rejects.toThrow('No heading_records record found or updated');
             });
         });
 
@@ -558,25 +556,23 @@ describe('Exhibit_heading_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(1);
 
                 const result = await headingTasks.set_heading_to_suppress(headingUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, uuid: headingUUID }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await headingTasks.set_heading_to_suppress(headingUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_heading_to_suppress(headingUUID)).rejects.toThrow('DB Error');
             });
 
-            test('should return false when no rows affected', async () => {
+            test('should throw when no rows affected', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockResolvedValue(0);
 
-                const result = await headingTasks.set_heading_to_suppress(headingUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_heading_to_suppress(headingUUID)).rejects.toThrow('No heading_records record found or updated');
             });
         });
     });

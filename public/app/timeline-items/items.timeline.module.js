@@ -157,21 +157,6 @@ const itemsTimelineModule = (function () {
     }
 
     /**
-     * Hides loading state and restores table visibility
-     * @param {Object} elements - Cached DOM elements
-     */
-    function hide_loading_state(elements) {
-
-        if (elements.timeline_items_table !== null) {
-            elements.timeline_items_table.style.visibility = 'visible';
-        }
-
-        if (elements.card !== null) {
-            elements.card.style.minHeight = '';
-        }
-    }
-
-    /**
      * Handles empty card state when items fetch fails
      * @param {Object} elements - Cached DOM elements
      */

@@ -128,7 +128,7 @@ describe('exhibitsAddFormModule.reset_form', () => {
 
     beforeAll(() => {
         // The module reads these at IIFE-definition time:
-        //   const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+        //   const APP_PATH = endpointsModule.get_app_path();
         //   const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
         // vitest's jsdom env exposes window.localStorage as a bare {} without
         // .getItem, so we have to stub it before evaling the module.

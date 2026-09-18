@@ -112,13 +112,13 @@ function auth_stub(token, overrides = {}) {
 }
 
 /**
- * endpointsModule stand-in whose get_app_path() reads the same
- * localStorage key the real module does, falling back to the default
- * dashboard path. Extra endpoint getters go in `overrides`.
+ * endpointsModule stand-in: get_app_path() returns the dashboard's build
+ * constant, as the real module does. Extra endpoint getters go in
+ * `overrides`.
  */
 function endpoints_stub(overrides = {}) {
     return {
-        get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+        get_app_path: () => '/exhibits-dashboard',
         ...overrides,
     };
 }

@@ -81,14 +81,6 @@ const repoPaginationModule = (function() {
     };
 
     /**
-     * Get all results (for selection tracking across pages)
-     * @returns {Array} All results
-     */
-    obj.get_all_results = function() {
-        return state.all_results;
-    };
-
-    /**
      * Get the global index for an item on the current page
      * @param {number} page_index - Index within current page (0-based)
      * @returns {number} Global index across all results
@@ -119,22 +111,6 @@ const repoPaginationModule = (function() {
     };
 
     /**
-     * Go to next page
-     * @returns {boolean} True if navigation successful
-     */
-    obj.next_page = function() {
-        return obj.go_to_page(state.current_page + 1);
-    };
-
-    /**
-     * Go to previous page
-     * @returns {boolean} True if navigation successful
-     */
-    obj.prev_page = function() {
-        return obj.go_to_page(state.current_page - 1);
-    };
-
-    /**
      * Get current pagination state
      * @returns {Object} Current state with computed properties
      */
@@ -152,14 +128,6 @@ const repoPaginationModule = (function() {
             has_previous: state.current_page > 1,
             has_next: state.current_page < state.total_pages
         };
-    };
-
-    /**
-     * Check if pagination is needed
-     * @returns {boolean} True if there are multiple pages
-     */
-    obj.needs_pagination = function() {
-        return state.total_pages > 1;
     };
 
     /**
@@ -429,25 +397,6 @@ const repoPaginationModule = (function() {
         live_region.textContent = 'Page ' + pagination_state.current_page + ' of ' + pagination_state.total_pages +
             '. Showing results ' + pagination_state.start_index + ' to ' + pagination_state.end_index +
             ' of ' + pagination_state.total_results + '.';
-    };
-
-    /**
-     * Get results per page setting
-     * @returns {number} Number of results per page
-     */
-    obj.get_results_per_page = function() {
-        return CONFIG.RESULTS_PER_PAGE;
-    };
-
-    /**
-     * Get the maximum number of page links rendered before the
-     * ellipsis-boundary kicks in. Symmetric with get_results_per_page
-     * so tests/consumers don't need to mirror the constant locally.
-     *
-     * @returns {number} Max visible page count
-     */
-    obj.get_max_visible_pages = function() {
-        return CONFIG.MAX_VISIBLE_PAGES;
     };
 
     /**

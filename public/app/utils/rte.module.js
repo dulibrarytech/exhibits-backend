@@ -649,44 +649,6 @@ const rteModule = (function () {
         return true;
     };
 
-    /**
-     * True when the editor holds no text content (e.g. '<p><br></p>').
-     * Unknown ids report empty.
-     * @param id container element id
-     */
-    obj.is_empty = function (id) {
-
-        const instance = ensure(id);
-
-        if (instance === undefined) {
-            return true;
-        }
-
-        return has_content(instance.quill) === false;
-    };
-
-    /**
-     * True when the user has changed the editor since the last set_html.
-     * @param id container element id
-     */
-    obj.is_dirty = function (id) {
-        return instances[id] !== undefined && instances[id].dirty === true;
-    };
-
-    /**
-     * Registers a change callback (used by edit forms for dirty tracking).
-     * @param id container element id
-     * @param callback invoked on each user edit
-     */
-    obj.on_change = function (id, callback) {
-
-        const instance = ensure(id);
-
-        if (instance !== undefined) {
-            instance.on_change = callback;
-        }
-    };
-
     /*
      * Like ensure(), but only mounts on a container declared as an editor
      * (data-rte). Callers of set_enabled may name a details-page id that is

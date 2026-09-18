@@ -45,7 +45,7 @@ const read_client_templates = () => {
         throw new Error('Could not locate the JSON payload in endpoints.templates.js');
     }
     const json = JSON.parse(match[1]);
-    return JSON.parse(json.split('__APP_PATH__').join(APP_PATH));
+    return JSON.parse(json);
 };
 
 /*

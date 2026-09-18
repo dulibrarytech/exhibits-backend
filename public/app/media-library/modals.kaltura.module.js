@@ -22,12 +22,11 @@ const kalturaModalsModule = (function() {
     const escape_html = helperMediaLibraryModule.escape_html;
     const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
     const strip_html = helperMediaLibraryModule.strip_html;
-    const get_app_path = helperMediaLibraryModule.get_app_path;
     const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
     const get_item_type_icon = helperMediaLibraryModule.get_media_type_icon;
     const get_item_type_label = helperMediaLibraryModule.get_media_type_label;
 
-    const APP_PATH = get_app_path();
+    const APP_PATH = endpointsModule.get_app_path();
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
@@ -856,15 +855,6 @@ const kalturaModalsModule = (function() {
     // ========================================
     // KALTURA IMPORT MODAL
     // ========================================
-
-    /**
-     * Close the Kaltura import modal (public method)
-     */
-    obj.close_kaltura_media_modal = function() {
-        close_kaltura_modal();
-        kaltura_media_data = null;
-        on_complete_callback = null;
-    };
 
     /**
      * Initialize modal event listeners

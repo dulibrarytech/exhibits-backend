@@ -24,7 +24,7 @@ Playwright (not part of `npm test`): 56 stubbed specs in `test/e2e/specs/`, 13 l
 
 Server-side modules tested in isolation:
 
-- **Record-task classes** (`exhibit_*_record_tasks`, `user_tasks`, `auth_tasks`, `permissions_tasks`) — constructor init, table/UUID/data validation, protected-field enforcement, timeout handling, CRUD, publish/suppress, reorder, error handling.
+- **Record-task classes** (`exhibit_*_record_tasks`, `user_tasks`, `auth_tasks`) — constructor init, table/UUID/data validation, protected-field enforcement, timeout handling, CRUD, publish/suppress, reorder, error handling.
 - **Indexer** (`indexer_*`) — index task lifecycle, bulk indexing, projections (item title, media name, margins, internal-name exclusion, container child records, repo IIIF), UUID validation, index checks.
 - **Services and guards** — IIIF cache/status, Kaltura thumbnail URL derivation, reindex coalescer, RTE vocabulary/DOM sanitizer, CSRF guard, SSO guard, process handlers, media create record, common-helper validators, dashboard view targets, dropped-title-column regression, API stubs sanity.
 

@@ -60,17 +60,6 @@ const exhibitsDetailsModule = (function () {
 
     obj.init = async function () {
 
-        // Helper function to safely add event listener
-        const add_listener = (selector, event, handler) => {
-            const element = document.querySelector(selector);
-            if (element && handler && typeof handler === 'function') {
-                element.addEventListener(event, handler);
-                return true;
-            }
-            console.warn(`Could not attach listener to: ${selector}`);
-            return false;
-        };
-
         try {
 
             // Check for permission denied status
@@ -79,9 +68,6 @@ const exhibitsDetailsModule = (function () {
                 domModule.set_alert('#message', 'danger', 'You do not have permission to edit this record.');
             }
 
-
-            // Add save button listener
-            add_listener('#save-exhibit-btn', 'click', exhibitsDetailsModule?.update_exhibit_record);
 
             // Display the record details
             await display_details_record();

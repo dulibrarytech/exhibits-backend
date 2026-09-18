@@ -67,7 +67,7 @@ describe('exhibitsModule', () => {
                     },
                 },
             }),
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+            get_app_path: () => '/exhibits-dashboard',
             // Minimal stand-in for endpointsModule.build (see endpoints.module.js)
             build: (template, params) => Object.entries(params || {}).reduce(
                 (url, [key, value]) => url.replace(':' + key, encodeURIComponent(String(value))),

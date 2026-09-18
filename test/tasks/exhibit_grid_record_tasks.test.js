@@ -215,10 +215,10 @@ describe('Exhibit_grid_record_tasks', () => {
             });
         });
 
-        describe('_set_grid_defaults', () => {
+        describe('grid defaults (DEFAULTS.grid via _apply_defaults)', () => {
             test('should set default values for missing fields', () => {
                 const data = { title: 'Test Grid' };
-                gridTasks._set_grid_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid);
                 expect(data.type).toBe('grid');
                 expect(data.columns).toBe(4);
                 expect(data.order).toBe(0);
@@ -226,13 +226,13 @@ describe('Exhibit_grid_record_tasks', () => {
 
             test('should not override existing values', () => {
                 const data = { title: 'Test', columns: 5 };
-                gridTasks._set_grid_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid);
                 expect(data.columns).toBe(5);
             });
 
             test('should set all expected default fields', () => {
                 const data = {};
-                gridTasks._set_grid_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid);
                 expect(data.type).toBe('grid');
                 expect(data.columns).toBe(4);
                 expect(data.order).toBe(0);
@@ -242,50 +242,47 @@ describe('Exhibit_grid_record_tasks', () => {
             });
         });
 
-        describe('_set_grid_item_defaults', () => {
+        describe('grid_item defaults (DEFAULTS.grid_item via _apply_defaults)', () => {
             test('should set default values for grid item fields', () => {
                 const data = { title: 'Test Grid Item' };
-                gridTasks._set_grid_item_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid_item);
                 expect(data.item_type).toBe('image');
                 expect(data.type).toBe('item');
             });
 
             test('does not default margins/text_alignment (grid item table does not carry them)', () => {
                 const data = {};
-                gridTasks._set_grid_item_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid_item);
                 expect(data.margins).toBeUndefined();
                 expect(data.text_alignment).toBeUndefined();
             });
 
             test('should not override existing grid item values', () => {
                 const data = { title: 'Test', order: 10 };
-                gridTasks._set_grid_item_defaults(data);
+                gridTasks._apply_defaults(data, Exhibit_grid_record_tasks.DEFAULTS.grid_item);
                 expect(data.order).toBe(10);
             });
         });
     });
 
     // ==================== _UPDATE_PUBLISH_STATUS TESTS ====================
+    /*
+     * Both publish-status helpers come from Base_tasks (the grid class no
+     * longer overrides them): one UPDATE scoped by the where clause plus
+     * is_deleted: 0, no COUNT or SELECT round-trip first.
+     */
     describe('_update_publish_status', () => {
-        test('should publish records successfully', async () => {
-            // First call: count query
-            const countQuery = createMockQuery();
-            countQuery.count.mockReturnThis();
-            countQuery.where.mockReturnThis();
-            countQuery.timeout.mockResolvedValue([{ count: 3 }]);
-
-            // Second call: update query
+        const mockUpdate = (affected_rows) => {
             const updateQuery = createMockQuery();
             updateQuery.where.mockReturnThis();
             updateQuery.update.mockReturnThis();
-            updateQuery.timeout.mockResolvedValue(3);
+            updateQuery.timeout.mockResolvedValue(affected_rows);
+            mockDB.mockReturnValue(updateQuery);
+            return updateQuery;
+        };
 
-            let callCount = 0;
-            mockDB.mockImplementation(() => {
-                callCount++;
-                if (callCount === 1) return countQuery;
-                return updateQuery;
-            });
+        test('should publish records successfully', async () => {
+            const updateQuery = mockUpdate(3);
 
             const result = await gridTasks._update_publish_status(
                 'grid_records',
@@ -295,25 +292,13 @@ describe('Exhibit_grid_record_tasks', () => {
 
             expect(result.success).toBe(true);
             expect(result.affected_rows).toBe(3);
+            expect(result.status).toBe('published');
+            /* Recycled rows never take part in a bulk publish */
+            expect(updateQuery.where).toHaveBeenCalledWith({ is_member_of_exhibit: exhibitUUID, is_deleted: 0 });
         });
 
         test('should suppress records successfully', async () => {
-            const countQuery = createMockQuery();
-            countQuery.count.mockReturnThis();
-            countQuery.where.mockReturnThis();
-            countQuery.timeout.mockResolvedValue([{ count: 2 }]);
-
-            const updateQuery = createMockQuery();
-            updateQuery.where.mockReturnThis();
-            updateQuery.update.mockReturnThis();
-            updateQuery.timeout.mockResolvedValue(2);
-
-            let callCount = 0;
-            mockDB.mockImplementation(() => {
-                callCount++;
-                if (callCount === 1) return countQuery;
-                return updateQuery;
-            });
+            mockUpdate(2);
 
             const result = await gridTasks._update_publish_status(
                 'grid_records',
@@ -326,11 +311,7 @@ describe('Exhibit_grid_record_tasks', () => {
         });
 
         test('should handle case with no records to update', async () => {
-            const countQuery = createMockQuery();
-            countQuery.count.mockReturnThis();
-            countQuery.where.mockReturnThis();
-            countQuery.timeout.mockResolvedValue([{ count: 0 }]);
-            mockDB.mockReturnValue(countQuery);
+            mockUpdate(0);
 
             const result = await gridTasks._update_publish_status(
                 'grid_records',
@@ -340,35 +321,21 @@ describe('Exhibit_grid_record_tasks', () => {
 
             expect(result.success).toBe(true);
             expect(result.affected_rows).toBe(0);
-            expect(result.total_records).toBe(0);
         });
 
         test('should include updated_by when provided', async () => {
-            const countQuery = createMockQuery();
-            countQuery.count.mockReturnThis();
-            countQuery.where.mockReturnThis();
-            countQuery.timeout.mockResolvedValue([{ count: 1 }]);
+            const updateQuery = mockUpdate(1);
 
-            const updateQuery = createMockQuery();
-            updateQuery.where.mockReturnThis();
-            updateQuery.update.mockReturnThis();
-            updateQuery.timeout.mockResolvedValue(1);
-
-            let callCount = 0;
-            mockDB.mockImplementation(() => {
-                callCount++;
-                if (callCount === 1) return countQuery;
-                return updateQuery;
-            });
-
-            const result = await gridTasks._update_publish_status(
+            await gridTasks._update_publish_status(
                 'grid_records',
                 { is_member_of_exhibit: exhibitUUID },
                 1,
                 'user456'
             );
 
-            expect(result.updated_by).toBe('user456');
+            expect(updateQuery.update).toHaveBeenCalledWith(
+                expect.objectContaining({ is_published: 1, updated_by: 'user456' })
+            );
         });
     });
 
@@ -525,29 +492,30 @@ describe('Exhibit_grid_record_tasks', () => {
     });
 
     // ==================== PUBLISHING METHODS TESTS ====================
+    /*
+     * The nine publish/suppress methods are generated by
+     * Base_tasks.define_publish_ops over the base helpers: bulk = one UPDATE
+     * scoped by the validated uuid (+ is_deleted: 0); single = one UPDATE by
+     * uuid (+ is_deleted: 0) that throws when no row changes.
+     */
     describe('Publishing Methods', () => {
+        const mockUpdate = (affected_rows) => {
+            const updateQuery = createMockQuery();
+            updateQuery.where.mockReturnThis();
+            updateQuery.update.mockReturnThis();
+            updateQuery.timeout.mockResolvedValue(affected_rows);
+            mockDB.mockReturnValue(updateQuery);
+            return updateQuery;
+        };
+
         describe('set_to_publish', () => {
             test('should publish all grids for an exhibit', async () => {
-                const countQuery = createMockQuery();
-                countQuery.count.mockReturnThis();
-                countQuery.where.mockReturnThis();
-                countQuery.timeout.mockResolvedValue([{ count: 2 }]);
-
-                const updateQuery = createMockQuery();
-                updateQuery.where.mockReturnThis();
-                updateQuery.update.mockReturnThis();
-                updateQuery.timeout.mockResolvedValue(2);
-
-                let callCount = 0;
-                mockDB.mockImplementation(() => {
-                    callCount++;
-                    if (callCount === 1) return countQuery;
-                    return updateQuery;
-                });
+                const updateQuery = mockUpdate(2);
 
                 const result = await gridTasks.set_to_publish(exhibitUUID);
                 expect(result.success).toBe(true);
                 expect(result.affected_rows).toBe(2);
+                expect(updateQuery.where).toHaveBeenCalledWith({ is_member_of_exhibit: exhibitUUID, is_deleted: 0 });
             });
 
             test('should throw error for invalid UUID', async () => {
@@ -559,67 +527,30 @@ describe('Exhibit_grid_record_tasks', () => {
 
         describe('set_grid_to_publish', () => {
             test('should publish single grid', async () => {
-                // _update_single_publish_status: select().where().first().timeout()
-                // then update().timeout()
-                const mockRecord = { id: 1, uuid: gridUUID, title: 'Test', is_published: 0, is_deleted: 0 };
-
-                const selectQuery = createMockQuery();
-                selectQuery.select.mockReturnThis();
-                selectQuery.where.mockReturnThis();
-                selectQuery.first.mockReturnThis();
-                selectQuery.timeout.mockResolvedValue(mockRecord);
-
-                const updateQuery = createMockQuery();
-                updateQuery.where.mockReturnThis();
-                updateQuery.update.mockReturnThis();
-                updateQuery.timeout.mockResolvedValue(1);
-
-                let callCount = 0;
-                mockDB.mockImplementation(() => {
-                    callCount++;
-                    if (callCount === 1) return selectQuery;
-                    return updateQuery;
-                });
+                const updateQuery = mockUpdate(1);
 
                 const result = await gridTasks.set_grid_to_publish(gridUUID);
                 expect(result.success).toBe(true);
+                expect(result.uuid).toBe(gridUUID);
+                /* A recycled grid must not be flipped back onto the site */
+                expect(updateQuery.where).toHaveBeenCalledWith({ uuid: gridUUID, is_deleted: 0 });
             });
 
             test('should throw error when record not found', async () => {
-                const selectQuery = createMockQuery();
-                selectQuery.select.mockReturnThis();
-                selectQuery.where.mockReturnThis();
-                selectQuery.first.mockReturnThis();
-                selectQuery.timeout.mockResolvedValue(null);
-
-                mockDB.mockReturnValue(selectQuery);
+                mockUpdate(0);
 
                 await expect(gridTasks.set_grid_to_publish(gridUUID))
-                    .rejects.toThrow('grid_records record not found');
+                    .rejects.toThrow('No grid_records record found or updated');
             });
         });
 
         describe('set_to_suppress', () => {
             test('should suppress all grids for an exhibit', async () => {
-                const countQuery = createMockQuery();
-                countQuery.count.mockReturnThis();
-                countQuery.where.mockReturnThis();
-                countQuery.timeout.mockResolvedValue([{ count: 2 }]);
-
-                const updateQuery = createMockQuery();
-                updateQuery.where.mockReturnThis();
-                updateQuery.update.mockReturnThis();
-                updateQuery.timeout.mockResolvedValue(2);
-
-                let callCount = 0;
-                mockDB.mockImplementation(() => {
-                    callCount++;
-                    if (callCount === 1) return countQuery;
-                    return updateQuery;
-                });
+                mockUpdate(2);
 
                 const result = await gridTasks.set_to_suppress(exhibitUUID);
                 expect(result.success).toBe(true);
+                expect(result.status).toBe('suppressed');
             });
 
             test('should throw error for invalid UUID', async () => {
@@ -630,41 +561,17 @@ describe('Exhibit_grid_record_tasks', () => {
 
         describe('set_grid_to_suppress', () => {
             test('should suppress single grid', async () => {
-                const mockRecord = { id: 1, uuid: gridUUID, title: 'Test', is_published: 1, is_deleted: 0 };
-
-                const selectQuery = createMockQuery();
-                selectQuery.select.mockReturnThis();
-                selectQuery.where.mockReturnThis();
-                selectQuery.first.mockReturnThis();
-                selectQuery.timeout.mockResolvedValue(mockRecord);
-
-                const updateQuery = createMockQuery();
-                updateQuery.where.mockReturnThis();
-                updateQuery.update.mockReturnThis();
-                updateQuery.timeout.mockResolvedValue(1);
-
-                let callCount = 0;
-                mockDB.mockImplementation(() => {
-                    callCount++;
-                    if (callCount === 1) return selectQuery;
-                    return updateQuery;
-                });
+                mockUpdate(1);
 
                 const result = await gridTasks.set_grid_to_suppress(gridUUID);
                 expect(result.success).toBe(true);
             });
 
             test('should throw error when record not found', async () => {
-                const selectQuery = createMockQuery();
-                selectQuery.select.mockReturnThis();
-                selectQuery.where.mockReturnThis();
-                selectQuery.first.mockReturnThis();
-                selectQuery.timeout.mockResolvedValue(null);
-
-                mockDB.mockReturnValue(selectQuery);
+                mockUpdate(0);
 
                 await expect(gridTasks.set_grid_to_suppress(gridUUID))
-                    .rejects.toThrow('grid_records record not found');
+                    .rejects.toThrow('No grid_records record found or updated');
             });
         });
     });

@@ -205,23 +205,6 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
-     * Get the application base path from localStorage
-     * Falls back to '/exhibits-dashboard' if not set or on error
-     * @returns {string} Application base path
-     */
-    obj.get_app_path = () => {
-        try {
-            const app_path = endpointsModule.get_app_path();
-            if (!app_path) {
-                return '/exhibits-dashboard';
-            }
-            return app_path;
-        } catch (error) {
-            return '/exhibits-dashboard';
-        }
-    };
-
-    /**
      * Get Font Awesome icon class for a media/object type
      * Merged superset covering uploads, Kaltura, repository, and collection types
      * @param {string} media_type - The media or object type

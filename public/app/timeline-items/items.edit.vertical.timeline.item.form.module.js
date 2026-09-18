@@ -89,12 +89,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
         }
     });
 
-    /**
-     * Update timeline item record
-     * @returns {Promise<boolean>}
-     */
-    obj.update_timeline_item_record = form.submit_record;
-
     obj.init = form.init;
 
     return obj;

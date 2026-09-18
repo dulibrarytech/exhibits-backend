@@ -156,15 +156,6 @@ const repoSubjectsModule = (function() {
         }
     };
 
-    /**
-     * Clear cached subject and resource type data
-     */
-    obj.clear_cache = function() {
-        subjects_cache = null;
-        resource_types_cache = null;
-        console.debug('Repo subjects cache cleared');
-    };
-
     // ========================================
     // MULTI-SELECT WIDGET CSS
     // ========================================

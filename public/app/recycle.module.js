@@ -315,8 +315,6 @@ const recycleModule = (function () {
         }
     }
 
-    obj.display_recycled_records = load_records;
-
     // ---- Restore ----
 
     async function restore_record(exhibit_id, uuid, type) {

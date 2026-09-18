@@ -19,11 +19,10 @@ const mediaUploadsModule = (function() {
     'use strict';
 
     // Shared helpers
-    const get_app_path = helperMediaLibraryModule.get_app_path;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
     const build_uploaded_thumbnail_url = helperMediaLibraryModule.build_uploaded_thumbnail_url;
 
-    const APP_PATH = get_app_path();
+    const APP_PATH = endpointsModule.get_app_path();
 
     // Module state
     let dropzone_instance = null;
@@ -409,36 +408,6 @@ const mediaUploadsModule = (function() {
         });
 
         new Dropzone('#item-dropzone', config);
-    };
-
-    obj.reset_upload = function() {
-        clear_uploaded_media_fields();
-        if (dropzone_instance) {
-            dropzone_instance.removeAllFiles(true);
-        }
-    };
-
-    obj.get_dropzone_instance = function() {
-        return dropzone_instance;
-    };
-
-    obj.get_max_files = function() {
-        return MAX_FILES;
-    };
-
-    obj.get_uploaded_files = function() {
-        return uploaded_files_data;
-    };
-
-    obj.open_modal = function() {
-        open_uploaded_media_modal();
-    };
-
-    obj.close_modal = function() {
-        if (typeof mediaModalsModule !== 'undefined' && 
-            typeof mediaModalsModule.close_uploaded_media_modal === 'function') {
-            mediaModalsModule.close_uploaded_media_modal();
-        }
     };
 
     obj.init = function() {

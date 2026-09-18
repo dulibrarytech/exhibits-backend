@@ -613,3 +613,41 @@ describe('helperModule.bind_embed_description (Embed item ↔ Pop-up Window Desc
         expect(document.getElementById('item-description-input-embed-note').hidden).toBe(true);
     });
 });
+
+describe('helperModule.show_form', () => {
+
+    beforeAll(() => {
+        const createDOMPurify = require('dompurify');
+        globalThis.DOMPurify = createDOMPurify(window);
+        load_browser_module('public/app/utils/helper.module.js', 'helperModule');
+    });
+
+    beforeEach(() => {
+        document.body.innerHTML = '';
+        /* Run the frame callback synchronously so the assertions can follow the call. */
+        globalThis.requestAnimationFrame = (callback) => { callback(); return 1; };
+    });
+
+    it('reveals every .card and reports true', () => {
+        document.body.innerHTML = `
+            <div class="card hidden" style="visibility: hidden; display: none; opacity: 0;"></div>
+            <div class="card" style="visibility: hidden;"></div>`;
+
+        expect(globalThis.helperModule.show_form()).toBe(true);
+
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card) => {
+            expect(card.classList.contains('hidden')).toBe(false);
+            expect(card.style.visibility).toBe('visible');
+            expect(card.style.display).not.toBe('none');
+            expect(card.style.opacity).not.toBe('0');
+        });
+    });
+
+    it('reports false when the page has no cards', () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        expect(globalThis.helperModule.show_form()).toBe(false);
+        expect(warn).toHaveBeenCalledTimes(1);
+        warn.mockRestore();
+    });
+});

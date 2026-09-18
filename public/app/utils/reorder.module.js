@@ -602,24 +602,6 @@ const reorderModule = (function () {
     }
 
     /**
-     * Public: move the row containing `trigger_button` up by one.
-     * @param {HTMLButtonElement} trigger_button
-     * @param {Object} [opts] - { grid_id, table_selector }
-     */
-    obj.move_row_up = function (trigger_button, opts) {
-        return _apply_keyboard_move(trigger_button, 'up', opts);
-    };
-
-    /**
-     * Public: move the row containing `trigger_button` down by one.
-     * @param {HTMLButtonElement} trigger_button
-     * @param {Object} [opts] - { grid_id, table_selector }
-     */
-    obj.move_row_down = function (trigger_button, opts) {
-        return _apply_keyboard_move(trigger_button, 'down', opts);
-    };
-
-    /**
      * Wire delegated click handlers on a table for
      * [data-action="move-up"] and [data-action="move-down"]. Idempotent
      * via dataset flag — safe to call after every DataTable redraw.

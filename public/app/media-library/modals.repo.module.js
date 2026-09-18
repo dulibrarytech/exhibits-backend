@@ -653,30 +653,6 @@ const repoModalsModule = (function() {
         console.debug('Repo media modal opened with ' + imported_items_data.length + ' items');
     };
 
-    /**
-     * Close the repo import modal
-     */
-    obj.close_repo_media_modal = function() {
-        close_repo_modal();
-        imported_items_data = [];
-        saved_items_count = 0;
-        on_complete_callback = null;
-    };
-
-    /**
-     * Get count of saved repo items
-     */
-    obj.get_saved_count = function() {
-        return saved_items_count;
-    };
-
-    /**
-     * Get imported items data
-     */
-    obj.get_items_data = function() {
-        return imported_items_data;
-    };
-
     // ========================================
     // VIEW MODAL FUNCTIONS
     // ========================================
@@ -907,21 +883,6 @@ const repoModalsModule = (function() {
     function is_repo_non_image(ctx) {
         return ctx.is_repo && (ctx.display_type === 'audio' || ctx.display_type === 'video' || ctx.display_type === 'pdf');
     }
-
-    /**
-     * Close the view media modal (public method)
-     */
-    obj.close_view_media_modal = function() {
-        viewMediaModalModule.close();
-    };
-
-    /**
-     * Initialize the modals module
-     */
-    obj.init = function() {
-        console.debug('Repo modals module initialized');
-        return true;
-    };
 
     return obj;
 
