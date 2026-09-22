@@ -140,11 +140,11 @@
 <%- include('partials/modal-kaltura-media-player.ejs'); %>
 <!-- External Libraries -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
-<script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
+<script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js?<%=build_version%>"></script>
 
 <!-- Dropzone.js Library (self-hosted; see public/libs/dropzone-5.9.3) -->
-<link rel="stylesheet" href="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.css" type="text/css" />
-<script src="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.js"></script>
+<link rel="stylesheet" href="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.css?<%=build_version%>" type="text/css" />
+<script src="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.js?<%=build_version%>"></script>
 
 <!-- Application Scripts -->
 <%- include('../partials/exhibits-app-common.ejs'); %>

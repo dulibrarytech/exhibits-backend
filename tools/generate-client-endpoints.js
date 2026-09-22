@@ -9,7 +9,8 @@
  * This is the ONLY channel that ships the registry to the client — nothing
  * else may send a second copy, or the map can lag the bundle that reads it.
  * APP_PATH comes from .env — the same build constant endpoints.module.js
- * carries — so the generated URLs are final.
+ * carries — so the generated URLs are final. Documentation keys
+ * (description, params, body) are stripped; the client reads `endpoint` only.
  *
  * Runs automatically as part of `npm run build:js`. A parity test
  * (test/integration/client_endpoints_parity.test.js) fails CI if the committed
@@ -20,6 +21,7 @@ require('dotenv').config();
 
 const FS = require('fs');
 const PATH = require('path');
+const { strip_registry_docs } = require('../libs/endpoints_config');
 
 const load = (module_path) => {
     const loaded = require(module_path);
@@ -34,7 +36,8 @@ const templates = {
     auth: load('../auth/endpoints')
 };
 
-const json = JSON.stringify(templates);
+/* The client reads `endpoint` only; the doc strings stay in the server modules. */
+const json = JSON.stringify(strip_registry_docs(templates));
 
 const banner = [
     "'use strict';",

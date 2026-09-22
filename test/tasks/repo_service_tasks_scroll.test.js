@@ -193,8 +193,8 @@ describe('Repo_service_tasks scroll methods', () => {
 
             await tasks.get_subjects();
 
-            expect(mock_logger.info).toHaveBeenCalledWith(
-                'INFO: [/media-library/tasks/repo_service_tasks (get_subjects)] Subjects retrieved successfully',
+            expect(mock_logger.debug).toHaveBeenCalledWith(
+                '[/media-library/tasks/repo_service_tasks (get_subjects)] Subjects retrieved successfully',
                 expect.objectContaining({ types: ['topical'], total: 1 })
             );
         });
@@ -332,8 +332,8 @@ describe('Repo_service_tasks scroll methods', () => {
 
             await tasks.get_resource_types();
 
-            expect(mock_logger.info).toHaveBeenCalledWith(
-                'INFO: [/media-library/tasks/repo_service_tasks (get_resource_types)] Resource types retrieved successfully',
+            expect(mock_logger.debug).toHaveBeenCalledWith(
+                '[/media-library/tasks/repo_service_tasks (get_resource_types)] Resource types retrieved successfully',
                 expect.objectContaining({ total: 1 })
             );
         });

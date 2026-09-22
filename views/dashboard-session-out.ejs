@@ -16,9 +16,9 @@
     </main>
     <div class="clearfix"></div>
     <script>window.sessionStorage.clear();</script>
-    <script src="/exhibits-dashboard/static/app/dist/endpoints.templates.min.js"></script>
-    <script src="/exhibits-dashboard/static/app/dist/endpoints.module.min.js"></script>
-    <script src="/exhibits-dashboard/static/app/dist/auth.module.min.js"></script>
+    <script src="/exhibits-dashboard/static/app/dist/endpoints.templates.min.js?<%=build_version%>"></script>
+    <script src="/exhibits-dashboard/static/app/dist/endpoints.module.min.js?<%=build_version%>"></script>
+    <script src="/exhibits-dashboard/static/app/dist/auth.module.min.js?<%=build_version%>"></script>
     <script>authModule.redirect_to_auth();</script>
     <%- include('partials/footer.ejs'); %>
 </div>

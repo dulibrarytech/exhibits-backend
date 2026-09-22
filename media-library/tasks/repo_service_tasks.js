@@ -361,7 +361,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
                             _score: 1
                         }]);
 
-                        this._log_success('INFO: [/media-library/tasks/repo_service_tasks (search)] Resolved exact identifier', {
+                        this._log_success('[/media-library/tasks/repo_service_tasks (search)] Resolved exact identifier', {
                             term: trimmed_term,
                             id: record_id
                         });
@@ -459,7 +459,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
                 }
             });
 
-            this._log_success('INFO: [/media-library/tasks/repo_service_tasks (search)] Search completed successfully', {
+            this._log_success('[/media-library/tasks/repo_service_tasks (search)] Search completed successfully', {
                 term: trimmed_term,
                 total: total,
                 returned: records.length
@@ -560,7 +560,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
             }
 
             if (response.found === true) {
-                this._log_success('INFO: [/media-library/tasks/repo_service_tasks (get_by_uuid)] Record retrieved successfully', {
+                this._log_success('[/media-library/tasks/repo_service_tasks (get_by_uuid)] Record retrieved successfully', {
                     uuid: uuid_trimmed,
                     version: response._version
                 });
@@ -775,7 +775,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
                 total += grouped_subjects[type].length;
             }
 
-            this._log_success('INFO: [/media-library/tasks/repo_service_tasks (get_subjects)] Subjects retrieved successfully', {
+            this._log_success('[/media-library/tasks/repo_service_tasks (get_subjects)] Subjects retrieved successfully', {
                 types: Object.keys(grouped_subjects),
                 total: total
             });
@@ -877,7 +877,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
             const types = Array.from(resource_types.values())
                 .sort((a, b) => a.resource_type.localeCompare(b.resource_type));
 
-            this._log_success('INFO: [/media-library/tasks/repo_service_tasks (get_resource_types)] Resource types retrieved successfully', {
+            this._log_success('[/media-library/tasks/repo_service_tasks (get_resource_types)] Resource types retrieved successfully', {
                 total: types.length
             });
 

@@ -99,7 +99,7 @@ describe('Es_base_tasks', () => {
 
         tasks._log_success('done', { uuid: 'x' });
 
-        const [message, context] = mock_logger.info.mock.calls[0];
+        const [message, context] = mock_logger.debug.mock.calls[0];
         expect(message).toBe('done');
         expect(context).toMatchObject({ index: INDEX, uuid: 'x' });
         expect(typeof context.timestamp).toBe('string');

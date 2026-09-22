@@ -54,11 +54,45 @@ const api_base = (endpoint) => `${API_ROOT}${endpoint}`;
  */
 const unprefixed_api_base = (endpoint) => `${PREFIX}${VERSION}${endpoint}`;
 
+/**
+ * Returns a copy of a registry without its documentation keys. Each node
+ * that carries an `endpoint` string also carries `description`, `params`
+ * and `body` for the reader of the server module; the client only ever
+ * reads `endpoint`, and the doc strings were half of the bundled map.
+ * @param {*} node - Registry object (or any value inside one)
+ * @returns {*} Deep copy with the three keys removed next to every endpoint
+ */
+const strip_registry_docs = (node) => {
+
+    if (Array.isArray(node)) {
+        return node.map(strip_registry_docs);
+    }
+
+    if (node === null || typeof node !== 'object') {
+        return node;
+    }
+
+    const documented = typeof node.endpoint === 'string';
+    const copy = {};
+
+    for (const [key, value] of Object.entries(node)) {
+
+        if (documented && (key === 'description' || key === 'params' || key === 'body')) {
+            continue;
+        }
+
+        copy[key] = strip_registry_docs(value);
+    }
+
+    return copy;
+};
+
 module.exports = {
     APP_PATH,
     PREFIX,
     VERSION,
     API_ROOT,
     api_base,
-    unprefixed_api_base
+    unprefixed_api_base,
+    strip_registry_docs
 };

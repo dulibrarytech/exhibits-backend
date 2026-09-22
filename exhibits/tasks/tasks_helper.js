@@ -346,13 +346,15 @@ const Base_tasks = class {
     }
 
     /**
-     * Logs successful operation
+     * Logs a successful operation at DEBUG. Every /api/ request already
+     * has an INFO access-log line (config/express.js); state changes get
+     * their own INFO lines in the models.
      * @param {string} message - Success message
      * @param {Object} context - Context for logging
      * @private
      */
     _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
+        LOGGER.module().debug(message, {
             ...context,
             timestamp: new Date().toISOString()
         });

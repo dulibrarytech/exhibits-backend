@@ -19,18 +19,18 @@
          the dashboard no longer depends on external CDNs at runtime, so a CDN outage
          can't degrade the live UI or break the e2e suite. CSP is 'self'-only for
          script/style/font (see config/helmet_config.js). -->
-    <link rel="stylesheet" href="/exhibits-dashboard/static/assets/fonts/open-sans/open-sans.css" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/assets/fonts/ibm-plex/ibm-plex.css" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/normalize-8.x/normalize.min.css" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/bootstrap-4.x/dist/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/assets/fonts/open-sans/open-sans.css?<%=build_version%>" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/assets/fonts/ibm-plex/ibm-plex.css?<%=build_version%>" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/normalize-8.x/normalize.min.css?<%=build_version%>" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/bootstrap-4.x/dist/css/bootstrap.min.css?<%=build_version%>" type="text/css">
     <%# FontAwesome is the dashboard's only icon font — no other icon font is
         loaded, so a new glyph must come from FontAwesome 4.7 or be inlined
         as SVG. %>
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/font-awesome-4.7.0/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/font-awesome-4.7.0/css/font-awesome.min.css?<%=build_version%>" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/assets/dist/dashboard.min.css?<%=build_version%>" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.css" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/data_tables/datatables.min.css" type="text/css">
-    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/quill-2.x/quill.snow.css" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.css?<%=build_version%>" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/data_tables/datatables.min.css?<%=build_version%>" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/libs/quill-2.x/quill.snow.css?<%=build_version%>" type="text/css">
     <script>
         // Apply sidebar collapsed state synchronously before first paint.
         // Runs before <body> exists, so targets <html> — the theme's .open

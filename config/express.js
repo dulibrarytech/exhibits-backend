@@ -64,7 +64,14 @@ module.exports = function() {
     APP.use(HELMET(HELMET_CONFIG));
     // CSRF defense: reject cross-origin state-changing requests
     APP.use(CSRF_GUARD);
-    APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
+    /*
+     * Static assets are immutable per URL: every reference carries
+     * ?<build_version> (app bundles, vendor libraries, stylesheets, images) and
+     * BUILD_VERSION is bumped with every client change, so a long max-age can
+     * never serve a stale file. Without it every page load re-validated about
+     * twenty assets with a 304 each.
+     */
+    APP.use('/exhibits-dashboard/static', EXPRESS.static('./public', { maxAge: '30d', immutable: true }));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
     APP.use(XSS.sanitize_req_params);

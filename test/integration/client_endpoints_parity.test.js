@@ -10,7 +10,9 @@
  * removed, this artifact is the ONLY channel that ships the registry to the
  * browser — so a stale artifact is now a broken client, not just a drift.
  * The first block fails if someone edits a server endpoint module without
- * rebuilding.
+ * rebuilding. The client copy carries `endpoint` only (the generator strips
+ * description / params / body), so the server side is stripped the same way
+ * before comparing.
  *
  * The second block pins the shape every registry is written in:
  *
@@ -27,6 +29,9 @@ const PATH = require('path');
 
 const APP_PATH = '/exhibits-dashboard';
 process.env.APP_PATH = APP_PATH;
+
+/* Required AFTER the env is set: libs/endpoints_config reads APP_PATH at load. */
+const { strip_registry_docs } = require('../../libs/endpoints_config');
 
 const HTTP_METHODS = ['get', 'post', 'put', 'delete'];
 
@@ -109,25 +114,25 @@ describe('client endpoint templates parity with server endpoint modules', () => 
     const client = read_client_templates();
 
     test('exhibits section matches exhibits/endpoints/index.js', () => {
-        expect(client.exhibits).toEqual(load('../../exhibits/endpoints/index'));
+        expect(client.exhibits).toEqual(strip_registry_docs(load('../../exhibits/endpoints/index')));
     });
 
     test('users section matches users/endpoints.js', () => {
-        expect(client.users).toEqual(load('../../users/endpoints'));
+        expect(client.users).toEqual(strip_registry_docs(load('../../users/endpoints')));
     });
 
     test('indexer section matches indexer/endpoints.js', () => {
-        expect(client.indexer).toEqual(load('../../indexer/endpoints'));
+        expect(client.indexer).toEqual(strip_registry_docs(load('../../indexer/endpoints')));
     });
 
     test('media_library section matches media-library/endpoints.js', () => {
-        expect(client.media_library).toEqual(load('../../media-library/endpoints'));
+        expect(client.media_library).toEqual(strip_registry_docs(load('../../media-library/endpoints')));
     });
 
     /* auth was hardcoded in the client (endpoints.module.js) until the
      * generator started emitting it. */
     test('auth section matches auth/endpoints.js', () => {
-        expect(client.auth).toEqual(load('../../auth/endpoints'));
+        expect(client.auth).toEqual(strip_registry_docs(load('../../auth/endpoints')));
     });
 
     test('every section the client reads is present', () => {
