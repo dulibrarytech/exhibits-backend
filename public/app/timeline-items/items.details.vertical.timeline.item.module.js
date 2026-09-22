@@ -20,19 +20,6 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
     'use strict';
 
-    /*
-     * Caption is plain text (no RTE) — set textContent, never innerHTML, so a
-     * stored value containing markup displays literally instead of rendering.
-     */
-    function set_caption_text(value) {
-
-        const caption = document.querySelector('#item-caption-input');
-
-        if (caption !== null) {
-            caption.textContent = value || '';
-        }
-    }
-
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -288,7 +275,16 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
                 // Surface the Pop-up Window Description + Caption read-only.
                 rteModule.render_static('item-description-input', record.description || '');
-                set_caption_text(record.caption ? helperModule.unescape(record.caption) : '');
+                /*
+                 * Caption is authored as plain text, but the gate holds it at
+                 * `linked_text` — stored captions carry photo-credit and source
+                 * anchors. Render them the way every other read-only field on this
+                 * page is rendered (render_static sanitizes, then sets innerHTML) so
+                 * staff read the credit instead of raw <a href> markup. No unescape()
+                 * on the way in: an author's literal "&lt;b&gt;" must stay literal,
+                 * exactly as it does for the editors.
+                 */
+                rteModule.render_static('item-caption-input', record.caption);
             }
 
             // Set embed item checkbox from record

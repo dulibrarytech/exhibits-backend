@@ -13,9 +13,11 @@
                  * so anchors are kept and everything else is stripped. A typed
                  * anchor is therefore preserved too.
                  * The details branch keeps the .rte-readonly box so it matches the
-                 * other read-only panels on the page, but it is populated with
-                 * textContent, never innerHTML. role="group" is what lets a div
-                 * legitimately carry aria-labelledby.
+                 * other read-only panels on the page, and is populated through
+                 * rteModule.render_static() — sanitized innerHTML, so a stored
+                 * photo-credit anchor reads as a link instead of raw <a href>
+                 * markup. role="group" is what lets a div legitimately carry
+                 * aria-labelledby.
                  */
                 %>
                 <% if (typeof is_details !== 'undefined' && is_details) { %>

@@ -12,7 +12,7 @@
  *   - the submitted value is bare text, NOT the `<p>…</p>` a full-profile
  *     editor produces (the gate holds caption at `linked_text`, which keeps
  *     anchors and strips everything else)
- *   - the details page renders it as static text
+ *   - the details page renders the stored markup rather than showing its tags
  */
 
 const { test, expect } = require('@playwright/test');
@@ -26,6 +26,8 @@ const {
     stubMediaApi,
     exhibitFixture,
     standardItemRecordFixture,
+    gridItemRecordFixture,
+    timelineItemRecordFixture,
 } = require('../fixtures/api-stubs');
 
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
@@ -135,15 +137,35 @@ test.describe('Caption field is plain text, not an RTE', () => {
     });
 
     /*
-     * The details page must show the caption as TEXT. Setting innerHTML there
-     * would render any markup a legacy value still carries.
+     * The details page is read-only, so it renders what the caption holds
+     * rather than showing its source. Captions are gated at `linked_text`,
+     * and the stored photo-credit anchors used to reach staff as literal
+     * "<a href=...>" text. Each item type has its own details module, so all
+     * three are asserted — the shared partial alone does not cover them.
      */
-    test('details page shows the caption as static text', async ({ page }) => {
+    const CREDIT_CAPTION = 'Photo credit: <a href="https://www.loc.gov/item/75693129/">Library of Congress</a>';
+
+    async function assert_caption_markup_renders(page) {
+        const box = page.locator(CAPTION);
+
+        /* the anchor is a real element, not text that looks like one */
+        await expect(box.locator('a')).toHaveAttribute('href', 'https://www.loc.gov/item/75693129/');
+        await expect(box).toHaveText('Photo credit: Library of Congress');
+
+        /* nothing tag-shaped survives in what staff actually read */
+        const shown = await box.innerText();
+        expect(shown).not.toMatch(/<[a-zA-Z/]/);
+
+        /* static box, never a mounted editor */
+        await expect(page.locator(`${CAPTION} .ql-editor`)).toHaveCount(0);
+    }
+
+    test('standard item details page renders the caption markup', async ({ page }) => {
         await stubStandardItemApi(page, {
             exhibitId: EXHIBIT_UUID,
             record: standardItemRecordFixture({
                 uuid: ITEM_UUID,
-                caption: 'Read-only caption',
+                caption: CREDIT_CAPTION,
                 item_type: 'image',
                 mime_type: 'image/jpeg',
                 media_uuid: 'media-uuid-existing',
@@ -154,8 +176,72 @@ test.describe('Caption field is plain text, not an RTE', () => {
             `${APP_PATH}/items/standard/media/details?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator(CAPTION)).toHaveText('Read-only caption');
-        await expect(page.locator(`${CAPTION} .ql-editor`)).toHaveCount(0);
+        await assert_caption_markup_renders(page);
+    });
+
+    test('grid item details page renders the caption markup', async ({ page }) => {
+        await stubGridItemRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            gridId: GRID_UUID,
+            record: gridItemRecordFixture({
+                uuid: ITEM_UUID,
+                caption: CREDIT_CAPTION,
+                item_type: 'image',
+                mime_type: 'image/jpeg',
+                media_uuid: 'media-uuid-existing',
+            }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/grid/item/media/details`
+            + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`
+        );
+
+        await assert_caption_markup_renders(page);
+    });
+
+    test('timeline item details page renders the caption markup', async ({ page }) => {
+        await stubTimelineItemApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            timelineId: TIMELINE_UUID,
+            record: timelineItemRecordFixture({
+                uuid: ITEM_UUID,
+                caption: CREDIT_CAPTION,
+                item_type: 'image',
+                mime_type: 'image/jpeg',
+                media_uuid: 'media-uuid-existing',
+            }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/vertical-timeline/item/media/details`
+            + `?exhibit_id=${EXHIBIT_UUID}&timeline_id=${TIMELINE_UUID}&item_id=${ITEM_UUID}`
+        );
+
+        await assert_caption_markup_renders(page);
+    });
+
+    /*
+     * The editors are gone from the caption, so nothing can author new markup
+     * — a caption typed with angle brackets must still read back literally.
+     */
+    test('details page keeps a typed angle bracket literal', async ({ page }) => {
+        await stubStandardItemApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: standardItemRecordFixture({
+                uuid: ITEM_UUID,
+                caption: 'Width &lt; 3 inches',
+                item_type: 'image',
+                mime_type: 'image/jpeg',
+                media_uuid: 'media-uuid-existing',
+            }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/standard/media/details?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
+        );
+
+        await expect(page.locator(CAPTION)).toHaveText('Width < 3 inches');
     });
 });
 
