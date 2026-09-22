@@ -74,9 +74,12 @@
 }
 
 /* static read-only rich text display (details pages without an editor);
-   populated by rteModule.render_static() */
+   populated by rteModule.render_static(). Same #e9ecef as .ql-disabled above
+   and as Bootstrap's .form-control[readonly]: a details page shows these
+   boxes beside readonly inputs (Media Name, Image Alt Text) and disabled
+   editors, and every read-only field on the page reads as one surface. */
 .rte-readonly {
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 12px 15px;
