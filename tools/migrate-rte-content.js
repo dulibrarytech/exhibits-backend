@@ -24,8 +24,6 @@
  * the database.
  */
 
-require('dotenv').config();
-
 const FS = require('fs');
 const PATH = require('path');
 const knex = require('knex');
@@ -35,15 +33,26 @@ const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 const APPLY = process.argv.includes('--apply');
 const REPORT_PATH = PATH.join(__dirname, 'rte-migration-report.txt');
 
-const DB = knex({
-    client: 'mysql2',
-    connection: {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-    }
-});
+/*
+ * Built when the migration actually runs — see the `require.main` guard at
+ * the foot of the file. Creating it at module load would open a pool (and
+ * read .env) merely because a unit test required this file for its pure
+ * helpers.
+ */
+function connect() {
+
+    require('dotenv').config();
+
+    return knex({
+        client: 'mysql2',
+        connection: {
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME
+        }
+    });
+}
 
 /*
  * Field → profile per table. This is a PARTIAL mirror of the model-layer RTE
@@ -89,9 +98,31 @@ const PROFILE_FN = {
 };
 
 /*
- * Decodes the legacy VALIDATOR.escape entity set exactly once. Applied only
- * when the value contains no raw markup but does contain escaped markup, so
- * already-decoded values are never double-processed.
+ * Tag names an escape-era value can carry: the current vocabulary plus the
+ * structural tags normalize_structure() rewrites (h1, center, div, button)
+ * and the legacy presentational ones it unwraps. Longest first so the
+ * alternation cannot settle on a prefix (`b` inside `br`).
+ */
+const ESCAPED_TAG_NAMES = [
+    'blockquote', 'strong', 'center', 'button', 'span', 'font', 'img',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'em', 'ul', 'ol', 'li', 'br',
+    'div', 'sub', 'sup', 'p', 'a', 'b', 'i', 'u'
+].sort((a, b) => b.length - a.length);
+
+/*
+ * An escaped TAG — `&lt;p&gt;`, `&lt;/p&gt;`, `&lt;a href="…"&gt;` — as
+ * opposed to an encoded literal less-than (`a &lt; b`, `&lt; 3 inches`).
+ * The trailing `&gt;` / whitespace / `/&gt;` is what makes it a tag and
+ * doubles as the name boundary, so `&lt;paragraph&gt;` does not match.
+ */
+const ESCAPED_TAG_REGEX = new RegExp(
+    '&lt;/?(' + ESCAPED_TAG_NAMES.join('|') + ')(&gt;|\\s|/&gt;)', 'i'
+);
+
+/*
+ * Decodes the legacy VALIDATOR.escape entity set exactly once. Applied when
+ * the value carries escaped markup, and skipped for values that hold only
+ * raw markup, so already-decoded values are never double-processed.
  *
  * `&amp;` is the one entity whose handling depends on the profile, because
  * the correct storage differs by destination:
@@ -118,7 +149,20 @@ const PROFILE_FN = {
  */
 function decode_legacy_entities(value, profile) {
 
-    if (value.includes('<')) {
+    /*
+     * Raw markup normally means the value is already migrated, and decoding
+     * it would turn a correctly-encoded literal (`a &lt; b`) into a broken
+     * tag — so those values are left alone.
+     *
+     * The exception is a value carrying BOTH raw markup and escaped TAG
+     * markup. Legacy escape-era content that has since been saved through an
+     * editor is exactly that mix, and a blanket `includes('<')` test skipped
+     * it: the sanitizer is then a no-op on the escaped half, so the row was
+     * reported as needing no migration while the dashboard kept rendering
+     * its literal `<p>` tags. Requiring an escaped TAG (not a bare `&lt;`)
+     * rescues that content without touching an encoded literal.
+     */
+    if (value.includes('<') && ESCAPED_TAG_REGEX.test(value) === false) {
         return value;
     }
 
@@ -431,8 +475,9 @@ function migrate_value(value, profile) {
     return PROFILE_FN[profile](working).trim();
 }
 
-(async () => {
+async function main() {
 
+    const DB = connect();
     const report_lines = [];
     let total_changed = 0;
     let total_values = 0;
@@ -494,4 +539,16 @@ function migrate_value(value, profile) {
     }
 
     await DB.destroy();
-})();
+}
+
+/* CLI entry point; requiring this file exposes the pure helpers instead. */
+if (require.main === module) {
+    main();
+}
+
+module.exports = {
+    decode_legacy_entities,
+    transform,
+    migrate_value,
+    ESCAPED_TAG_REGEX
+};
