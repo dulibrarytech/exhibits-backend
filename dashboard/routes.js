@@ -151,6 +151,16 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/delete')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_delete_form);
 
+    //============Content Blocks============//
+    app.route(APP_PATH + '/items/content-block')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_content_block_add_form);
+
+    app.route(APP_PATH + '/items/content-block/details')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_content_block_details);
+
+    app.route(APP_PATH + '/items/content-block/edit')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_content_block_edit_form);
+
     //============Users============//
     app.route(APP_PATH + '/users')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_users);

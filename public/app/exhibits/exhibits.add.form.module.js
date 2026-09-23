@@ -447,8 +447,8 @@ const exhibitsAddFormModule = (function () {
 
             // ── Style fields — clear all color inputs, pickers, font sizes, font selects ──
             const style_sections = [
-                'introduction', 'navigation', 'heading1', 'item1',
-                'heading2', 'heading3', 'item2', 'item3'
+                'introduction', 'navigation', 'heading1', 'accent1', 'item1',
+                'heading2', 'heading3', 'accent2', 'accent3', 'item2', 'item3'
             ];
 
             for (const key of style_sections) {
@@ -459,6 +459,13 @@ const exhibitsAddFormModule = (function () {
 
                 const bg_picker = document.querySelector('#' + key + '-background-color-picker');
                 if (bg_picker) bg_picker.value = '#ffffff';
+
+                // Accent color text + picker
+                const accent_input = document.querySelector('#' + key + '-accent-color');
+                if (accent_input) accent_input.value = '';
+
+                const accent_picker = document.querySelector('#' + key + '-accent-color-picker');
+                if (accent_picker) accent_picker.value = '#ffffff';
 
                 // Font color text + picker
                 const font_input = document.querySelector('#' + key + '-font-color');
@@ -481,6 +488,9 @@ const exhibitsAddFormModule = (function () {
 
                 const swatch_font = document.querySelector('#swatch-' + key + '-font');
                 if (swatch_font) swatch_font.style.backgroundColor = '';
+
+                const swatch_accent = document.querySelector('#swatch-' + key + '-font');
+                if (swatch_font) swatch_accent.style.backgroundColor = '';
             }
 
             // ── Collapse all open accordion panels ──

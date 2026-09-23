@@ -1,0 +1,182 @@
+<% const _is_details = typeof is_details !== 'undefined' && is_details; %>
+<div id="item-data-card" class="card">
+    <div class="card-header">
+        <strong class="card-title mb-3">Item Data</strong>
+        <div class="btn-group float-right">
+            <span id="created" style="text-align: right; font-size: x-small"></span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="content-block-type" class="row">
+            <div class="col-md-6 mb-3">
+                <label for="content-type">Content Type</label>
+                <select class="form-control"
+                        id="content-type"
+                        name="content_type">
+                    <option value="" disabled selected>Select a content type</option>
+                    <option value="" disabled>----------</option>
+                    <option value="button">Button</option>
+                    <option value="card">Card</option>
+                    <option value="divider">Divider</option>
+                    <option value="emphasis">Emphasis</option>
+                    <option value="quote">Quote</option>
+                </select>
+            </div>
+        </div>
+        <div id="content-block-button">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
+                                <span class="badge badge-required">Required</span></span>
+                            </div>
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>This text is displayed in the button</em></small>
+                            <% if (_is_details) { %>
+                            <div id="button-text-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                            <% } else { %>
+                            <div id="button-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12 mb-3">
+                            <label for="button-url-input" class="form-text text-muted" style="font-size: 17px">URL
+                                <span class="badge badge-required">Required</span>
+                            </label>
+                            <small id="button-url-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                <em>The button will take the user to this URL</em>
+                            </small>
+                            <input type="text" id="button-url-input" name="button_url"
+                                   class="form-control" aria-describedby="button-url-hint">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-6">
+                            <div style="margin-bottom: 3rem">
+                                <div class="form-text text-muted" style="font-size: 17px"><label for="size">Size</label></div>
+                                <select class="form-control"
+                                        id="button-size"
+                                        name="button_size">
+                                    <option value="small">Small</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div>
+                                <small class="form-text text-muted mb-3"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Remove fill color from button background</em></small>
+                                <label class="form-text text-muted" style="font-size: 17px" for="button_transparent">Transparent&nbsp;
+                                    <input type="checkbox" id="button-transparent" name="button_transparent">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content-block-card">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Card Heading
+                                <span class="badge badge-required">Required</span></span>
+                            </div>
+                            <% if (_is_details) { %>
+                            <div id="card-title-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                            <% } else { %>
+                            <div id="card-title-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Card Body
+                                <span class="badge badge-required">Required</span></span>
+                            </div>
+                            <% if (_is_details) { %>
+                            <div id="card-text-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                            <% } else { %>
+                            <div id="card-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content-block-divider">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-6">
+                            <div class="form-text text-muted" style="font-size: 17px"><label for="size">Size</label></div>
+                            <select class="form-control"
+                                    id="divider-size"
+                                    name="divider_size">
+                                <option value="small">Small</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content-block-emphasis">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
+                                <span class="badge badge-required">Required</span></span>
+                            </div>
+                            <% if (_is_details) { %>
+                            <div id="emphasis-text-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                            <% } else { %>
+                            <div id="emphasis-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content-block-quote">
+            <div class="row">
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <div class="col-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
+                                <span class="badge badge-required">Required</span></span>
+                            </div>
+                            <% if (_is_details) { %>
+                            <div id="quote-text-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                            <% } else { %>
+                            <div id="quote-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 col-md-12">
+                        <label for="quote-attribution-input" class="form-text text-muted" style="font-size: 17px">Attribution
+                            <span class="badge badge-required">Required</span>
+                        </label>
+                        <input type="text" id="quote-attribution-input" name="quote_attribution" class="form-control">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

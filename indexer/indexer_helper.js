@@ -406,6 +406,37 @@ const construct_heading_index_record = (record) => {
 };
 
 /**
+ * Constructs content block index record
+ * @param {Object} record - Content block record
+ * @returns {Object} Formatted index record
+ */
+const construct_content_block_index_record = (record) => {
+
+    if (!record) {
+        throw new Error('Invalid record provided');
+    }
+
+    return normalize_empty_to_null({
+        is_member_of_exhibit: record.is_member_of_exhibit,
+        uuid: record.uuid,
+        type: record.type,
+        text: record.text,
+        order: record.order,
+        styles: record.styles,
+        is_visible: record.is_visible,
+        is_anchor: record.is_anchor,
+        is_published: record.is_published,
+        created: record.created,
+        title: record.title,
+        url: record.url,
+        content_type: record.content_type,
+        attribution: record.attribution,
+        transparent: record.transparent,
+        size: record.size,
+    });
+};
+
+/**
  * Constructs item index record (used for standard items, grid items, and timeline items)
  * @param {Object} record - Item record
  * @returns {Object} Formatted index record
@@ -435,9 +466,16 @@ const construct_item_index_record = (record) => {
         // tbl_timelines and tbl_standard_items lost it in the titles-to-subheadings
         // migration). The frontend builds nav subheadings from item.title, so it
         // must ride into the index doc. Standard items have no title column → null.
+        // Content blocks use title for the card content type's headings.
         title: record.title,
         caption: record.caption,
         item_type: record.item_type,
+        text: record.text,
+        url: record.url,
+        attribution: record.attribution,
+        size: record.size,
+        content_type: record.content_type,
+        transparent: record.transparent,
         text: record.text,
         wrap_text: record.wrap_text,
         description: record.description,
@@ -941,6 +979,7 @@ module.exports = {
     normalize_empty_to_null,
     construct_exhibit_index_record,
     construct_heading_index_record,
+    construct_content_block_index_record,
     construct_item_index_record,
     construct_grid_index_record,
     construct_timeline_index_record,

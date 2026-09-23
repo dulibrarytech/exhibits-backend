@@ -23,6 +23,7 @@ const DB = require('../config/db_config')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
+const EXHIBIT_CONTENT_BLOCK_RECORD_TASKS = require('../exhibits/tasks/exhibit_content_block_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('../exhibits/tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('../exhibits/tasks/exhibit_timeline_record_tasks');
 const INDEXER_INDEX_TASKS = require('../indexer/tasks/indexer_index_tasks');
@@ -37,6 +38,7 @@ const {
     build_response,
     construct_exhibit_index_record,
     construct_heading_index_record,
+    construct_content_block_index_record,
     construct_item_index_record,
     construct_grid_index_record,
     construct_timeline_index_record,
@@ -51,6 +53,7 @@ const {
 const index_tasks = new INDEXER_INDEX_TASKS(CLIENT, ES_CONFIG.elasticsearch_index);
 const exhibit_record_task = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+const content_block_record_task = new EXHIBIT_CONTENT_BLOCK_RECORD_TASKS(DB, TABLES);
 const item_record_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
@@ -84,12 +87,14 @@ exports.index_exhibit = async (uuid, type) => {
         const [
             exhibit_record,
             heading_records,
+            content_block_records,
             item_records,
             grid_records,
             timeline_records
         ] = await Promise.all([
             exhibit_record_task.get_exhibit_record(uuid),
             heading_record_task.get_heading_records(uuid),
+            content_block_record_task.get_content_block_records(uuid),
             item_record_task.get_item_records(uuid),
             grid_record_task.get_grid_records(uuid),
             timeline_record_task.get_timeline_records(uuid)
@@ -123,10 +128,16 @@ exports.index_exhibit = async (uuid, type) => {
         // Process all component types in parallel
         const [
             heading_index_records,
+            content_block_index_records,
             item_index_records,
             grid_index_records,
             timeline_index_records
         ] = await Promise.all([
+            Promise.resolve(
+                content_block_records && content_block_records.length > 0
+                    ? content_block_records.map(h => construct_content_block_index_record(h))
+                    : []
+            ),
             Promise.resolve(
                 heading_records && heading_records.length > 0
                     ? heading_records.map(h => construct_heading_index_record(h))
@@ -160,6 +171,7 @@ exports.index_exhibit = async (uuid, type) => {
         // Index all records in parallel batches
         await Promise.all([
             batch_index_records(heading_index_records, 'Heading', index_tasks),
+            batch_index_records(content_block_index_records, 'Content Block', index_tasks),
             batch_index_records(item_index_records, 'Item', index_tasks),
             batch_index_records(grid_index_records, 'Grid', index_tasks),
             batch_index_records(timeline_index_records, 'Timeline', index_tasks)
@@ -430,6 +442,25 @@ exports.index_heading_record = async (exhibit_id, heading_id) => {
         construct_fn: construct_heading_index_record,
         index_tasks,
         label: 'Heading'
+    });
+};
+
+/**
+ * Indexes a single content block record
+ * @param {string} exhibit_id - Exhibit UUID
+ * @param {string} content_block_id - content block UUID
+ * @returns {Promise<boolean>} Success status
+ */
+exports.index_content_block_record = async (exhibit_id, content_block_id) => {
+
+    return index_standalone_record({
+        exhibit_id,
+        record_id: content_block_id,
+        record_task: content_block_record_task,
+        get_record_method: 'get_content_block_record',
+        construct_fn: construct_content_block_index_record,
+        index_tasks,
+        label: 'Content Block'
     });
 };
 

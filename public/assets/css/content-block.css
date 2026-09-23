@@ -1,0 +1,27 @@
+#content-block-button,
+#content-block-card,
+#content-block-divider,
+#content-block-emphasis,
+#content-block-quote {
+  display: none;
+}
+
+#content-block-type:has(option[value="button"]:checked) ~ #content-block-button {
+  display: block;
+}
+
+#content-block-type:has(option[value="card"]:checked) ~ #content-block-card {
+  display: block;
+}
+
+#content-block-type:has(option[value="divider"]:checked) ~ #content-block-divider {
+  display: block;
+}
+
+#content-block-type:has(option[value="emphasis"]:checked) ~ #content-block-emphasis {
+  display: block;
+}
+
+#content-block-type:has(option[value="quote"]:checked) ~ #content-block-quote {
+  display: block;
+}

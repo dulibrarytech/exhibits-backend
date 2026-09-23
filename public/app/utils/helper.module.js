@@ -893,7 +893,11 @@ const helperModule = (function () {
             const swatches = document.createElement('span');
             swatches.className = 'item-style-swatches';
 
-            [['backgroundColor', 'Background color'], ['color', 'Font color']].forEach(function (pair) {
+            [
+                ['backgroundColor', 'Background color'],
+                ['color', 'Font color'],
+                ['accentColor', 'Accent color']
+            ].forEach(function (pair) {
                 const dot = document.createElement('span');
                 dot.className = 'color-swatch';
                 dot.title = pair[1];

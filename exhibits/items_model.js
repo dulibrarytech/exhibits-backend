@@ -23,6 +23,7 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
+const EXHIBIT_CONTENT_BLOCK_RECORD_TASKS = require('./tasks/exhibit_content_block_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
 const HELPER = require('../libs/helper');
@@ -65,6 +66,7 @@ const helper_task = new HELPER();
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 const item_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+const content_block_task = new EXHIBIT_CONTENT_BLOCK_RECORD_TASKS(DB, TABLES);
 const grid_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 
@@ -157,9 +159,10 @@ exports.get_item_records = async (is_member_of_exhibit) => {
         }
 
         // Fetch all record types in parallel
-        const [items, headings, grids_raw, timelines_raw] = await Promise.all([
+        const [items, headings, content_blocks, grids_raw, timelines_raw] = await Promise.all([
             item_task.get_item_records(is_member_of_exhibit),
             heading_task.get_heading_records(is_member_of_exhibit),
+            content_block_task.get_content_block_records(is_member_of_exhibit),
             grid_task.get_grid_records(is_member_of_exhibit),
             timeline_task.get_timeline_records(is_member_of_exhibit)
         ]);
@@ -171,7 +174,7 @@ exports.get_item_records = async (is_member_of_exhibit) => {
         ]);
 
         // Combine and sort all records
-        const records = [...items, ...headings, ...grids, ...timelines];
+        const records = [...items, ...headings, ...content_blocks, ...grids, ...timelines];
 
         records.sort((a, b) => {
             return (a.order || 0) - (b.order || 0);
@@ -790,12 +793,13 @@ exports.reorder_exhibit_items = async (exhibit_id, updated_order, updated_by = n
         // grid items scope to their grid (is_member_of_grid), everything else to the
         // exhibit (is_member_of_exhibit).
         const TYPE_MAP = {
-            item:       { table: TABLES.item_records,      scope_column: 'is_member_of_exhibit' },
-            grid:       { table: TABLES.grid_records,      scope_column: 'is_member_of_exhibit' },
-            heading:    { table: TABLES.heading_records,   scope_column: 'is_member_of_exhibit' },
-            subheading: { table: TABLES.heading_records,   scope_column: 'is_member_of_exhibit' },
-            timeline:   { table: TABLES.timeline_records,  scope_column: 'is_member_of_exhibit' },
-            griditem:   { table: TABLES.grid_item_records, scope_column: 'is_member_of_grid' }
+            item:          { table: TABLES.item_records,          scope_column: 'is_member_of_exhibit' },
+            grid:          { table: TABLES.grid_records,          scope_column: 'is_member_of_exhibit' },
+            heading:       { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
+            content_block: { table: TABLES.content_block_records, scope_column: 'is_member_of_exhibit' },
+            subheading:    { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
+            timeline:      { table: TABLES.timeline_records,      scope_column: 'is_member_of_exhibit' },
+            griditem:      { table: TABLES.grid_item_records,     scope_column: 'is_member_of_grid' }
         };
 
         // Group rows by (table, scope value).
@@ -921,6 +925,8 @@ exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
             ops.set(`item:${row.uuid}`, () => INDEXER_MODEL.index_item_record(exhibit_id, row.uuid));
         } else if ((row.type === 'heading' || row.type === 'subheading') && is_valid_uuid(row.uuid)) {
             ops.set(`heading:${row.uuid}`, () => INDEXER_MODEL.index_heading_record(exhibit_id, row.uuid));
+        } else if ((row.type === 'content block') && is_valid_uuid(row.uuid)) {
+            ops.set(`content-block:${row.uuid}`, () => INDEXER_MODEL.index_content_block_record(exhibit_id, row.uuid));
         } else if (row.type === 'grid' && is_valid_uuid(row.uuid)) {
             ops.set(`grid:${row.uuid}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.uuid));
         } else if (row.type === 'timeline' && is_valid_uuid(row.uuid)) {

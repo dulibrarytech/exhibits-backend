@@ -24,6 +24,7 @@ const TABLES = {
     exhibit_records: process.env.EXHIBIT_RECORDS,
     item_records: process.env.ITEM_RECORDS,
     heading_records: process.env.HEADING_RECORDS,
+    content_block_records: process.env.CONTENT_BLOCK_RECORDS,
     grid_item_records: process.env.GRID_ITEM_RECORDS,
     grid_records: process.env.GRID_RECORDS,
     timeline_records: process.env.TIMELINE_RECORDS,
