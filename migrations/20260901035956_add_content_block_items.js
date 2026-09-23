@@ -8,6 +8,7 @@ exports.up = function(knex) {
     table.boolean('is_locked');
     table.boolean('is_visible');
     table.integer('locked_by_user');
+    table.datetime('locked_at');
   }).then(() => knex.schema.alterTable('tbl_content_block_items', (table) => {
     table.string('type').defaultTo().alter();
     table.dropColumn('text_alignment');

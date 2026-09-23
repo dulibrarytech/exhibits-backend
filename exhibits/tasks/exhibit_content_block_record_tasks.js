@@ -85,7 +85,7 @@ const Exhibit_content_block_record_tasks = class extends Base_tasks {
         const ALLOWED_FIELDS = [
             'is_member_of_exhibit', 'uuid', 'type', 'text', 'title', 'attribution', 'size', 'order',
             'is_visible', 'is_published', 'is_locked', 'locked_by_user', 'content_type',
-            'locked_at', 'is_deleted', 'owner', 'transparent', 'styles', 'url',
+            'locked_at', 'is_deleted', 'owner', 'transparent', 'styles', 'url', 'created_by'
         ];
 
         try {
@@ -354,7 +354,7 @@ const Exhibit_content_block_record_tasks = class extends Base_tasks {
         const UPDATABLE_FIELDS = [
             'type', 'text', 'order', 'styles', 'is_visible', 'title',
             'is_published', 'is_locked', 'locked_by_user', 'locked_at',
-             'size', 'owner', 'url', 'content_type', 'transparent',
+            'size', 'owner', 'url', 'content_type', 'transparent', 'updated_by'
         ];
 
         try {
