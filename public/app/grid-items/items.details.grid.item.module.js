@@ -137,8 +137,8 @@ const itemsDetailsGridItemModule = (function () {
         }
 
         // Set basic item data
-        rteModule.render_static('item-title-input', helperModule.unescape(record.title));
-        rteModule.render_static('item-text-input', helperModule.unescape(record.text));
+        rteModule.render_static('item-title-input', record.title);
+        rteModule.render_static('item-text-input', record.text);
 
         // Populate media previews using the shared common module
         if (window.location.pathname.indexOf('media') !== -1) {
@@ -147,11 +147,21 @@ const itemsDetailsGridItemModule = (function () {
             // Surface the popup-related fields read-only. The common form module
             // (also init'd on this page) reveals/relocates them; here we fill in
             // their values and gate the Embed Item control to audio/video media.
-            rteModule.render_static('item-description-input', helperModule.unescape(record.description));
-            rteModule.render_static('item-caption-input', helperModule.unescape(record.caption));
+            rteModule.render_static('item-description-input', record.description);
+            /*
+             * Caption is authored as plain text, but the gate holds it at
+             * `linked_text` — stored captions carry photo-credit and source
+             * anchors. Render them the way every other read-only field on this
+             * page is rendered (render_static sanitizes, then sets innerHTML) so
+             * staff read the credit instead of raw <a href> markup. No unescape()
+             * on the way in: an author's literal "&lt;b&gt;" must stay literal,
+             * exactly as it does for the editors.
+             */
+            rteModule.render_static('item-caption-input', record.caption);
 
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
         }
 
         // Set radio button selections

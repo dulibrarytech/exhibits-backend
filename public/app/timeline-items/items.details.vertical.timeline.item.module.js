@@ -257,8 +257,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             }
 
             // Set basic form fields
-            rteModule.render_static('item-title-input', record.title ? helperModule.unescape(record.title) : '');
-            rteModule.render_static('item-text-input', record.text ? helperModule.unescape(record.text) : '');
+            rteModule.render_static('item-title-input', record.title || '');
+            rteModule.render_static('item-text-input', record.text || '');
 
             // Set date field (extract date portion from ISO string)
             if (record.date) {
@@ -274,8 +274,17 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
                 itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
                 // Surface the Pop-up Window Description + Caption read-only.
-                rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
-                rteModule.render_static('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+                rteModule.render_static('item-description-input', record.description || '');
+                /*
+                 * Caption is authored as plain text, but the gate holds it at
+                 * `linked_text` — stored captions carry photo-credit and source
+                 * anchors. Render them the way every other read-only field on this
+                 * page is rendered (render_static sanitizes, then sets innerHTML) so
+                 * staff read the credit instead of raw <a href> markup. No unescape()
+                 * on the way in: an author's literal "&lt;b&gt;" must stay literal,
+                 * exactly as it does for the editors.
+                 */
+                rteModule.render_static('item-caption-input', record.caption);
             }
 
             // Set embed item checkbox from record
@@ -283,6 +292,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             if (embed_item_el) {
                 embed_item_el.checked = record.is_embedded === 1;
             }
+            helperModule.mark_embedded_description('item-description-input', record.is_embedded === 1);
 
             // Disable all form fields after population (details view is read-only)
             disable_all_fields();

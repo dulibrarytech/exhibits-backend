@@ -365,6 +365,34 @@ describe('Media Library Routes Integration (real router)', () => {
             expect(response.status).toBe(403);
             expect(mockMediaModel.delete_media_record).not.toHaveBeenCalled();
         });
+
+        test('DELETE media record maps an in-use refusal to 409 with the dependents', async () => {
+            const references = [{ record_type: 'item', uuid: TEST_EXHIBIT_ID, role: 'media' }];
+            mockMediaModel.delete_media_record.mockResolvedValue({
+                success: false,
+                in_use: true,
+                message: 'This media is still in use and cannot be deleted. It is used by "Latinx Poetry": 1 item.',
+                references
+            });
+
+            const response = await request(app)
+                .delete(path_for(ENDPOINTS.media_records.delete.endpoint, { media_id: TEST_MEDIA_ID }));
+
+            expect(response.status).toBe(409);
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toContain('still in use');
+            expect(response.body.data).toEqual({ in_use: true, references });
+        });
+
+        test('DELETE media record maps any other model failure to 400', async () => {
+            mockMediaModel.delete_media_record.mockResolvedValue({ success: false, message: 'Media record not found' });
+
+            const response = await request(app)
+                .delete(path_for(ENDPOINTS.media_records.delete.endpoint, { media_id: TEST_MEDIA_ID }));
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Media record not found');
+        });
     });
 
     // ==================== DUPLICATE CHECK (registration order) ====================
@@ -838,6 +866,85 @@ describe('Media Library Routes Integration (real router)', () => {
                 .get(path_for(ENDPOINTS.iiif_manifest.get.endpoint, { media_id: TEST_MEDIA_ID }));
 
             expect(response.status).toBe(404);
+        });
+
+        // A cross-origin response without Access-Control-Allow-Origin is
+        // reported by the browser as a CORS failure regardless of status, so
+        // every IIIF error must carry the headers or its real status is hidden.
+        describe('CORS on every response under /iiif', () => {
+
+            const CORS_ASSERTIONS = (response) => {
+                expect(response.headers['access-control-allow-origin']).toBe('*');
+                expect(response.headers['access-control-allow-methods']).toContain('GET');
+                expect(response.headers['access-control-allow-headers']).toContain('Origin');
+            };
+
+            test('manifest 404 (deleted / missing media) carries CORS headers', async () => {
+                mockIiifService.build_manifest_for_uuid.mockResolvedValue({
+                    success: false, status: 404, message: 'Media record not found'
+                });
+
+                const response = await request(app)
+                    .get(path_for(ENDPOINTS.iiif_manifest.get.endpoint, { media_id: TEST_MEDIA_ID }))
+                    .set('Origin', 'https://exhibits.example.edu');
+
+                expect(response.status).toBe(404);
+                expect(response.body.message).toBe('Media record not found');
+                CORS_ASSERTIONS(response);
+            });
+
+            test('image 404 carries CORS headers', async () => {
+                mockIiifService.get_image.mockResolvedValue({
+                    success: false, status: 404, message: 'Media record not found'
+                });
+
+                const response = await request(app)
+                    .get(path_for(ENDPOINTS.iiif_image.get.endpoint, {
+                        media_id: TEST_MEDIA_ID, region: 'full', size: 'max', rotation: '0', quality_format: 'default.jpg'
+                    }));
+
+                expect(response.status).toBe(404);
+                CORS_ASSERTIONS(response);
+            });
+
+            test('info.json 500 (service threw) carries CORS headers', async () => {
+                mockIiifService.get_info.mockResolvedValue({ success: false, message: 'boom' });
+
+                const response = await request(app)
+                    .get(path_for(ENDPOINTS.iiif_info.get.endpoint, { media_id: TEST_MEDIA_ID }));
+
+                expect(response.status).toBe(500);
+                CORS_ASSERTIONS(response);
+            });
+
+            test('malformed media id 400 carries CORS headers', async () => {
+                const response = await request(app)
+                    .get(path_for(ENDPOINTS.iiif_file.get.endpoint, { media_id: 'not-a-uuid' }));
+
+                expect(response.status).toBe(400);
+                CORS_ASSERTIONS(response);
+            });
+
+            test('OPTIONS preflight is answered with 204 + CORS headers, without touching the service', async () => {
+                const response = await request(app)
+                    .options(path_for(ENDPOINTS.iiif_manifest.get.endpoint, { media_id: TEST_MEDIA_ID }))
+                    .set('Origin', 'https://exhibits.example.edu')
+                    .set('Access-Control-Request-Method', 'GET');
+
+                expect(response.status).toBe(204);
+                CORS_ASSERTIONS(response);
+                expect(response.headers['access-control-max-age']).toBe('86400');
+                expect(mockIiifService.build_manifest_for_uuid).not.toHaveBeenCalled();
+            });
+
+            test('non-IIIF routes are not given the wildcard CORS headers', async () => {
+                mockMediaModel.get_media_record.mockResolvedValue({ success: true, record: { uuid: TEST_MEDIA_ID } });
+
+                const response = await request(app)
+                    .get(path_for(ENDPOINTS.media_record.get.endpoint, { media_id: TEST_MEDIA_ID }));
+
+                expect(response.headers['access-control-allow-origin']).toBeUndefined();
+            });
         });
 
         test('GET manifest sub-resource URIs 303-redirect to the parent manifest', async () => {

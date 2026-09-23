@@ -20,7 +20,6 @@
     min-height: 120px;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 0.875rem;
 }
 
 /* title / subtitle / heading fields — visually one-to-two lines */
@@ -59,25 +58,140 @@
     background-color: #e9ecef;
 }
 
-/* keep palette swatches visible against the toolbar background */
-.ql-snow .ql-color .ql-picker-options [data-value=""] {
-    border: 1px solid #ccc;
+/* rteModule.set_enabled(false) hides the toolbar but leaves it in the DOM,
+   so Quill's toolbar + container border join would still remove the box's
+   top edge; restore it, as for editors mounted without a toolbar */
+.ql-toolbar.ql-snow[hidden] + .rte-container.ql-container.ql-snow {
+    border-top: 1px solid #ccc;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+/* the "not used while Embed item is checked" note under a field's label
+   (helperModule.bind_embed_description / mark_embedded_description) */
+.rte-embed-note {
+    margin: 0 0 0.5rem;
 }
 
 /* static read-only rich text display (details pages without an editor);
-   populated by rteModule.render_static() */
+   populated by rteModule.render_static(). Same #e9ecef as .ql-disabled above
+   and as Bootstrap's .form-control[readonly]: a details page shows these
+   boxes beside readonly inputs (Media Name, Image Alt Text) and disabled
+   editors, and every read-only field on the page reads as one surface. */
 .rte-readonly {
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 12px 15px;
     min-height: 44px;
     max-height: 400px;
     overflow-y: auto;
-    font-size: 0.875rem;
     margin-bottom: 0.75rem;
 }
 
 .rte-readonly > :last-child {
     margin-bottom: 0;
 }
+
+/*
+ * Typography.
+ *
+ * The dashboard theme (style.css) styles bare elements for page chrome —
+ * p { Open Sans 16px #5A5A5A }, a { #5A5A5A }, h1-h6 { #40434D }, ul/ol
+ * { padding-left: 0 } — and an element selector matches every <p>/<a>/<h2>
+ * Quill renders inside the editor too. A rule matched ON an element beats
+ * anything it would inherit, so paragraphs took the theme's look while list
+ * items inherited the editor's (Helvetica 14px #212529): one field, two
+ * fonts. Give each rich text surface one typography and make the block
+ * elements inherit it. Links stay visibly links. No !important is needed —
+ * .rte-readonly p (0,1,1) and .rte-container .ql-editor a (0,2,1) already
+ * out-rank the theme's element rules (0,0,1) and Quill's .ql-snow a (0,1,1).
+ *
+ * rteModule.set_theme() overrides the surface values inline when an item
+ * style preset is mirrored, and everything below still inherits from it.
+ */
+.rte-container.ql-container,
+.rte-readonly {
+    font-family: "Open Sans", sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #212529;
+}
+
+.rte-container .ql-editor p,
+.rte-container .ql-editor li,
+.rte-container .ql-editor a,
+.rte-readonly p,
+.rte-readonly li,
+.rte-readonly a {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+/* Bootstrap's link blue (#007bff) measures 3.98:1 on white — under AA's
+   4.5:1 for normal text; its hover shade passes at 7.3:1 */
+.rte-container .ql-editor a,
+.rte-readonly a {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.rte-container .ql-editor a:hover,
+.rte-container .ql-editor a:focus,
+.rte-readonly a:hover,
+.rte-readonly a:focus {
+    color: #003d80;
+    text-decoration: underline;
+}
+
+/* stored h2/h3 (the picker is gone, the format is kept): read as headings
+   in the surface's font and colour, at Quill's own relative sizes */
+.rte-container .ql-editor h2,
+.rte-container .ql-editor h3,
+.rte-readonly h2,
+.rte-readonly h3 {
+    font-family: inherit;
+    color: inherit;
+    line-height: 1.2;
+}
+
+.rte-readonly h2 {
+    font-size: 1.5em;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+.rte-readonly h3 {
+    font-size: 1.17em;
+    margin: 0 0 0.5rem;
+    padding: 0;
+}
+
+/* the static box gets none of Quill's list rules; restore the indent the
+   theme's ul/ol reset removes (stored lists are real nested <ul>/<ol>) */
+.rte-readonly ul,
+.rte-readonly ol {
+    padding-left: 1.5em;
+    margin: 0 0 0.5rem;
+}
+
+.rte-readonly ul ul,
+.rte-readonly ol ol,
+.rte-readonly ul ol,
+.rte-readonly ol ul {
+    margin-bottom: 0;
+}
+
+/* indented paragraphs are stored as <p class="ql-indent-N"> (the gate keeps
+   1-8); Quill only styles them under .ql-editor, so the static box needs the
+   same 3em steps */
+.rte-readonly .ql-indent-1 { padding-left: 3em; }
+.rte-readonly .ql-indent-2 { padding-left: 6em; }
+.rte-readonly .ql-indent-3 { padding-left: 9em; }
+.rte-readonly .ql-indent-4 { padding-left: 12em; }
+.rte-readonly .ql-indent-5 { padding-left: 15em; }
+.rte-readonly .ql-indent-6 { padding-left: 18em; }
+.rte-readonly .ql-indent-7 { padding-left: 21em; }
+.rte-readonly .ql-indent-8 { padding-left: 24em; }

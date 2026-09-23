@@ -153,6 +153,80 @@ test.describe('Media library delete modal (modals.delete.module.js — open_dele
         await expect(page.locator('#delete-media-confirm-btn')).toBeEnabled();
     });
 
+    test('409 in-use refusal locks the modal: warning shown, Delete disabled, record kept', async ({ page }) => {
+        // The backend refuses to soft-delete media that an item or exhibit
+        // still binds (media-library/model.js in-use guard) and answers 409
+        // with a staff-facing message naming the dependents. The modal must
+        // surface that message as a warning (not a failure), drop the
+        // "are you sure / cannot be undone" prompt, and DISABLE Delete for
+        // good — a retry cannot succeed until the record is unbound — leaving
+        // only Cancel/close. A fresh open starts from the confirm state again.
+        const record = mediaRecordFixture({
+            uuid: TARGET_UUID,
+            name: 'El Corno Emplumado 5',
+            original_filename: 'el-corno-5.pdf',
+            ingest_method: 'upload',
+            media_type: 'pdf',
+        });
+        const in_use_message = 'This media is still in use and cannot be deleted. '
+            + 'It is used by "Latinx Poetry": 3 items. '
+            + 'Select different media for those items (or remove it from them) first, then delete it.';
+        await stubMediaLibraryListApi(page, { records: [record] });
+        const recordState = await stubMediaRecordApi(page, {
+            record,
+            deleteStatus: 409,
+            deleteBody: {
+                success: false,
+                message: in_use_message,
+                data: { in_use: true, references: [{ record_type: 'item', role: 'media', uuid: 'a676c5bb' }] },
+            },
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await page.locator(`a.btn-delete-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+        await expect(page.locator('#delete-media-confirm-btn')).toBeVisible();
+
+        await page.locator('#delete-media-confirm-btn').click();
+
+        await expect.poll(() => recordState.deleteCount).toBe(1);
+        const alert = page.locator('#delete-media-message .alert-warning');
+        await expect(alert).toBeVisible();
+        await expect(alert).toContainText('"Latinx Poetry": 3 items');
+        await expect(page.locator('#delete-media-message .alert-danger')).toHaveCount(0);
+
+        // Locked: modal open, Delete disabled (attribute + aria), prompt and
+        // irreversibility notice hidden, the record card still identifies it
+        await expect(page.locator('#delete-media-modal')).toBeVisible();
+        const confirm_btn = page.locator('#delete-media-confirm-btn');
+        await expect(confirm_btn).toBeDisabled();
+        await expect(confirm_btn).toHaveAttribute('aria-disabled', 'true');
+        await expect(confirm_btn).toHaveText(/Delete/);
+        await expect(page.locator('#delete-media-prompt')).toBeHidden();
+        await expect(page.locator('#delete-media-irreversible')).toBeHidden();
+        await expect(page.locator('#delete-media-name')).toHaveText('El Corno Emplumado 5');
+        await expect(page.locator('#delete-media-cancel-btn')).toBeEnabled();
+
+        // Forcing a click on the disabled button must not fire another DELETE
+        await confirm_btn.dispatchEvent('click');
+        await page.waitForTimeout(300);
+        expect(recordState.deleteCount).toBe(1);
+
+        // Nothing was removed from the list
+        await expect(page.locator(`a.btn-delete-media[data-uuid="${TARGET_UUID}"]`)).toHaveCount(1);
+
+        // Cancel, reopen: the lock is per open — the confirm state is back
+        await page.locator('#delete-media-cancel-btn').click();
+        await expect(page.locator('#delete-media-modal')).toBeHidden();
+        await page.locator(`a.btn-delete-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+        await expect(page.locator('#delete-media-confirm-btn')).toBeVisible();
+        await expect(page.locator('#delete-media-confirm-btn')).toBeEnabled();
+        await expect(page.locator('#delete-media-prompt')).toBeVisible();
+        await expect(page.locator('#delete-media-irreversible')).toBeVisible();
+        await expect(page.locator('#delete-media-message .alert')).toHaveCount(0);
+    });
+
     test('rapid double-click on confirm fires only one DELETE', async ({ page }) => {
         // Regression for the confirm-button double-click race.
         // setup_delete_modal_handlers clones-and-replaces the confirm

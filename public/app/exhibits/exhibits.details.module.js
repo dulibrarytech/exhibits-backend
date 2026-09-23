@@ -449,10 +449,10 @@ const exhibitsDetailsModule = (function () {
             set_element_value('#is-published', is_published);
 
             // Set basic exhibit data with proper unescaping
-            rteModule.set_html('exhibit-title-input', helperModule.unescape(record.title || ''));
-            rteModule.set_html('exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
-            rteModule.set_html('exhibit-description-input', helperModule.unescape(record.description || ''));
-            rteModule.set_html('exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
+            rteModule.set_html('exhibit-title-input', record.title || '');
+            rteModule.set_html('exhibit-sub-title-input', record.subtitle || '');
+            rteModule.set_html('exhibit-description-input', record.description || '');
+            rteModule.set_html('exhibit-about-the-curators-input', record.about_the_curators || '');
 
             // Set owner
             set_element_value('#exhibit-owner', record.owner);

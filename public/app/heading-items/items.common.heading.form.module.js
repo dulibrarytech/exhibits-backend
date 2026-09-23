@@ -56,8 +56,10 @@ const itemsCommonHeadingFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get heading text (rich text; serialized HTML, '' when empty)
-            item_heading.text = rteModule.get_html('item-heading-text-input');
+            // Heading text is plain-authored; the reduced gate still permits the
+            // b/i/u and <br> that legacy headings carry.
+            const heading_text_el = document.querySelector('#item-heading-text-input');
+            item_heading.text = heading_text_el ? heading_text_el.value.trim() : '';
 
             // Validate required heading text
             if (!item_heading.text || item_heading.text.length === 0) {

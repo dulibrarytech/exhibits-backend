@@ -859,6 +859,21 @@ exports.delete_media_record = async function (req, res) {
 
         const result = await MEDIA_MODEL.delete_media_record(media_id, username);
 
+        // Still bound to items/exhibits: the model refuses and names the
+        // dependents. 409 so the client can present it as a state conflict
+        // rather than a failed request.
+        if (result?.in_use === true) {
+            res.status(409).json({
+                success: false,
+                message: result.message,
+                data: {
+                    in_use: true,
+                    references: result.references || []
+                }
+            });
+            return;
+        }
+
         if (!result || !result.success) {
             res.status(400).json({
                 success: false,
