@@ -181,9 +181,9 @@ const ENDPOINTS = {
     },
     iiif_image: {
         get: {
-            description: 'Serves image via IIIF Image API 3.0 (region/size/rotation/quality.format)',
+            description: 'Serves image via IIIF Image API 3.0 (region/size/rotation/quality.format). A multi-page PDF page is selected by appending ";N" to the identifier (Cantaloupe syntax, 1-based), e.g. {uuid};4',
             endpoint: `${IIIF_PATH}/:media_id/:region/:size/:rotation/:quality_format`,
-            params: 'token or api_key, media_id (UUID), region, size, rotation, quality_format'
+            params: 'token or api_key, media_id (UUID, optionally with a ";N" PDF page selector), region, size, rotation, quality_format'
         }
     },
 };

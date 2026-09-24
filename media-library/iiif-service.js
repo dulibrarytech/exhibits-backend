@@ -24,6 +24,8 @@ const SHARP = require('sharp');
 const MEDIA_MODEL = require('../media-library/model');
 const UPLOADS = require('../media-library/uploads');
 const IIIF_CACHE = require('../media-library/iiif-cache');
+const PDF_RENDER = require('../media-library/pdf-render');
+const STORAGE_CONFIG = require('../media-library/storage_config')();
 const APP_CONFIG = require('../config/app_config')();
 const KALTURA_CONFIG = require('../config/kaltura_config')();
 const LOGGER = require('../libs/log4');
@@ -73,6 +75,13 @@ const IIIF_MAX_SOURCE_PIXELS = (() => {
     const v = parseInt(process.env.IIIF_MAX_SOURCE_PIXELS, 10);
     return Number.isFinite(v) && v > 0 ? v : 268402689;
 })();
+
+// Envelope a rendered PDF page is fitted into. Matches the box the upload
+// thumbnail is built in (uploads.generate_pdf_thumbnail), so a selected page is
+// the same size and sharpness as page 1 rather than out-resolving every other
+// PDF item in the same exhibit. Raising this is the single change that would
+// make PDF previews render at display resolution — see pdf_render_box().
+const PDF_THUMBNAIL_BOX = STORAGE_CONFIG.thumbnail || { width: 400, height: 400 };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -149,6 +158,55 @@ const is_valid_uuid = (uuid) => {
     const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuid_regex.test(uuid);
 };
+
+/**
+ * Splits a IIIF identifier into its media UUID and a 1-based page selector.
+ *
+ * Multi-page PDFs are addressed as `{uuid};{N}`, Cantaloupe's page-selection
+ * syntax — the same convention the repository's Cantaloupe image server
+ * accepts, so the public frontend builds one URL shape for both image sources.
+ * A bare UUID means page 1.
+ *
+ * Only the canonical spelling is accepted: no leading zeros, no `;0`, no signs
+ * or decimals. A second spelling of the same page (`;04`, `;004`) would
+ * otherwise mint an extra derivative-cache entry and an extra ETag for
+ * byte-identical output.
+ *
+ * Express decodes path parameters, so `%3B` arrives here as `;` and both forms
+ * parse identically.
+ *
+ * @param {string} identifier - IIIF identifier path segment
+ * @returns {Object|null} { uuid, page } or null when the identifier is malformed
+ */
+const parse_identifier = (identifier) => {
+
+    if (!identifier || typeof identifier !== 'string') {
+        return null;
+    }
+
+    const separator = identifier.indexOf(';');
+
+    if (separator === -1) {
+        return is_valid_uuid(identifier) ? { uuid: identifier, page: 1 } : null;
+    }
+
+    const uuid = identifier.substring(0, separator);
+    const page_token = identifier.substring(separator + 1);
+
+    /*
+     * Bounded to nine digits so the page is always a safe integer. This is NOT
+     * a defence against page-number probing — `;4999` costs exactly what
+     * `;99999999` would — that is what the declared page count below and the
+     * endpoint's rate limit are for.
+     */
+    if (!is_valid_uuid(uuid) || !/^[1-9][0-9]{0,8}$/.test(page_token)) {
+        return null;
+    }
+
+    return { uuid, page: parseInt(page_token, 10) };
+};
+
+exports.parse_identifier = parse_identifier;
 
 /**
  * Parses a pipe-delimited subject string into a trimmed, filtered array.
@@ -731,6 +789,13 @@ exports.build_manifest_for_uuid = async function (uuid, base_url, file_base) {
 /**
  * Builds the IIIF Image API 3.0 info.json response for a media record
  * Provides image dimensions, supported formats, and service profile
+ * Page selection is NOT accepted here: like /manifest and /file, info.json
+ * describes the record, and nothing resolves a PDF's info.json today because
+ * PDF canvases carry no ImageService3. If that changes (a multi-page manifest
+ * would do it), a page selector belongs here too — along with reporting the
+ * page's rendered dimensions, which must be measured from the same scaled
+ * viewport the renderer uses rather than computed arithmetically.
+ *
  * @param {string} uuid - Media record UUID
  * @param {string} base_url - IIIF base URL (e.g., https://host/path/iiif)
  * @returns {Promise<Object>} Result object with info.json data
@@ -838,6 +903,150 @@ const resolve_image_source = async (record) => {
         LOGGER.module().error(`ERROR: [/media-library/iiif-service (resolve_image_source)] Failed to resolve image source for ${record.uuid}: ${error.message}`);
         return null;
     }
+};
+
+/**
+ * Page count recorded on the media record at upload time, when present.
+ * @param {Object} record - Media library DB record
+ * @returns {number|null} Page count, or null when the record does not carry one
+ */
+const declared_page_count = (record) => {
+
+    if (!record.exif_data) {
+        return null;
+    }
+
+    try {
+
+        const exif = typeof record.exif_data === 'string'
+            ? JSON.parse(record.exif_data)
+            : record.exif_data;
+
+        const count = parseInt(exif.PageCount, 10);
+
+        return Number.isFinite(count) && count > 0 ? count : null;
+
+    } catch (error) {
+        LOGGER.module().warn(`WARNING: [/media-library/iiif-service (declared_page_count)] Failed to parse EXIF data for ${record.uuid}: ${error.message}`);
+        return null;
+    }
+};
+
+/**
+ * Resolution policy for an on-demand PDF page render.
+ *
+ * Today every page is rendered into the upload-thumbnail envelope, so a
+ * selected page matches page 1 — which is served from that stored thumbnail.
+ * The requested IIIF size is deliberately ignored: honouring it would make
+ * paged items visibly sharper than every page-1 item beside them.
+ *
+ * This is the one place that policy lives. Deriving the box from `size`
+ * instead (falling back to a configured default for `max`/`full`) is what
+ * would move PDF previews to display resolution across the board — it also
+ * requires get_info and build_pdf_canvas to report the render dimensions
+ * rather than the record's stored thumbnail dimensions.
+ *
+ * @param {string} size - IIIF size parameter (unused under the current policy)
+ * @returns {Object} { width, height } bounding box in pixels
+ */
+const pdf_render_box = (size) => {
+    return { width: PDF_THUMBNAIL_BOX.width, height: PDF_THUMBNAIL_BOX.height };
+};
+
+/**
+ * Rasterizes a selected page of an uploaded PDF, for `{uuid};{N}` requests
+ * where N > 1. Page 1 keeps coming from the stored thumbnail, which is the same
+ * pixels by construction.
+ *
+ * Concurrent requests for the same page of the same record collapse into one
+ * render (single_flight): a cold exhibit page can ask for the same derivative
+ * several times at once, and rasterizing runs on the main thread.
+ *
+ * @param {Object} record - Media library DB record
+ * @param {number} page - 1-based page number
+ * @param {string} size - IIIF size parameter, for the render policy
+ * @returns {Promise<Object>} { buffer } on success, or { status, message } on failure
+ */
+const resolve_pdf_page_source = async (record, page, size) => {
+
+    if (!record.storage_path) {
+        return { status: 404, message: 'Image source not available' };
+    }
+
+    /*
+     * Reject an out-of-range page from the record's own metadata, before any
+     * file is opened. exiftool records PageCount at upload (129 of 132 stored
+     * PDFs carry it), so this is what actually stops a caller walking page
+     * numbers and forcing a full PDF parse per request. The document's own
+     * numPages stays authoritative for the rest.
+     */
+    const declared_pages = declared_page_count(record);
+
+    if (declared_pages !== null && page > declared_pages) {
+        return {
+            status: 404,
+            message: `Page ${page} does not exist in this document (${declared_pages} pages)`
+        };
+    }
+
+    const box = pdf_render_box(size);
+    const version = record.updated || record.created || null;
+    const key = `${record.uuid}|${version}|${page}|${box.width}x${box.height}`;
+
+    return PDF_RENDER.single_flight(key, async () => {
+
+        try {
+
+            const resolved_path = await UPLOADS.resolve_storage_path(
+                decode_html_entities(record.storage_path)
+            );
+
+            const stats = await FS.promises.stat(resolved_path);
+
+            if (stats.size > PDF_RENDER.MAX_PDF_BYTES) {
+                LOGGER.module().warn(`WARNING: [/media-library/iiif-service (resolve_pdf_page_source)] PDF exceeds the render limit for ${record.uuid}: ${stats.size} bytes`);
+                return { status: 400, message: 'Document is too large for page rendering' };
+            }
+
+            const pdf_buffer = await FS.promises.readFile(resolved_path);
+            const rendered = await PDF_RENDER.render_pdf_page_boxed(pdf_buffer, page, box.width, box.height);
+
+            if (rendered.success) {
+                return { buffer: rendered.buffer };
+            }
+
+            return pdf_failure_response(rendered, page);
+
+        } catch (error) {
+            LOGGER.module().error(`ERROR: [/media-library/iiif-service (resolve_pdf_page_source)] Failed to render page ${page} of ${record.uuid}: ${error.message}`);
+            return { status: 404, message: 'Image source not available' };
+        }
+    });
+};
+
+/**
+ * Maps a pdf-render failure code onto the HTTP status and message the IIIF
+ * endpoints return. Shared by the page-image and page-dimension paths so both
+ * answer a given failure the same way.
+ * @param {Object} failure - A { code, page_count } result from pdf-render
+ * @param {number} page - 1-based page number that was requested
+ * @returns {Object} { status, message }
+ */
+const pdf_failure_response = (failure, page) => {
+
+    if (failure.code === PDF_RENDER.RENDER_CODES.PAGE_OUT_OF_RANGE) {
+        /* The page resource does not exist — 404, not a malformed request. */
+        return {
+            status: 404,
+            message: `Page ${page} does not exist in this document${failure.page_count ? ` (${failure.page_count} pages)` : ''}`
+        };
+    }
+
+    if (failure.code === PDF_RENDER.RENDER_CODES.DOCUMENT_TOO_LARGE) {
+        return { status: 400, message: 'Document is too large for page rendering' };
+    }
+
+    return { status: 500, message: 'Error rendering PDF page' };
 };
 
 /**
@@ -1045,9 +1254,10 @@ const parse_quality_format = (quality_format) => {
  * conditional requests with 304 Not Modified.
  *
  * For uploaded images: reads from local hash-bucketed storage
- * For uploaded PDFs: uses the generated thumbnail
+ * For uploaded PDFs: uses the generated thumbnail for page 1, and rasterizes
+ * the requested page on demand for a `{uuid};{N}` identifier where N > 1
  *
- * @param {string} uuid - Media record UUID
+ * @param {string} identifier - Media record UUID, optionally with a `;{N}` page selector
  * @param {string} region - IIIF region parameter (full, square, x,y,w,h)
  * @param {string} size - IIIF size parameter (max, w,h, !w,h, w,, ,h)
  * @param {string} rotation - IIIF rotation parameter (0 for Level 1)
@@ -1056,13 +1266,17 @@ const parse_quality_format = (quality_format) => {
  * @param {string} [options.if_none_match] - Client If-None-Match header for conditional requests
  * @returns {Promise<Object>} Result object with image buffer, content type, etag and version
  */
-exports.get_image = async function (uuid, region, size, rotation, quality_format, options = {}) {
+exports.get_image = async function (identifier, region, size, rotation, quality_format, options = {}) {
 
     try {
 
-        if (!is_valid_uuid(uuid)) {
+        const parsed = parse_identifier(identifier);
+
+        if (parsed === null) {
             return build_response(false, 'Invalid UUID format', { image: null, status: 400 });
         }
+
+        const { uuid, page } = parsed;
 
         // Parse quality.format first — reject early if invalid
         const qf = parse_quality_format(quality_format);
@@ -1101,8 +1315,19 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
         }
 
         const record = result.record;
+
+        // Page selection is only defined for multi-page documents. `;1` is the
+        // identity request and stays valid for every media type, so a caller can
+        // append the page unconditionally.
+        if (page > 1 && normalize_media_type(record.media_type) !== 'pdf') {
+            return build_response(false, 'Page selection is only supported for PDF media', {
+                image: null,
+                status: 400
+            });
+        }
+
         const version = record.updated || record.created || null;
-        const etag = IIIF_CACHE.compute_etag(uuid, version, region, size, rotation, quality_format);
+        const etag = IIIF_CACHE.compute_etag(uuid, version, region, size, rotation, quality_format, page);
 
         // Conditional request: nothing changed — let the caller answer 304
         if (options.if_none_match && options.if_none_match === etag) {
@@ -1116,7 +1341,7 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
         }
 
         // Serve from the derivative cache when present (no source read, no transcode)
-        const cached = await IIIF_CACHE.get_cached(uuid, version, region, size, rotation, quality_format);
+        const cached = await IIIF_CACHE.get_cached(uuid, version, region, size, rotation, quality_format, page);
 
         if (cached) {
             return build_response(true, 'Image served from cache', {
@@ -1128,10 +1353,29 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Cache miss — processing IIIF image request: ${uuid}/${region}/${size}/${rotation}/${quality_format}`);
+        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Cache miss — processing IIIF image request: ${uuid} page ${page} ${region}/${size}/${rotation}/${quality_format}`);
 
-        // Resolve the source image buffer (async — never blocks the event loop)
-        const source_buffer = await resolve_image_source(record);
+        // Resolve the source image buffer (async — never blocks the event loop).
+        // A selected page is rasterized from the stored PDF; everything else
+        // reads an already-stored image.
+        let source_buffer = null;
+
+        if (page > 1) {
+
+            const page_source = await resolve_pdf_page_source(record, page, size);
+
+            if (!page_source.buffer) {
+                return build_response(false, page_source.message, {
+                    image: null,
+                    status: page_source.status
+                });
+            }
+
+            source_buffer = page_source.buffer;
+
+        } else {
+            source_buffer = await resolve_image_source(record);
+        }
 
         if (!source_buffer) {
             return build_response(false, 'Image source not available', { image: null, status: 404 });
@@ -1180,9 +1424,9 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
 
         // Store the derivative for subsequent requests (best-effort — a cache
         // write failure must never fail the response)
-        await IIIF_CACHE.put_cached(uuid, version, region, size, rotation, quality_format, output_buffer);
+        await IIIF_CACHE.put_cached(uuid, version, region, size, rotation, quality_format, output_buffer, page);
 
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Image processed successfully for: ${uuid} (${output_buffer.length} bytes)`);
+        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Image processed successfully for: ${uuid} page ${page} (${output_buffer.length} bytes)`);
 
         return build_response(true, 'Image processed successfully', {
             image: output_buffer,
@@ -1194,7 +1438,7 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/iiif-service (get_image)] ${error.message}`, {
-            uuid,
+            identifier,
             region,
             size,
             rotation,

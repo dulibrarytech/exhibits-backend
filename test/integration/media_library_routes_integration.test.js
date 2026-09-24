@@ -109,7 +109,15 @@ const mockIiifService = {
     derive_file_base: jest.fn().mockReturnValue('http://test.host/exhibits-dashboard/iiif'),
     build_manifest_for_uuid: jest.fn(),
     get_info: jest.fn(),
-    get_image: jest.fn()
+    get_image: jest.fn(),
+    // The identifier grammar (which accepts a `{uuid};{N}` PDF page selector)
+    // is the controller's pre-flight check, so the real implementation is used
+    // rather than a stub that could silently drift from it. Resolved lazily:
+    // requiring it here would pull the real service in while the mock factories
+    // above are still in their temporal dead zone.
+    parse_identifier: (identifier) => {
+        return jest.requireActual('../../media-library/iiif-service').parse_identifier(identifier);
+    }
 };
 
 jest.mock('../../media-library/iiif-service', () => mockIiifService);

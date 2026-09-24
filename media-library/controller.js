@@ -1973,8 +1973,11 @@ exports.get_iiif_image = async function (req, res) {
         const rotation = req.params.rotation;
         const quality_format = req.params.quality_format;
 
-        // Validate UUID format
-        if (!is_valid_uuid(media_id)) {
+        // Validate the identifier, which may carry a `{uuid};{N}` page selector
+        // for a multi-page PDF (Cantaloupe syntax — see iiif-service.parse_identifier)
+        const identifier = IIIF_SERVICE.parse_identifier(media_id);
+
+        if (identifier === null) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Invalid media ID: ${media_id}`);
             return res.status(400).json({
                 success: false,
@@ -1983,7 +1986,7 @@ exports.get_iiif_image = async function (req, res) {
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${media_id}/${region}/${size}/${rotation}/${quality_format}`);
+        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${identifier.uuid} page ${identifier.page} ${region}/${size}/${rotation}/${quality_format}`);
 
         // Conditional-request validator — lets an unchanged derivative answer 304
         const if_none_match = req.headers['if-none-match'];
