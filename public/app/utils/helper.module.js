@@ -893,7 +893,16 @@ const helperModule = (function () {
             const swatches = document.createElement('span');
             swatches.className = 'item-style-swatches';
 
-            [['backgroundColor', 'Background color'], ['color', 'Font color']].forEach(function (pair) {
+            let swatchTypes = [
+                ['backgroundColor', 'Background color'],
+                ['color', 'Font color'],
+            ];
+
+            if (key.includes('accent')) {
+                swatchTypes.push(['accentColor', 'Accent color']);
+            }
+
+            swatchTypes.forEach(function (pair) {
                 const dot = document.createElement('span');
                 dot.className = 'color-swatch';
                 dot.title = pair[1];

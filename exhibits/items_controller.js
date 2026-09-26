@@ -20,6 +20,7 @@
 
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
+const CONTENT_BLOCKS_MODEL = require('../exhibits/content_blocks_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const EXHIBITS_MODEL = require('./exhibits_model');
@@ -199,6 +200,7 @@ exports.publish_item_record = async function (req, res) {
         const publish_handlers = {
             item: ITEMS_MODEL.publish_item_record,
             heading: HEADINGS_MODEL.publish_heading_record,
+            content_block: CONTENT_BLOCKS_MODEL.publish_content_block_record,
             grid: GRIDS_MODEL.publish_grid_record,
             timeline: TIMELINES_MODEL.publish_timeline_record
         };
@@ -253,6 +255,7 @@ exports.suppress_item_record = async function (req, res) {
         const suppress_handlers = {
             item: ITEMS_MODEL.suppress_item_record,
             heading: HEADINGS_MODEL.suppress_heading_record,
+            content_block: CONTENT_BLOCKS_MODEL.suppress_content_block_record,
             grid: GRIDS_MODEL.suppress_grid_record,
             timeline: TIMELINES_MODEL.suppress_timeline_record
         };

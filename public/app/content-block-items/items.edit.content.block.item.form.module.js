@@ -1,0 +1,726 @@
+/**
+
+ Copyright 2024 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
+const itemsEditContentBlockFormModule = (function () {
+
+    'use strict';
+
+    const APP_PATH = endpointsModule.get_app_path();
+    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    let obj = {};
+
+    async function get_item_content_block_record() {
+
+        // Cache DOM element reference
+        const message_element = document.querySelector('#message');
+
+        try {
+
+            // Validate required parameters early
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+
+            if (!exhibit_id || !item_id) {
+                throw new Error('Missing required parameters: exhibit_id or item_id');
+            }
+
+            // Get and validate authentication
+            const token = authModule.get_user_token();
+            const profile = authModule.get_user_profile_data();
+
+            if (!token || token === false) {
+                if (message_element) {
+                    message_element.textContent = 'Authentication required. Redirecting to login...';
+                }
+
+                setTimeout(() => {
+                    const login_url = `${APP_PATH}/login`;
+                    window.location.replace(login_url);
+                }, 1000);
+
+                return null;
+            }
+
+            if (!profile?.uid) {
+                throw new Error('Invalid user profile data');
+            }
+
+            // Safely construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.content_block_records.get.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':content_block_id', encodeURIComponent(item_id));
+
+            // Construct URL with query parameters safely
+            const params = new URLSearchParams({
+                type: 'edit',
+                uid: profile.uid
+            });
+            const full_url = `${endpoint}?${params.toString()}`;
+
+            // Make API request with timeout consideration
+            const response = await httpModule.req({
+                method: 'GET',
+                url: full_url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            // Validate response structure
+            if (!response) {
+                throw new Error('No response received from server');
+            }
+
+            if (response.status !== 200) {
+                throw new Error(`Server returned status ${response.status}`);
+            }
+
+            if (!response.data?.data) {
+                throw new Error('Invalid response structure');
+            }
+
+            return response.data.data;
+
+        } catch (error) {
+            // Log error for debugging (remove in production or use proper logging service)
+            console.error('Error in get_item_content_block_record:', error);
+
+            // Display user-friendly error message (prevent XSS)
+            if (message_element) {
+                // Create elements safely to prevent XSS
+                const alert_div = document.createElement('div');
+                alert_div.className = 'alert alert-danger';
+                alert_div.setAttribute('role', 'alert');
+
+                const icon = document.createElement('i');
+                icon.className = 'fa fa-exclamation';
+                alert_div.appendChild(icon);
+
+                // Use generic message to avoid leaking sensitive error details
+                const error_text = document.createTextNode(' Unable to load the content block record. Please try again.');
+                alert_div.appendChild(error_text);
+
+                // Clear and set new content
+                message_element.textContent = '';
+                message_element.appendChild(alert_div);
+            }
+
+            return null;
+        }
+    }
+
+    async function display_edit_record() {
+
+        // Helper function to check if current user is an administrator
+        const is_user_administrator = async () => {
+
+            try {
+                const profile = authModule.get_user_profile_data();
+                if (!profile || !profile.uid) {
+                    return false;
+                }
+
+                const user_id = parseInt(profile.uid, 10);
+                if (isNaN(user_id)) {
+                    return false;
+                }
+
+                const user_role = await authModule.get_user_role(user_id);
+                return user_role === 'Administrator';
+
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                return false;
+            }
+        };
+
+        // Helper function to disable all form fields
+        const disable_form_fields = async (is_admin) => {
+
+            // Get all form elements
+            const form_elements = document.querySelectorAll(
+                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
+            );
+
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
+
+            let disabled_count = 0;
+
+            form_elements.forEach(element => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && element.id === 'unlock-record') {
+                    console.debug('Preserving unlock button for administrator');
+                    return;
+                }
+
+                // Don't disable already disabled elements or read-only elements
+                if (!element.disabled && !element.readOnly) {
+                    element.disabled = true;
+                    element.style.cursor = 'not-allowed';
+                    element.style.opacity = '0.6';
+                    disabled_count++;
+                }
+            });
+
+            // Also disable file upload areas and custom buttons (except unlock button for admins)
+            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
+            custom_buttons.forEach(button => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && button.id === 'unlock-record') {
+                    return;
+                }
+
+                button.disabled = true;
+                button.style.cursor = 'not-allowed';
+                button.style.opacity = '0.6';
+            });
+
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
+        };
+
+        // Helper function to check if record is locked by another user
+        const is_locked_by_other_user = (record) => {
+
+            // Check if record is locked
+            if (!record || record.is_locked !== 1) {
+                return false;
+            }
+
+            // Get current user profile
+            const profile = authModule.get_user_profile_data();
+
+            if (!profile || !profile.uid) {
+                console.warn('Unable to get user profile data');
+                return false;
+            }
+
+            // Parse user IDs safely
+            const user_id = parseInt(profile.uid, 10);
+            const locked_by_user = parseInt(record.locked_by_user, 10);
+
+            // Check for valid numbers
+            if (isNaN(user_id) || isNaN(locked_by_user)) {
+                console.error('Invalid user ID values');
+                return false;
+            }
+
+            // Return true if locked by someone else
+            return user_id !== locked_by_user;
+        };
+
+        try {
+
+            // Fetch record data
+            const record = await get_item_content_block_record();
+
+            if (!record) {
+                throw new Error('Failed to load record data');
+            }
+
+            // Check if record is locked
+            await lockModule.check_if_locked(record, '#item-submit-card');
+
+            // Disable form fields if locked by another user
+            if (is_locked_by_other_user(record)) {
+                // Check if current user is an administrator
+                const is_admin = await is_user_administrator();
+
+                // Disable form fields, but preserve unlock button for admins
+                await disable_form_fields(is_admin);
+            }
+
+            // Setup automatic unlock when user navigates away (only if current user has it locked)
+            // setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
+
+            // Cache all DOM elements once
+            const dom_elements = cache_dom_elements();
+
+            // Validate and check record lock status
+            await lockModule.check_if_locked(record, '#item-submit-card');
+
+            // Display metadata (creation/update info)
+            display_metadata_info(record, dom_elements.created);
+
+            // Populate form fields
+            set_element_value(dom_elements.content_type_input, record.content_type);
+            set_rte_text('button-text-input', record.text);
+            set_rte_text('card-text-input', record.text);
+            set_rte_text('card-title-input', record.title);
+            set_rte_text('emphasis-text-input', record.text);
+            set_rte_text('quote-text-input', record.text);
+            set_element_value(dom_elements.button_size, record.size);
+            set_checkbox_state(dom_elements.button_transparent, !!record.transparent);
+            set_element_value(dom_elements.button_url_input, record.url);
+            set_element_value(dom_elements.divider_size, record.size);
+            set_element_value(dom_elements.quote_attribution_input, record.attribution);
+
+            // Set published status
+            set_published_status(record.is_published, dom_elements.is_published);
+
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "accent1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonContentBlockFormModule.wait_for_styles();
+                itemsCommonContentBlockFormModule.set_item_style(record.styles);
+            }
+
+            return false;
+
+        } catch (error) {
+            console.error('Error in display_edit_record:', error);
+            display_error_message('Unable to display the record. Please try again.');
+            return false;
+        }
+    }
+
+    /**
+     * Cache all required DOM elements to avoid repeated queries
+     */
+    function cache_dom_elements() {
+        return {
+            created: document.querySelector('#created'),
+            content_type_input: document.querySelector('#content-type'),
+            button_text_input: document.querySelector('#button-text-input'),
+            button_size: document.querySelector('#button-size'),
+            button_transparent: document.querySelector('#button-transparent'),
+            button_url_input: document.querySelector('#button-url-input'),
+            card_text_input: document.querySelector('#card-text-input'),
+            card_title_input: document.querySelector('#card-title-input'),
+            divider_size: document.querySelector('#divider-size'),
+            emphasis_text_input: document.querySelector('#emphasis-text-input'),
+            quote_text_input: document.querySelector('#quote-text-input'),
+            quote_attribution_input: document.querySelector('#quote-attribution-input'),
+            is_published: document.querySelector('#is-published'),
+        };
+    }
+
+    /**
+     * Display creation and update metadata securely
+     */
+    function display_metadata_info(record, created_element) {
+
+        if (!created_element || !record) {
+            return;
+        }
+
+        const metadata_parts = [];
+
+        // Add creation info
+        if (record.created_by && record.created) {
+            const create_date = new Date(record.created);
+
+            if (is_valid_date(create_date)) {
+                const create_date_time = helperModule.format_date(create_date);
+                const created_em = document.createElement('em');
+                created_em.textContent = `Created by ${record.created_by} on ${create_date_time}`;
+                metadata_parts.push(created_em);
+            }
+        }
+
+        // Add update info
+        if (record.updated_by && record.updated) {
+            const update_date = new Date(record.updated);
+
+            if (is_valid_date(update_date)) {
+                const update_date_time = helperModule.format_date(update_date);
+                const updated_em = document.createElement('em');
+                updated_em.textContent = `Last updated by ${record.updated_by} on ${update_date_time}`;
+                metadata_parts.push(updated_em);
+            }
+        }
+
+        // Clear existing content and append new content safely
+        created_element.textContent = '';
+
+        metadata_parts.forEach((part, index) => {
+            if (index > 0) {
+                created_element.appendChild(document.createTextNode(' | '));
+            }
+            created_element.appendChild(part);
+        });
+    }
+
+    /**
+     * Set content block text input value
+     */
+    function set_rte_text(id, text) {
+        rteModule.set_html(id, text ? helperModule.unescape(text) : '');
+    }
+
+    /**
+     * Set content block element value
+     */
+    function set_element_value(element, value) {
+        if (!element) {
+            return;
+        }
+
+        element.value = value;
+    }
+
+    /**
+     * Set content block checkbox value
+     */
+    const set_checkbox_state = (element, is_checked) => {
+        if (element) {
+            element.checked = Boolean(is_checked);
+        }
+    };
+
+    /**
+     * Set published status checkbox
+     */
+    function set_published_status(is_published, element) {
+        if (!element) {
+            return;
+        }
+
+        // Handle both numeric (0/1) and boolean values
+        const PUBLISHED_VALUES = [1, true, '1', 'true'];
+        element.checked = PUBLISHED_VALUES.includes(is_published);
+    }
+
+    /**
+     * Validate if a date object is valid
+     */
+    function is_valid_date(date) {
+        return date instanceof Date && !isNaN(date.getTime());
+    }
+
+    /**
+     * Display error message to user
+     */
+    function display_error_message(message) {
+        const message_element = document.querySelector('#message');
+
+        if (!message_element) {
+            return;
+        }
+
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-danger';
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation';
+        alert_div.appendChild(icon);
+
+        const text_node = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text_node);
+
+        message_element.textContent = '';
+        message_element.appendChild(alert_div);
+    }
+
+    /**
+     * Update item content block record
+     * @returns {Promise<boolean>}
+     */
+    obj.update_item_content_block_record = async function() {
+        // Prevent duplicate submissions
+        if (this._is_updating) {
+            return false;
+        }
+
+        this._is_updating = true;
+
+        try {
+            // Cache DOM element
+            const message_element = document.querySelector('#message');
+
+            // Scroll to top for user feedback
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+            // Show loading state
+            display_status_message(message_element, 'info', 'Updating content block record...');
+
+            // Validate required parameters
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+
+            if (!exhibit_id || !item_id) {
+                display_status_message(message_element, 'danger', 'Missing required record identifiers');
+                return false;
+            }
+
+            // Validate authentication
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                display_status_message(message_element, 'danger', 'Session expired. Redirecting to login...');
+
+                setTimeout(() => {
+                    authModule.logout();
+                }, 1000);
+
+                return false;
+            }
+
+            // Get and validate form data
+            const form_data = itemsCommonContentBlockFormModule.get_common_content_block_item_form_fields();
+
+            if (!form_data || form_data === false) {
+                display_status_message(message_element, 'danger', 'Invalid form data. Please check all required fields.');
+                return false;
+            }
+
+            // Add metadata
+            const user_name = helperModule.get_user_name();
+            if (user_name) {
+                form_data.updated_by = user_name;
+            }
+
+            // Construct endpoint with URL encoding
+            const endpoint = construct_update_endpoint(exhibit_id, item_id);
+
+            // Make API request
+            const response = await make_update_request(endpoint, form_data, token);
+
+            // Handle successful response
+            if (response && response.status === 201) {
+                display_status_message(message_element, 'success', 'content block record updated successfully');
+
+                // Refresh the display with updated data instead of reloading
+                await refresh_record_display();
+
+                // Auto-dismiss success message after a delay
+                setTimeout(() => {
+                    clear_status_message(message_element);
+                }, 3000);
+
+                return true;
+            } else {
+                throw new Error('Unexpected response from server');
+            }
+
+        } catch (error) {
+            console.error('Error updating content block record:', error);
+
+            const message_element = document.querySelector('#message');
+            const error_message = get_user_friendly_error_message(error);
+            display_status_message(message_element, 'danger', error_message);
+
+            return false;
+
+        } finally {
+            // Reset submission flag
+            this._is_updating = false;
+        }
+    };
+
+    /**
+     * Refresh the record display without reloading the page
+     */
+    async function refresh_record_display() {
+        try {
+            // Re-fetch and display the updated record
+            if (typeof display_edit_record === 'function') {
+                await display_edit_record();
+            }
+
+            // Reset any form states that need resetting
+            reset_form_states();
+
+        } catch (error) {
+            console.error('Error refreshing display:', error);
+            // Don't throw - we already saved successfully
+        }
+    }
+
+    /**
+     * Reset form states after successful update
+     */
+    function reset_form_states() {
+        // Disable save button temporarily to prevent duplicate saves
+        const submit_button = document.querySelector('#item-submit-card button[type="submit"]');
+        if (submit_button) {
+            submit_button.disabled = true;
+
+            // Re-enable after a short delay
+            setTimeout(() => {
+                submit_button.disabled = false;
+            }, 1000);
+        }
+
+        // Clear any unsaved changes warnings
+        window.onbeforeunload = null;
+    }
+
+    /**
+     * Display status message to user (XSS-safe)
+     */
+    function display_status_message(element, type, message) {
+        if (!element) {
+            return;
+        }
+
+        // Validate message type
+        const valid_types = ['info', 'success', 'danger', 'warning'];
+        const alert_type = valid_types.includes(type) ? type : 'info';
+
+        // Create alert container
+        const alert_div = document.createElement('div');
+        alert_div.className = `alert alert-${alert_type}`;
+        alert_div.setAttribute('role', 'alert');
+
+        // Add icon based on type
+        const icon = document.createElement('i');
+        icon.className = get_icon_class(alert_type);
+        alert_div.appendChild(icon);
+
+        // Add message text
+        const text_node = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text_node);
+
+        // Clear and set new content
+        element.textContent = '';
+        element.appendChild(alert_div);
+    }
+
+    /**
+     * Clear status message
+     */
+    function clear_status_message(element) {
+
+        if (!element) {
+            return;
+        }
+
+        // Fade out effect (if you want animation)
+        element.style.transition = 'opacity 0.3s ease-out';
+        element.style.opacity = '0';
+
+        setTimeout(() => {
+            element.textContent = '';
+            element.style.opacity = '1';
+        }, 300);
+    }
+
+    /**
+     * Get appropriate icon class for alert type
+     */
+    function get_icon_class(alert_type) {
+        const icon_map = {
+            'info': 'fa fa-info',
+            'success': 'fa fa-check',
+            'danger': 'fa fa-exclamation',
+            'warning': 'fa fa-exclamation-triangle'
+        };
+
+        return icon_map[alert_type] || 'fa fa-info';
+    }
+
+    /**
+     * Construct update endpoint with URL encoding
+     */
+    function construct_update_endpoint(exhibit_id, item_id) {
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.content_block_records?.put?.endpoint) {
+            throw new Error('API endpoint configuration missing');
+        }
+
+        const endpoint_template = EXHIBITS_ENDPOINTS.exhibits.content_block_records.put.endpoint;
+
+        return endpoint_template
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+            .replace(':content_block_id', encodeURIComponent(item_id));
+    }
+
+    /**
+     * Make the update request to the API
+     */
+    async function make_update_request(endpoint, data, token) {
+        if (!httpModule?.req) {
+            throw new Error('HTTP module not available');
+        }
+
+        const response = await httpModule.req({
+            method: 'PUT',
+            url: endpoint,
+            data: data,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        return response;
+    }
+
+    /**
+     * Get user-friendly error message
+     */
+    function get_user_friendly_error_message(error) {
+        // Map specific errors to user-friendly messages
+        const error_messages = {
+            'NetworkError': 'Network connection error. Please check your internet connection.',
+            'TimeoutError': 'Request timed out. Please try again.',
+            'AbortError': 'Request was cancelled. Please try again.'
+        };
+
+        // Check for specific error types
+        if (error.name && error_messages[error.name]) {
+            return error_messages[error.name];
+        }
+
+        // Check for HTTP status codes
+        if (error.response?.status) {
+            const status = error.response.status;
+
+            if (status === 401 || status === 403) {
+                return 'Authentication failed. Please log in again.';
+            } else if (status === 404) {
+                return 'Record not found.';
+            } else if (status === 422) {
+                return 'Invalid data submitted. Please check your inputs.';
+            } else if (status >= 500) {
+                return 'Server error. Please try again later.';
+            }
+        }
+
+        // Generic fallback message
+        return 'Unable to update content block record. Please try again.';
+    }
+
+    obj.init = async function () {
+
+        try {
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const content_block_id = helperModule.get_parameter_by_name('item_id');
+
+            const redirect = '/items/content-block/details?exhibit_id=' + exhibit_id + '&item_id=' + content_block_id + '&status=403';
+            await authModule.check_permissions(['update_item', 'update_any_item'], 'content block', exhibit_id, content_block_id, redirect);
+            await exhibitsModule.set_exhibit_title(exhibit_id);
+
+            domModule.on('#save-item-btn', 'click', await itemsEditContentBlockFormModule.update_item_content_block_record);
+            await display_edit_record();
+
+        } catch (error) {
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
+        }
+    };
+
+    return obj;
+
+}());

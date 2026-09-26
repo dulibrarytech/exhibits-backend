@@ -570,6 +570,77 @@ const itemsListDisplayModule = (function() {
         }
     };
 
+
+    /**
+     * Display content block items
+     */
+    obj.display_content_block_items = async function(item) {
+
+        try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid content block item data');
+            }
+
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}`;
+
+            // Order cell
+            tr.appendChild(create_order_cell(item.order));
+
+            // Compact item cell
+            const title = helperModule.strip_html(helperModule.unescape(item.title || item.text || ''));
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = `${APP_PATH}/items/content-block/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: item.content_type,
+                type_icon_class: 'ti-widget',
+                thumbnail_img: null,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
+
+            // Child items cell (empty for content-blocks)
+            tr.appendChild(build_child_items_cell());
+
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
+            status_td.appendChild(status_small);
+            tr.appendChild(status_td);
+
+            // Actions dropdown
+            const edit_url = item.is_published === 1
+                ? `${APP_PATH}/items/content-block/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/content-block/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=content-block`;
+
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published,
+                item_title: title
+            }));
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+            return container.innerHTML;
+
+        } catch (error) {
+            console.error('Error displaying content block item:', error);
+            display_error_message(error.message || 'Unable to display content block item');
+            return '';
+        }
+    };
+
     /**
      * Display grid items
      */

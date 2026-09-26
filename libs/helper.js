@@ -500,7 +500,7 @@ const Helper = class {
             }
 
             // Validate required tables exist
-            const required_tables = ['heading_records', 'item_records', 'grid_records', 'timeline_records'];
+            const required_tables = ['heading_records', 'content_block_records', 'item_records', 'grid_records', 'timeline_records'];
             for (const table_name of required_tables) {
                 if (!tables[table_name]) {
                     throw new Error(`Table "${table_name}" is not defined`);
@@ -523,8 +523,13 @@ const Helper = class {
                 is_deleted: 0
             };
 
-            const [heading_order, item_order, grid_order, timeline_order] = await Promise.all([
+            const [heading_order, content_block_order, item_order, grid_order, timeline_order] = await Promise.all([
                 db(tables.heading_records)
+                    .select('order')
+                    .where(where_clause)
+                    .timeout(10000),
+
+                db(tables.content_block_records)
                     .select('order')
                     .where(where_clause)
                     .timeout(10000),
@@ -547,7 +552,7 @@ const Helper = class {
 
             // ===== MERGE ALL ORDERS =====
 
-            const merged = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
+            const merged = [...heading_order, ...content_block_order, ...item_order, ...grid_order, ...timeline_order];
 
             // ===== GET NEXT ORDER NUMBER =====
 
@@ -650,7 +655,7 @@ const Helper = class {
     }
 
     /**
-     * Gets all exhibit content items (headings, items, grids, timelines) with normalized order
+     * Gets all exhibit content items (headings, content blocks, items, grids, timelines) with normalized order
      * Removes gaps in order sequence and reorders from 1
      * @param {string} uuid - The exhibit UUID
      * @param {Object} db - Database connection instance
@@ -676,7 +681,7 @@ const Helper = class {
             }
 
             // Validate required tables exist
-            const required_tables = ['heading_records', 'item_records', 'grid_records', 'timeline_records'];
+            const required_tables = ['heading_records', 'content_block_records', 'item_records', 'grid_records', 'timeline_records'];
             for (const table_name of required_tables) {
                 if (!tables[table_name]) {
                     throw new Error(`Table "${table_name}" is not defined`);
@@ -700,12 +705,18 @@ const Helper = class {
             };
 
             // Query each table with type identifier
-            const [heading_order, item_order, grid_order, timeline_order] = await Promise.all([
+            const [heading_order, content_block_order, item_order, grid_order, timeline_order] = await Promise.all([
                 db(tables.heading_records)
                     .select('uuid', 'order')
                     .where(where_clause)
                     .timeout(10000)
                     .then(results => results.map(item => ({ ...item, type: 'heading' }))),
+
+                db(tables.content_block_records)
+                    .select('uuid', 'order')
+                    .where(where_clause)
+                    .timeout(10000)
+                    .then(results => results.map(item => ({ ...item, type: 'content block' }))),
 
                 db(tables.item_records)
                     .select('uuid', 'order')
@@ -728,7 +739,7 @@ const Helper = class {
 
             // ===== COMBINE ALL ITEMS =====
 
-            const all_items = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
+            const all_items = [...heading_order, ...content_block_order, ...item_order, ...grid_order, ...timeline_order];
 
             // ===== HANDLE EMPTY RESULT =====
 
@@ -762,6 +773,7 @@ const Helper = class {
 
             const counts_by_type = {
                 heading: reordered_items.filter(i => i.type === 'heading').length,
+                content_block: reordered_items.filter(i => i.type === 'content block').length,
                 item: reordered_items.filter(i => i.type === 'item').length,
                 grid: reordered_items.filter(i => i.type === 'grid').length,
                 timeline: reordered_items.filter(i => i.type === 'timeline').length
@@ -818,6 +830,7 @@ const Helper = class {
             // Group items by type
             const items_by_type = {
                 heading: reordered_items.filter(i => i.type === 'heading'),
+                content_block: reordered_items.filter(i => i.type === 'content block'),
                 item: reordered_items.filter(i => i.type === 'item'),
                 grid: reordered_items.filter(i => i.type === 'grid'),
                 timeline: reordered_items.filter(i => i.type === 'timeline')
@@ -825,6 +838,7 @@ const Helper = class {
 
             const type_to_table = {
                 heading: tables.heading_records,
+                content_block: tables.content_block_records,
                 item: tables.item_records,
                 grid: tables.grid_records,
                 timeline: tables.timeline_records

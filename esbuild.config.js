@@ -53,6 +53,12 @@ const sources = [
     'public/app/heading-items/items.details.heading.item.module.js',
     'public/app/heading-items/items.edit.heading.form.module.js',
 
+    // content-block-items
+    'public/app/content-block-items/items.add.content.block.item.form.module.js',
+    'public/app/content-block-items/items.common.content.block.item.form.module.js',
+    'public/app/content-block-items/items.details.content.block.item.module.js',
+    'public/app/content-block-items/items.edit.content.block.item.form.module.js',
+
     // standard-items
     'public/app/standard-items/items.add.standard.item.form.module.js',
     'public/app/standard-items/items.common.standard.item.form.module.js',

@@ -296,6 +296,9 @@ const itemsModule = (function() {
                     case 'vertical_timeline':
                         item_data += await itemsListDisplayModule.display_timelines(record);
                         break;
+                    case 'content block':
+                        item_data += await itemsListDisplayModule.display_content_block_items(record);
+                        break;
                     default:
                         console.warn(`Unknown item type: ${type}`);
                 }
@@ -914,6 +917,15 @@ const itemsModule = (function() {
                 edit_url = is_published
                     ? `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
                     : `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
+                break;
+
+            case 'content-block':
+                item_category = 'content-block';
+                edit_url = is_published
+                    ? `${APP_PATH}/items/content-block/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/content-block/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
                 edit_label = is_published ? 'Details' : 'Edit';
                 edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;

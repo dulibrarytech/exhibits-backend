@@ -409,6 +409,12 @@ const exhibitsDetailsModule = (function () {
                 set_element_value(config.backgroundColor.picker, section_styles.backgroundColor);
             }
 
+            // Accent color
+            if (section_styles.accentColor) {
+                set_element_value(config.accentColor.input, section_styles.accentColor);
+                set_element_value(config.accentColor.picker, section_styles.accentColor);
+            }
+
             // Font color
             if (section_styles.color) {
                 set_element_value(config.color.input, section_styles.color);

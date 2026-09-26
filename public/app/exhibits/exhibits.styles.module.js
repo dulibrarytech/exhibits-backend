@@ -32,9 +32,12 @@ const exhibitsStylesModule = (function () {
         'introduction',
         'navigation',
         'heading1',
+        'accent1',
         'item1',
         'heading2',
         'heading3',
+        'accent2',
+        'accent3',
         'item2',
         'item3'
     ];
@@ -47,6 +50,7 @@ const exhibitsStylesModule = (function () {
         'introduction',
         'navigation',
         'heading1',
+        'accent1',
         'item1'
     ];
 
@@ -58,9 +62,12 @@ const exhibitsStylesModule = (function () {
         introduction: 'Exhibit Introduction',
         navigation: 'Navigation Menu',
         heading1: 'Heading Style 1',
+        accent1: 'Accent Style 1',
         item1: 'Item Style 1',
         heading2: 'Heading Style 2',
         heading3: 'Heading Style 3',
+        accent2: 'Accent Style 2',
+        accent3: 'Accent Style 3',
         item2: 'Item Style 2',
         item3: 'Item Style 3'
     };
@@ -71,6 +78,7 @@ const exhibitsStylesModule = (function () {
      */
     const PROPERTY_LABELS = {
         backgroundColor: 'Background Color',
+        accentColor: 'Accent Color',
         color: 'Font Color',
         fontSize: 'Font Size',
         fontFamily: 'Font'
@@ -86,6 +94,12 @@ const exhibitsStylesModule = (function () {
             suffix: '-background-color',
             picker_suffix: '-background-color-picker',
             swatch_role: 'bg',
+            transform: null
+        },
+        accentColor: {
+            suffix: '-accent-color',
+            picker_suffix: '-accent-color-picker',
+            swatch_role: 'accent',
             transform: null
         },
         color: {
@@ -435,6 +449,13 @@ const exhibitsStylesModule = (function () {
                     set_element_value('#' + key + '-background-color', section_data.backgroundColor);
                     set_element_value('#' + key + '-background-color-picker', section_data.backgroundColor);
                     update_swatch(key, 'bg', section_data.backgroundColor);
+                }
+
+                // Accent color
+                if (section_data.accentColor) {
+                    set_element_value('#' + key + '-accent-color', section_data.accentColor);
+                    set_element_value('#' + key + '-accent-color-picker', section_data.accentColor);
+                    update_swatch(key, 'accent', section_data.accentColor);
                 }
 
                 // Font color
