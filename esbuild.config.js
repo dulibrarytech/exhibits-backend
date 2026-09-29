@@ -39,12 +39,16 @@ const sources = [
     // grid-items
     'public/app/grid-items/items.add.grid.form.module.js',
     'public/app/grid-items/items.add.grid.item.form.module.js',
+    'public/app/grid-items/items.add.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.common.grid.form.module.js',
     'public/app/grid-items/items.common.grid.item.form.module.js',
+    'public/app/grid-items/items.common.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.details.grid.module.js',
     'public/app/grid-items/items.details.grid.item.module.js',
+    'public/app/grid-items/items.details.content.block.grid.item.module.js',
     'public/app/grid-items/items.edit.grid.form.module.js',
     'public/app/grid-items/items.edit.grid.item.form.module.js',
+    'public/app/grid-items/items.edit.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.grid.module.js',
 
     // heading-items

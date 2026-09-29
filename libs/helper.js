@@ -716,7 +716,7 @@ const Helper = class {
                     .select('uuid', 'order')
                     .where(where_clause)
                     .timeout(10000)
-                    .then(results => results.map(item => ({ ...item, type: 'content block' }))),
+                    .then(results => results.map(item => ({ ...item, type: 'content-block' }))),
 
                 db(tables.item_records)
                     .select('uuid', 'order')
@@ -773,7 +773,7 @@ const Helper = class {
 
             const counts_by_type = {
                 heading: reordered_items.filter(i => i.type === 'heading').length,
-                content_block: reordered_items.filter(i => i.type === 'content block').length,
+                content_block: reordered_items.filter(i => i.type === 'content-block').length,
                 item: reordered_items.filter(i => i.type === 'item').length,
                 grid: reordered_items.filter(i => i.type === 'grid').length,
                 timeline: reordered_items.filter(i => i.type === 'timeline').length
@@ -830,7 +830,7 @@ const Helper = class {
             // Group items by type
             const items_by_type = {
                 heading: reordered_items.filter(i => i.type === 'heading'),
-                content_block: reordered_items.filter(i => i.type === 'content block'),
+                content_block: reordered_items.filter(i => i.type === 'content-block'),
                 item: reordered_items.filter(i => i.type === 'item'),
                 grid: reordered_items.filter(i => i.type === 'grid'),
                 timeline: reordered_items.filter(i => i.type === 'timeline')

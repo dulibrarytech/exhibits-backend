@@ -659,11 +659,11 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
 
         const ALLOWED_FIELDS = [
             'uuid', 'is_member_of_grid', 'is_member_of_exhibit',
-            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type',
+            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type', 'url',
             'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'description',
-            'type', 'layout', 'media_width', 'media_padding', 'alt_text',
-            'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
-            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
+            'type', 'layout', 'media_width', 'media_padding', 'alt_text', 'attribution', 'size',
+            'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles', 'content_type',
+            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded', 'transparent',
             'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'is_deleted',
             'owner'
         ];
@@ -1006,12 +1006,12 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
     async update_grid_item_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption',
-            'item_type', 'mime_type', 'media', 'media_uuid', 'text', 'wrap_text',
+            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'transparent', 'content_type',
+            'item_type', 'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'size',
             'description', 'type', 'layout', 'media_width', 'media_padding', 'alt_text',
             'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
-            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
-            'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'owner'
+            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded', 'attribution',
+            'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'owner', 'url'
         ];
 
         try {

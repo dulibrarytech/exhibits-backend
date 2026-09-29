@@ -1,0 +1,44 @@
+<%- include('../partials/header.ejs'); %>
+<body>
+<%- include('../partials/skip-link.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
+<div id="right-panel" class="right-panel">
+    <%- include('../partials/main-header.ejs'); %>
+    <main id="main" class="content" tabindex="-1">
+        <div id="message"></div>
+        <h1><span id="exhibit-title"></span> - Grid Content Block Item</h1>
+
+        <%- include('partials/item-grid-item-content-block-data-card.ejs'); %>
+
+        <input type="radio"
+               name="layout"
+               id="item-layout-content-block"
+               value="content-block" checked style="visibility: hidden" />
+        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-item-btn">
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>Grid Item</small></div>
+        </div>
+    </main>
+    <div class="clearfix"></div>
+    <%- include('../partials/footer.ejs'); %>
+</div>
+<!-- libs -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
+<!-- app -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.content.block.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.add.content.block.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script>
+    navModule.wire_nav_links();
+    itemsCommonContentBlockGridItemFormModule.init();
+    itemsAddContentBlockGridItemFormModule.init();
+</script>
+</body>
+</html>

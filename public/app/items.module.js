@@ -296,7 +296,7 @@ const itemsModule = (function() {
                     case 'vertical_timeline':
                         item_data += await itemsListDisplayModule.display_timelines(record);
                         break;
-                    case 'content block':
+                    case 'content-block':
                         item_data += await itemsListDisplayModule.display_content_block_items(record);
                         break;
                     default:

@@ -14,6 +14,12 @@ exports.up = function(knex) {
     table.dropColumn('text_alignment');
     table.dropColumn('margins');
     table.dropColumn('internal_name');
+  })).then(() => knex.schema.alterTable('tbl_grid_items', (table) => {
+    table.string('size');
+    table.string('url');
+    table.string('attribution');
+    table.string('content_type');
+    table.boolean('transparent');
   }));
 };
 

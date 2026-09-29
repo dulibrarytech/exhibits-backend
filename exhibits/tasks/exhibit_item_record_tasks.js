@@ -83,6 +83,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             'item': 'item_records',
             'grid': 'grid_records',
             'heading': 'heading_records',
+            'content-block': 'content_block_records',
             'timeline': 'timeline_records',
             'standard_item': 'item_records',
             'grid_item': 'grid_item_records',

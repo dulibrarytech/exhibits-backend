@@ -16,7 +16,7 @@
 
  */
 
-const itemsEditContentBlockFormModule = (function () {
+const itemsEditContentBlockGridItemFormModule = (function () {
 
     'use strict';
 
@@ -33,9 +33,10 @@ const itemsEditContentBlockFormModule = (function () {
 
             // Validate required parameters early
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
 
-            if (!exhibit_id || !item_id) {
+            if (!exhibit_id || !grid_id || !item_id) {
                 throw new Error('Missing required parameters: exhibit_id or item_id');
             }
 
@@ -61,9 +62,10 @@ const itemsEditContentBlockFormModule = (function () {
             }
 
             // Safely construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.content_block_records.get.endpoint
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint
                 .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':content_block_id', encodeURIComponent(item_id));
+                .replace(':grid_id', encodeURIComponent(grid_id))
+                .replace(':item_id', encodeURIComponent(item_id));
 
             // Construct URL with query parameters safely
             const params = new URLSearchParams({
@@ -281,8 +283,8 @@ const itemsEditContentBlockFormModule = (function () {
             // Style keys are simple strings like "accent1"; skip "{}" (prepare_styles default) and legacy JSON blobs
             if (record.styles && typeof record.styles === 'string'
                 && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
-                await itemsCommonContentBlockFormModule.wait_for_styles();
-                itemsCommonContentBlockFormModule.set_item_style(record.styles);
+                await itemsCommonContentBlockGridItemFormModule.wait_for_styles();
+                itemsCommonContentBlockGridItemFormModule.set_item_style(record.styles);
             }
 
             return false;
@@ -457,6 +459,7 @@ const itemsEditContentBlockFormModule = (function () {
 
             // Validate required parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
 
             if (!exhibit_id || !item_id) {
@@ -478,7 +481,7 @@ const itemsEditContentBlockFormModule = (function () {
             }
 
             // Get and validate form data
-            const form_data = itemsCommonContentBlockFormModule.get_common_content_block_item_form_fields();
+            const form_data = itemsCommonContentBlockGridItemFormModule.get_common_content_block_item_form_fields();
 
             if (!form_data || form_data === false) {
                 display_status_message(message_element, 'danger', 'Invalid form data. Please check all required fields.');
@@ -492,7 +495,10 @@ const itemsEditContentBlockFormModule = (function () {
             }
 
             // Construct endpoint with URL encoding
-            const endpoint = construct_update_endpoint(exhibit_id, item_id);
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':grid_id', encodeURIComponent(grid_id))
+                .replace(':item_id', encodeURIComponent(item_id));
 
             // Make API request
             const response = await make_update_request(endpoint, form_data, token);
@@ -632,21 +638,6 @@ const itemsEditContentBlockFormModule = (function () {
     }
 
     /**
-     * Construct update endpoint with URL encoding
-     */
-    function construct_update_endpoint(exhibit_id, item_id) {
-        if (!EXHIBITS_ENDPOINTS?.exhibits?.content_block_records?.put?.endpoint) {
-            throw new Error('API endpoint configuration missing');
-        }
-
-        const endpoint_template = EXHIBITS_ENDPOINTS.exhibits.content_block_records.put.endpoint;
-
-        return endpoint_template
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-            .replace(':content_block_id', encodeURIComponent(item_id));
-    }
-
-    /**
      * Make the update request to the API
      */
     async function make_update_request(endpoint, data, token) {
@@ -708,12 +699,11 @@ const itemsEditContentBlockFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const content_block_id = helperModule.get_parameter_by_name('item_id');
-
-            const redirect = '/items/content-block/details?exhibit_id=' + exhibit_id + '&item_id=' + content_block_id + '&status=403';
+            const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + content_block_id + '&status=403';
             await authModule.check_permissions(['update_item', 'update_any_item'], 'content-block', exhibit_id, content_block_id, redirect);
             await exhibitsModule.set_exhibit_title(exhibit_id);
 
-            domModule.on('#save-item-btn', 'click', await itemsEditContentBlockFormModule.update_item_content_block_record);
+            domModule.on('#save-item-btn', 'click', await itemsEditContentBlockGridItemFormModule.update_item_content_block_record);
             await display_edit_record();
 
         } catch (error) {

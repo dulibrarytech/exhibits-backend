@@ -200,7 +200,7 @@ exports.publish_item_record = async function (req, res) {
         const publish_handlers = {
             item: ITEMS_MODEL.publish_item_record,
             heading: HEADINGS_MODEL.publish_heading_record,
-            content_block: CONTENT_BLOCKS_MODEL.publish_content_block_record,
+            'content-block': CONTENT_BLOCKS_MODEL.publish_content_block_record,
             grid: GRIDS_MODEL.publish_grid_record,
             timeline: TIMELINES_MODEL.publish_timeline_record
         };
@@ -255,7 +255,7 @@ exports.suppress_item_record = async function (req, res) {
         const suppress_handlers = {
             item: ITEMS_MODEL.suppress_item_record,
             heading: HEADINGS_MODEL.suppress_heading_record,
-            content_block: CONTENT_BLOCKS_MODEL.suppress_content_block_record,
+            'content-block': CONTENT_BLOCKS_MODEL.suppress_content_block_record,
             grid: GRIDS_MODEL.suppress_grid_record,
             timeline: TIMELINES_MODEL.suppress_timeline_record
         };
@@ -312,7 +312,7 @@ exports.reorder_items = async function (req, res) {
             return;
         }
 
-        const valid_types = ['item', 'grid', 'heading', 'subheading', 'timeline', 'griditem'];
+        const valid_types = ['item', 'grid', 'heading', 'content-block', 'subheading', 'timeline', 'griditem'];
 
         // Validate all items before processing
         for (const item of updated_order) {

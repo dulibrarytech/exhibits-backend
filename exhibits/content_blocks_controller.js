@@ -37,7 +37,7 @@ exports.create_content_block_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'content block';
+        options.record_type = 'content-block';
         options.parent_id = is_member_of_exhibit;
         options.child_id = null;
 
@@ -126,7 +126,7 @@ exports.update_content_block_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'content block';
+        options.record_type = 'content-block';
         options.parent_id = is_member_of_exhibit;
         options.child_id = content_block_id;
 

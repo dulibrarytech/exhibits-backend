@@ -793,13 +793,13 @@ exports.reorder_exhibit_items = async (exhibit_id, updated_order, updated_by = n
         // grid items scope to their grid (is_member_of_grid), everything else to the
         // exhibit (is_member_of_exhibit).
         const TYPE_MAP = {
-            item:          { table: TABLES.item_records,          scope_column: 'is_member_of_exhibit' },
-            grid:          { table: TABLES.grid_records,          scope_column: 'is_member_of_exhibit' },
-            heading:       { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
-            content_block: { table: TABLES.content_block_records, scope_column: 'is_member_of_exhibit' },
-            subheading:    { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
-            timeline:      { table: TABLES.timeline_records,      scope_column: 'is_member_of_exhibit' },
-            griditem:      { table: TABLES.grid_item_records,     scope_column: 'is_member_of_grid' }
+            item:            { table: TABLES.item_records,          scope_column: 'is_member_of_exhibit' },
+            grid:            { table: TABLES.grid_records,          scope_column: 'is_member_of_exhibit' },
+            heading:         { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
+            'content-block': { table: TABLES.content_block_records, scope_column: 'is_member_of_exhibit' },
+            subheading:      { table: TABLES.heading_records,       scope_column: 'is_member_of_exhibit' },
+            timeline:        { table: TABLES.timeline_records,      scope_column: 'is_member_of_exhibit' },
+            griditem:        { table: TABLES.grid_item_records,     scope_column: 'is_member_of_grid' }
         };
 
         // Group rows by (table, scope value).
@@ -925,7 +925,7 @@ exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
             ops.set(`item:${row.uuid}`, () => INDEXER_MODEL.index_item_record(exhibit_id, row.uuid));
         } else if ((row.type === 'heading' || row.type === 'subheading') && is_valid_uuid(row.uuid)) {
             ops.set(`heading:${row.uuid}`, () => INDEXER_MODEL.index_heading_record(exhibit_id, row.uuid));
-        } else if ((row.type === 'content block') && is_valid_uuid(row.uuid)) {
+        } else if ((row.type === 'content-block') && is_valid_uuid(row.uuid)) {
             ops.set(`content-block:${row.uuid}`, () => INDEXER_MODEL.index_content_block_record(exhibit_id, row.uuid));
         } else if (row.type === 'grid' && is_valid_uuid(row.uuid)) {
             ops.set(`grid:${row.uuid}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.uuid));

@@ -46,7 +46,7 @@ const Exhibit_content_block_record_tasks = class extends Base_tasks {
      */
     _set_content_block_defaults(data) {
         const defaults = {
-            type: 'content block',
+            type: 'content-block',
             order: 0,
             is_visible: 1,
             is_published: 0,

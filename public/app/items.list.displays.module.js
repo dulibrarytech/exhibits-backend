@@ -575,7 +575,7 @@ const itemsListDisplayModule = (function() {
      * Display content block items
      */
     obj.display_content_block_items = async function(item) {
-
+        
         try {
             // Validate required data
             if (!item || !item.uuid) {
@@ -733,7 +733,7 @@ const itemsListDisplayModule = (function() {
             let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
             let thumbnail_element = null;
 
-            if (item.item_type !== 'text') {
+            if (!['text', 'content_block'].includes(item.item_type)) {
 
                 // ── Media library asset path (preferred) ──
                 if (item.thumbnail_media_uuid || item.media_uuid) {
@@ -834,7 +834,8 @@ const itemsListDisplayModule = (function() {
                 'image': 'fa fa-image',
                 'video': 'fa fa-file-video-o',
                 'audio': 'fa fa-file-audio-o',
-                'pdf': 'fa fa-file-pdf-o'
+                'pdf': 'fa fa-file-pdf-o',
+                'content_block': 'ti ti-widget'
             };
             const type_icon_class = icon_map[item.item_type] || 'fa fa-file-o';
 
@@ -844,12 +845,14 @@ const itemsListDisplayModule = (function() {
             const item_id = encodeURIComponent(item.uuid);
             const details_url = item.item_type === 'text'
                 ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                : `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                : item.item_type === 'media'
+                    ? `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
 
             // Compact item cell
             tr.appendChild(build_compact_item_cell({
                 title: title,
-                type_label: 'grid item',
+                type_label: (item.item_type === 'content_block' ? item.content_type : item.item_type) + ' grid item',
                 type_icon_class: type_icon_class,
                 thumbnail_img: thumbnail_img,
                 is_locked: item.is_locked,
@@ -869,11 +872,15 @@ const itemsListDisplayModule = (function() {
             if (item.is_published === 1) {
                 edit_url = item.item_type === 'text'
                     ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                    : `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                    : item.item_type === 'media'
+                        ?  `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                        :  `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
             } else {
                 edit_url = item.item_type === 'text'
                     ? `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                    : `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                    : item.item_type === 'media'
+                        ? `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                        : `${APP_PATH}/items/grid/item/content-block/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
             }
 
             const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;

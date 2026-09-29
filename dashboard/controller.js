@@ -203,7 +203,8 @@ const NAV_CONFIGS = {
         },
         links: [
             { id: 'grid-media-item-link', label: 'Add Media Grid Item', icon: 'ti-image', nav_path: '/items/grid/item/media?exhibit_id={exhibit_id}&grid_id={grid_id}' },
-            { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'ti-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' }
+            { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'ti-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' },
+            { id: 'grid-content-block-item-link', label: 'Add Content Block Item', icon: 'ti-widget', nav_path: '/items/grid/item/content-block?exhibit_id={exhibit_id}&grid_id={grid_id}' }
         ]
     },
 
@@ -530,6 +531,13 @@ exports.get_dashboard_grid_add_text_item_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_grid_add_content_block_item_form = function (req, res) {
+    res.render('dist/grid-items/dashboard-grid-add-content-block-item-form', {
+        ...template_config,
+        nav: NAV_CONFIGS.grid_item_form
+    });
+};
+
 exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
     res.render('dist/grid-items/dashboard-grid-edit-media-item-form', {
         ...template_config,
@@ -544,6 +552,13 @@ exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_grid_edit_content_block_item_form = function (req, res) {
+    res.render('dist/grid-items/dashboard-grid-edit-content-block-item-form', {
+        ...template_config,
+        nav: NAV_CONFIGS.grid_item_form
+    });
+};
+
 exports.get_dashboard_grid_item_media_details = function (req, res) {
     res.render('dist/grid-items/dashboard-grid-item-media-details', {
         ...template_config,
@@ -553,6 +568,13 @@ exports.get_dashboard_grid_item_media_details = function (req, res) {
 
 exports.get_dashboard_grid_item_text_details = function (req, res) {
     res.render('dist/grid-items/dashboard-grid-item-text-details', {
+        ...template_config,
+        nav: NAV_CONFIGS.grid_item_details
+    });
+};
+
+exports.get_dashboard_grid_item_content_block_details = function (req, res) {
+    res.render('dist/grid-items/dashboard-grid-item-content-block-details', {
         ...template_config,
         nav: NAV_CONFIGS.grid_item_details
     });

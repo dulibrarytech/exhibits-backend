@@ -96,17 +96,26 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/item/text')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_text_item_form);
 
+    app.route(APP_PATH + '/items/grid/item/content-block')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_content_block_item_form);
+
     app.route(APP_PATH + '/items/grid/item/media/details')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_media_details);
 
     app.route(APP_PATH + '/items/grid/item/text/details')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_text_details);
 
+    app.route(APP_PATH + '/items/grid/item/content-block/details')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_content_block_details);
+
     app.route(APP_PATH + '/items/grid/item/media/edit')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_media_item_form);
 
     app.route(APP_PATH + '/items/grid/item/text/edit')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_text_item_form);
+
+    app.route(APP_PATH + '/items/grid/item/content-block/edit')
+        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_content_block_item_form);
 
     app.route(APP_PATH + '/items/grid/items')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_grid_items);
