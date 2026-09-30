@@ -5,6 +5,7 @@ const mediaEndpoints = require('./media-endpoints');
 const gridEndpoints = require('./grid-endpoints');
 const itemEndpoints = require('./item-endpoints');
 const headingEndpoints = require('./heading-endpoints');
+const contentBlockEndpoints = require('./content-block-endpoints');
 const timelineEndpoints = require('./timeline-endpoints');
 const workflowEndpoints = require('./workflow-endpoints');
 const utilityEndpoints = require('./utility-endpoints');
@@ -16,6 +17,7 @@ const ENDPOINTS = {
         ...gridEndpoints,
         ...itemEndpoints,
         ...headingEndpoints,
+        ...contentBlockEndpoints,
         ...timelineEndpoints,
         ...workflowEndpoints,
         ...utilityEndpoints

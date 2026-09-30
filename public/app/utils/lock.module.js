@@ -215,6 +215,14 @@ const lockModule = (function () {
                 })
             },
             {
+                paths: ['items/content-block/edit'],
+                endpoint_key: 'exhibits.content_block_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({
+                    exhibit_id,
+                    content_block_id: helperModule.get_parameter_by_name('item_id')
+                })
+            },
+            {
                 paths: ['items/standard/text/edit', 'items/standard/media/edit'],
                 endpoint_key: 'exhibits.item_unlock_record.post.endpoint',
                 params: (exhibit_id) => ({
@@ -223,7 +231,7 @@ const lockModule = (function () {
                 })
             },
             {
-                paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit'],
+                paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit', 'items/grid/item/content-block/edit'],
                 endpoint_key: 'exhibits.grid_item_unlock_record.post.endpoint',
                 params: (exhibit_id) => ({
                     exhibit_id,

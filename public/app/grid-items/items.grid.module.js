@@ -427,8 +427,10 @@ const itemsGridModule = (function () {
 
                 if (type[1] === 'griditem' && type[2] === 'text') {
                     details_path = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
+                } else if (type[1] === 'griditem' && type[2] === 'media') {
                     details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
+                } else if (type[1] === 'griditem' && type[2] === 'content-block') {
+                    details_path = `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                 }
 
                 const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
