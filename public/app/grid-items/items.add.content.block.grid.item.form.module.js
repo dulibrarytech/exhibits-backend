@@ -145,7 +145,7 @@ const itemsAddContentBlockGridItemFormModule = (function () {
 
             // Gracefully redirect to edit page after showing success message
             setTimeout(() => {
-                redirect_to_item_edit_page(exhibit_id, new_item_id);
+                redirect_to_item_edit_page(exhibit_id, grid_id, new_item_id);
             }, 1200);
 
             return true;
