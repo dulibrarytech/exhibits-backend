@@ -1,0 +1,48 @@
+<%- include('../partials/header.ejs'); %>
+<body>
+<%- include('../partials/skip-link.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
+<div id="right-panel" class="right-panel">
+    <%- include('../partials/main-header.ejs'); %>
+    <main id="main" class="content" tabindex="-1">
+        <div id="message"></div>
+        <h1><span id="exhibit-title"></span> - Content Block</h1>
+        <%- include('partials/item-data-card.ejs', { is_details: true }); %>
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="edit-item-btn">
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning" aria-hidden="true"></i> Changes made to published exhibit content blocks are immediately visible to the public</span>
+                <button class="btn btn-primary" type="button" id="save-item-btn" style="visibility: hidden">
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>Content Block</small></div>
+        </div>
+    </main>
+    <div class="clearfix"></div>
+    <%- include('../partials/footer.ejs'); %>
+</div>
+<!-- libs -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
+<!-- app -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.content.block.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.details.content.block.item.module.min.js?<%=build_version%>"></script>
+<script>
+    navModule.wire_nav_links();
+    itemsDetailsContentBlockModule.init();
+    itemsCommonContentBlockFormModule.init();
+    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
+        event.preventDefault();
+        document.querySelector('.content').style.visibility = 'hidden';
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        window.location.replace(`/exhibits-dashboard/items/content-block/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`);
+        return false;
+    });
+</script>
+</body>
+</html>

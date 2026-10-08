@@ -1,0 +1,67 @@
+<%- include('../partials/header.ejs'); %>
+<body>
+<%- include('../partials/nav-dashboard'); %>
+<div id="right-panel" class="right-panel">
+    <%- include('../partials/main-header.ejs'); %>
+    <main id="main" class="content" tabindex="-1">
+        <div id="message"></div>
+        <h1><span id="exhibit-title"></span> - Content Block Item</h1>
+
+        <%- include('partials/item-data-card.ejs'); %>
+        <%- include('partials/item-styles-card.ejs'); %>
+
+        <input type="radio"
+               name="layout"
+               id="item-layout-text-only"
+               value="text_only" checked style="visibility: hidden" />
+        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
+        <input type="hidden" id="is-published" name="is_published">
+        <div id="exhibit-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-item-btn">
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
+                </button>
+                <button class="btn btn-outline-secondary ms-2" type="button" id="cancel-exhibit-btn">
+                    <i class="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;Cancel
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>Content Block</small></div>
+        </div>
+    </main>
+    <div class="clearfix"></div>
+    <%- include('../partials/footer.ejs'); %>
+</div>
+<!-- libs -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
+<!-- app -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.content.block.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.edit.content.block.item.form.module.min.js?<%=build_version%>"></script>
+<script>
+    itemsCommonContentBlockFormModule.init();
+    itemsEditContentBlockFormModule.init();
+    navModule.wire_nav_links();
+
+    const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+    const cancel_exhibit_btn = document.getElementById('cancel-exhibit-btn');
+
+    cancel_exhibit_btn.addEventListener('click', function () {
+        const has_unsaved_changes = check_for_unsaved_changes();
+        if (has_unsaved_changes) {
+            const confirm_cancel = confirm('Discard unsaved changes and return to the exhibit item list?');
+            if (!confirm_cancel) return;
+        }
+        // Redirect
+        window.location.href = `/exhibits-dashboard/items?exhibit_id=${exhibit_id}`;
+    });
+
+    function check_for_unsaved_changes() {
+        const inputs = document.querySelectorAll('input, textarea, select');
+        return Array.from(inputs).some(input => input.defaultValue !== input.value);
+    }
+
+</script>
+</body>
+</html>

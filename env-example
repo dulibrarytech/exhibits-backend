@@ -36,6 +36,7 @@ DB_NAME=exhibitsv2
 EXHIBIT_RECORDS=tbl_exhibits
 ITEM_RECORDS=tbl_standard_items
 HEADING_RECORDS=tbl_heading_items
+CONTENT_BLOCK_RECORDS=tbl_content_block_items
 GRID_RECORDS=tbl_grids
 GRID_ITEM_RECORDS=tbl_grid_items
 TIMELINE_RECORDS=tbl_timelines
