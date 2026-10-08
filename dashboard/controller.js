@@ -204,7 +204,7 @@ const NAV_CONFIGS = {
         links: [
             { id: 'grid-media-item-link', label: 'Add Media Grid Item', icon: 'ti-image', nav_path: '/items/grid/item/media?exhibit_id={exhibit_id}&grid_id={grid_id}' },
             { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'ti-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' },
-            { id: 'grid-content-block-item-link', label: 'Add Content Block Item', icon: 'ti-widget', nav_path: '/items/grid/item/content-block?exhibit_id={exhibit_id}&grid_id={grid_id}' }
+            { id: 'grid-content-block-item-link', label: 'Add Content Block', icon: 'ti-widget', nav_path: '/items/grid/item/content-block?exhibit_id={exhibit_id}&grid_id={grid_id}' }
         ]
     },
 

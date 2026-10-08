@@ -589,7 +589,7 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(create_order_cell(item.order));
 
             // Compact item cell
-            const title = helperModule.strip_html(helperModule.unescape(item.title || item.text || ''));
+            const title = helperModule.strip_html(helperModule.unescape(item.title || item.text || (item.content_type === 'divider' ? item.size + ' divider' : '')));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
             const details_url = `${APP_PATH}/items/content-block/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;

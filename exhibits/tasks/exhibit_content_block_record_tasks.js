@@ -100,7 +100,7 @@ const Exhibit_content_block_record_tasks = class extends Base_tasks {
                 [data.is_member_of_exhibit]: 'exhibit UUID'
             });
 
-            this._validate_string(data.content_type, 'content block content_type');
+            this._validate_string(data.content_type, 'content block type');
 
             if (data.content_type === 'button') {
                 this._validate_string(data.text, 'content block text');
@@ -115,7 +115,6 @@ const Exhibit_content_block_record_tasks = class extends Base_tasks {
                 this._validate_string(data.text, 'content block text');
             } else if (data.content_type === 'quote') {
                 this._validate_string(data.text, 'content block text');
-                this._validate_string(data.attribution, 'content block attribution');
             }
 
             // Sanitize data
