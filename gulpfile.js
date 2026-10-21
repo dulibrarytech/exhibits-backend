@@ -27,7 +27,8 @@ gulp.task('minify-css', function () {
         'public/assets/css/sidebar-overrides.css',
         'public/assets/css/exhibits.common.css',
         'public/assets/css/media.library.css',
-        'public/assets/css/rte.css'
+        'public/assets/css/rte.css',
+        'public/assets/css/content-block.css'
     ])
         .pipe(concat('dashboard.min.css'))
         .pipe(cleanCSS())
@@ -110,6 +111,22 @@ gulp.task('minify-standard-item-partial-views', function () {
         .pipe(gulp.dest('views/dist/standard-items/partials'));
 });
 
+gulp.task('minify-content-block-item-views', function () {
+    return gulp.src([
+        'views/content-block-items/*.ejs'
+    ])
+        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gulp.dest('views/dist/content-block-items'));
+});
+
+gulp.task('minify-content-block-item-partial-views', function () {
+    return gulp.src([
+        'views/content-block-items/partials/*.ejs',
+    ])
+        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gulp.dest('views/dist/content-block-items/partials'));
+});
+
 gulp.task('minify-timeline-item-views', function () {
     return gulp.src([
         'views/timeline-items/*.ejs'
@@ -181,6 +198,8 @@ gulp.task('default', gulp.series(
         'minify-heading-item-partial-views',
         'minify-standard-item-views',
         'minify-standard-item-partial-views',
+        'minify-content-block-item-views',
+        'minify-content-block-item-partial-views',
         'minify-timeline-item-views',
         'minify-timeline-item-partial-views',
         'minify-users-views',
