@@ -87,7 +87,7 @@ const itemsAddContentBlockGridItemFormModule = (function () {
 
             form_data.type = 'content_block';
             form_data.item_type = 'content_block';
-            form_data.title = '';
+            form_data.title = form_data.title || '';
 
             // Add metadata
             const user_name = helperModule.get_user_name();

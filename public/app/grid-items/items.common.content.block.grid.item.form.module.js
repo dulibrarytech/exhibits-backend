@@ -268,12 +268,10 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
                 item_content_block.attribution = get_element_value('#quote-attribution-input');
 
                 // Validate
-                ['attribution', 'text'].forEach(val => {
-                    if (!item_content_block[val] || item_content_block[val].length === 0) {
-                        show_error(`Please enter quote ${val}`, `#quote-${val}-input`);
-                        return false;
-                    }
-                })
+                if (!item_content_block.text || item_content_block.text.length === 0) {
+                    show_error(`Please enter quote text`, `#quote-text-input`);
+                    return false;
+                }
             }
 
             // Get optional published status
