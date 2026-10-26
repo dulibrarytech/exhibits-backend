@@ -96,6 +96,7 @@ module.exports = function() {
     require('../dashboard/routes')(APP);
     require('../exhibits/exhibits_routes')(APP);
     require('../exhibits/headings_routes')(APP);
+    require('../exhibits/content_blocks_routes')(APP);
     require('../exhibits/items_routes')(APP);
     require('../exhibits/grid_routes')(APP);
     require('../exhibits/timelines_routes')(APP);

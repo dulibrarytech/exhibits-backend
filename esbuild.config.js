@@ -39,12 +39,16 @@ const sources = [
     // grid-items
     'public/app/grid-items/items.add.grid.form.module.js',
     'public/app/grid-items/items.add.grid.item.form.module.js',
+    'public/app/grid-items/items.add.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.common.grid.form.module.js',
     'public/app/grid-items/items.common.grid.item.form.module.js',
+    'public/app/grid-items/items.common.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.details.grid.module.js',
     'public/app/grid-items/items.details.grid.item.module.js',
+    'public/app/grid-items/items.details.content.block.grid.item.module.js',
     'public/app/grid-items/items.edit.grid.form.module.js',
     'public/app/grid-items/items.edit.grid.item.form.module.js',
+    'public/app/grid-items/items.edit.content.block.grid.item.form.module.js',
     'public/app/grid-items/items.grid.module.js',
 
     // heading-items
@@ -52,6 +56,12 @@ const sources = [
     'public/app/heading-items/items.common.heading.form.module.js',
     'public/app/heading-items/items.details.heading.item.module.js',
     'public/app/heading-items/items.edit.heading.form.module.js',
+
+    // content-block-items
+    'public/app/content-block-items/items.add.content.block.item.form.module.js',
+    'public/app/content-block-items/items.common.content.block.item.form.module.js',
+    'public/app/content-block-items/items.details.content.block.item.module.js',
+    'public/app/content-block-items/items.edit.content.block.item.form.module.js',
 
     // standard-items
     'public/app/standard-items/items.add.standard.item.form.module.js',

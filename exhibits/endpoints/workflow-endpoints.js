@@ -27,6 +27,12 @@ module.exports = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id/unlock`
         }
     },
+    content_block_unlock_record: {
+        post: {
+            description: 'Unlock content block record',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/content-blocks/:content_block_id/unlock`
+        }
+    },
     item_unlock_record: {
         post: {
             description: 'Unlock standard item record',

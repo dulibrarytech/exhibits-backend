@@ -1,0 +1,17 @@
+<div id="item-styles-card" class="card" style="display: none;">
+    <div class="card-header">
+        <strong class="card-title">Styles</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-6">
+                <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Applies an exhibit style preset to this item</em></small>
+                <%# Preset options are built by helperModule.build_item_style_swatch_options,
+                    which default-checks the first preset — there is no "None" option;
+                    every item carries a style preset. -%>
+                <div id="item-style-options" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
