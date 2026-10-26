@@ -26,6 +26,7 @@ const { exiftool } = require('exiftool-vendored');
 const LOGGER = require('../libs/log4');
 const TOKEN = require('../libs/tokens');
 const AUTHORIZE = require('../auth/authorize');
+const PDF_RENDER = require('./pdf-render');
 const { rate_limits } = require('../config/rate_limits_loader');
 
 // Configuration
@@ -262,7 +263,11 @@ const generate_image_thumbnail = async (image_buffer, uuid) => {
 
 /**
  * Generates a thumbnail from the first page of a PDF
- * Uses pdfjs-dist with node-canvas for pure Node.js rendering — no system dependencies required
+ *
+ * Rasterization lives in media-library/pdf-render, which the IIIF page selector
+ * (`{uuid};{N}`) also calls — one renderer, so an uploaded thumbnail and a
+ * selected page are produced by the same code path at the same envelope.
+ *
  * @param {Buffer} pdf_buffer - Source PDF buffer
  * @param {string} uuid - File UUID for thumbnail naming
  * @param {string} source_path - Path to the stored PDF file (unused, kept for signature compatibility)
@@ -277,50 +282,23 @@ const generate_pdf_thumbnail = async (pdf_buffer, uuid, source_path) => {
 
         await ensure_directory(thumbnail_dir);
 
-        // Import pdfjs-dist legacy build for Node.js compatibility
-        const { createCanvas, DOMMatrix } = require('@napi-rs/canvas');
+        // Rendered straight into the thumbnail box — no Sharp resize afterwards.
+        // Rendering large and then downscaling rounded twice, which left page 1
+        // a pixel wider than the same page rendered through the IIIF page
+        // selector. One renderer, one rounding step, identical dimensions.
+        const rendered = await PDF_RENDER.render_pdf_page_boxed(
+            pdf_buffer,
+            1,
+            THUMBNAIL_CONFIG.width,
+            THUMBNAIL_CONFIG.height
+        );
 
-        // pdfjs-dist renderer expects DOMMatrix as a global
-        if (typeof globalThis.DOMMatrix === 'undefined') {
-            globalThis.DOMMatrix = DOMMatrix;
+        if (!rendered.success) {
+            LOGGER.module().warn(`WARN: [/media-library/uploads (generate_pdf_thumbnail)] PDF page 1 render failed for ${uuid}: ${rendered.code}`);
+            return null;
         }
 
-        const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
-
-        // Load the PDF from the buffer
-        const pdf_data = new Uint8Array(pdf_buffer);
-        const pdf_document = await pdfjsLib.getDocument({ data: pdf_data }).promise;
-
-        // Get the first page
-        const page = await pdf_document.getPage(1);
-
-        // Calculate scale to produce a thumbnail at the target width
-        const unscaled_viewport = page.getViewport({ scale: 1.0 });
-        const scale = THUMBNAIL_CONFIG.width / unscaled_viewport.width;
-        const viewport = page.getViewport({ scale: scale });
-
-        // Create a canvas at the scaled dimensions
-        const canvas = createCanvas(Math.floor(viewport.width), Math.floor(viewport.height));
-        const context = canvas.getContext('2d');
-
-        // Render the page onto the canvas
-        await page.render({
-            canvasContext: context,
-            viewport: viewport
-        }).promise;
-
-        // Convert canvas to PNG buffer
-        const png_buffer = canvas.toBuffer('image/png');
-
-        // Clean up PDF document
-        await pdf_document.destroy();
-
-        // Use Sharp to resize to final thumbnail dimensions and convert to JPEG
-        await sharp(png_buffer)
-            .resize(THUMBNAIL_CONFIG.width, THUMBNAIL_CONFIG.height, {
-                fit: 'inside',
-                withoutEnlargement: true
-            })
+        await sharp(rendered.buffer)
             .flatten({ background: '#ffffff' })
             .jpeg({ quality: THUMBNAIL_CONFIG.quality })
             .toFile(thumbnail_path);
@@ -893,6 +871,9 @@ module.exports.resolve_storage_path = resolve_storage_path;
 module.exports.delete_stored_file = delete_stored_file;
 module.exports.shutdown_exiftool = shutdown_exiftool;
 module.exports.generate_image_thumbnail = generate_image_thumbnail;
+// Exported for tools/heal-blank-pdf-thumbnails.js, so a heal regenerates a
+// thumbnail through the same code path an upload does.
+module.exports.generate_pdf_thumbnail = generate_pdf_thumbnail;
 module.exports.STORAGE_PATH = STORAGE_PATH;
 module.exports.store_file = store_file;
 module.exports.extract_metadata = extract_metadata;

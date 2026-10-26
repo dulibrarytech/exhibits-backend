@@ -6,7 +6,8 @@
 // media-path field sets (selected from window.location.pathname via
 // history.pushState), required-field validation, the inverted
 // media_padding / wrap_text checkbox semantics, and the PDF
-// open-to-page fallback — plus set_item_style and wait_for_styles.
+// open-to-page fallback — plus set_item_style, wait_for_styles, and the
+// order in which init() fetches style presets and reveals the form.
 
 'use strict';
 
@@ -322,6 +323,145 @@ describe('itemsCommonStandardItemFormModule', () => {
                 'danger',
                 'boom',
             );
+        });
+    });
+
+    /*
+     * init() fetches the exhibit's style presets alongside the auth check and
+     * holds the card reveal until they settle (capped at 1500 ms), so the
+     * preset swatches in the Styles card above Item Data are built before the
+     * form shows and the card does not grow afterwards.
+     */
+    describe('init — style presets and form reveal', () => {
+
+        const PRESET_RESPONSE = {
+            status: 200,
+            data: { data: { styles: JSON.stringify({ exhibit: { item1: { color: '#303030' } } }) } },
+        };
+
+        /* a promise the test settles by hand */
+        function deferred() {
+            let resolve;
+            const promise = new Promise((r) => { resolve = r; });
+            return { promise, resolve };
+        }
+
+        async function flush_microtasks() {
+            for (let i = 0; i < 10; i++) await Promise.resolve();
+        }
+
+        let exhibit_get;
+        let auth_check;
+        let reveal_log;
+
+        beforeEach(() => {
+            document.body.insertAdjacentHTML(
+                'afterbegin',
+                '<div id="item-styles-card" class="card" style="display: none;"></div>',
+            );
+
+            exhibit_get = deferred();
+            auth_check = deferred();
+            reveal_log = [];
+
+            vi.spyOn(console, 'info').mockImplementation(() => {});
+            globalThis.authModule = {
+                get_user_token: () => 'test-token',
+                check_auth: vi.fn(() => auth_check.promise),
+            };
+            globalThis.navModule = { init: vi.fn() };
+            globalThis.httpModule = { req: vi.fn(() => exhibit_get.promise) };
+            globalThis.endpointsModule.get_exhibits_endpoints = () => ({
+                exhibits: { exhibit_records: { endpoints: { get: { endpoint: '/api/v1/exhibits/:exhibit_id' } } } },
+            });
+            Object.assign(globalThis.helperModule, {
+                get_parameter_by_name: () => 'exhibit-uuid-1',
+                build_item_style_swatch_options: vi.fn(),
+                bind_item_style_theme: vi.fn(),
+                /* records how many times the swatches had been built when the cards were revealed */
+                show_form: vi.fn(() => {
+                    reveal_log.push(globalThis.helperModule.build_item_style_swatch_options.mock.calls.length);
+                }),
+            });
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('requests the presets before the auth check resolves', async () => {
+            const init = globalThis.itemsCommonStandardItemFormModule.init();
+
+            expect(globalThis.httpModule.req).toHaveBeenCalledTimes(1);
+            expect(globalThis.httpModule.req.mock.calls[0][0].url).toBe('/api/v1/exhibits/exhibit-uuid-1');
+            expect(globalThis.authModule.check_auth).toHaveBeenCalledWith('test-token');
+
+            exhibit_get.resolve(PRESET_RESPONSE);
+            auth_check.resolve(true);
+            await init;
+        });
+
+        it('makes wait_for_styles wait for the fetch while the auth check is still pending', async () => {
+            const init = globalThis.itemsCommonStandardItemFormModule.init();
+            let waited = false;
+            const wait = globalThis.itemsCommonStandardItemFormModule.wait_for_styles()
+                .then(() => { waited = true; });
+
+            await flush_microtasks();
+            expect(waited).toBe(false);
+
+            exhibit_get.resolve(PRESET_RESPONSE);
+            await wait;
+            expect(globalThis.helperModule.build_item_style_swatch_options).toHaveBeenCalledTimes(1);
+
+            auth_check.resolve(true);
+            await init;
+        });
+
+        it('reveals the form only after the preset swatches are built', async () => {
+            const init = globalThis.itemsCommonStandardItemFormModule.init();
+            auth_check.resolve(true);
+
+            await flush_microtasks();
+            expect(globalThis.navModule.init).toHaveBeenCalledTimes(1);
+            expect(globalThis.helperModule.show_form).not.toHaveBeenCalled();
+
+            exhibit_get.resolve(PRESET_RESPONSE);
+            await init;
+
+            expect(reveal_log).toEqual([1]);
+            expect(globalThis.domModule.set_alert).not.toHaveBeenCalled();
+        });
+
+        it('reveals the form without the swatches after 1500 ms when the presets request hangs', async () => {
+            vi.useFakeTimers();
+            const init = globalThis.itemsCommonStandardItemFormModule.init();
+            auth_check.resolve(true);
+            await flush_microtasks();
+
+            await vi.advanceTimersByTimeAsync(1499);
+            expect(globalThis.helperModule.show_form).not.toHaveBeenCalled();
+
+            await vi.advanceTimersByTimeAsync(1);
+            await init;
+            expect(reveal_log).toEqual([0]);
+
+            /* settle the hung request so no pending promise leaks into later tests */
+            exhibit_get.resolve({ status: 500 });
+            await globalThis.itemsCommonStandardItemFormModule.wait_for_styles();
+        });
+
+        it('does not wait for the presets on a page without a Styles card (details pages)', async () => {
+            document.getElementById('item-styles-card').remove();
+
+            const init = globalThis.itemsCommonStandardItemFormModule.init();
+            auth_check.resolve(true);
+            await init;
+
+            expect(globalThis.helperModule.show_form).toHaveBeenCalledTimes(1);
+
+            exhibit_get.resolve(PRESET_RESPONSE);
+            await globalThis.itemsCommonStandardItemFormModule.wait_for_styles();
         });
     });
 });

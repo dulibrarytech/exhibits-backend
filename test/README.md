@@ -10,7 +10,7 @@ The suite is split across three runners:
 - **Jest** owns integration tests under `test/integration/`. Used because Vitest's `vi.mock` cannot intercept the transitive CommonJS `require()` chains that the source modules rely on; Jest patches `require()` directly and so its module mocks work end-to-end.
 - **Playwright** owns e2e tests under `test/e2e/` — stubbed client-behavior specs in `specs/` (default mode) and full-stack workflow specs in `live/` (`PW_MODE=live`, dedicated `exhibits_e2e` DB). See `playwright.config.js` for the mode mechanics.
 
-`npm test` runs unit then integration; `npm run test:predeploy` adds both e2e modes.
+`npm test` runs unit then integration; `npm run test:predeploy` adds both e2e modes. Live mode needs Elasticsearch at `ELASTICSEARCH_HOST`: `test/e2e/live/elasticsearch-check.js` runs first in both the live suite and the pre-deploy gate, and stops the run with a clear message when it isn't answering.
 
 ## Layout
 

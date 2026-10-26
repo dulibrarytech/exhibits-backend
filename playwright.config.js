@@ -14,7 +14,8 @@ const { defineConfig, devices } = require('@playwright/test');
 //     exhibits_e2e) with NO auth bypass: global-setup migrates/seeds the DB,
 //     creates one user per role, and mints real JWTs via libs/tokens.create,
 //     so verify()/authorize run for real. Media storage is pointed at a
-//     scratch dir so live uploads never pollute real storage.
+//     scratch dir so live uploads never pollute real storage. Before any of
+//     that, elasticsearch-check stops the run if Elasticsearch isn't answering.
 //
 const PW_MODE = process.env.PW_MODE || 'stub';
 const IS_LIVE = PW_MODE === 'live';
@@ -41,7 +42,9 @@ process.env.E2E_DB_NAME = E2E_DB_NAME;
 
 module.exports = defineConfig({
     testDir: IS_LIVE ? './test/e2e/live' : './test/e2e/specs',
-    globalSetup: IS_LIVE ? './test/e2e/live/global-setup.js' : undefined,
+    globalSetup: IS_LIVE
+        ? ['./test/e2e/live/elasticsearch-check.js', './test/e2e/live/global-setup.js']
+        : undefined,
     timeout: 30_000,
     expect: { timeout: 5_000 },
     fullyParallel: true,

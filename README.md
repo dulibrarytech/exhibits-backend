@@ -100,6 +100,9 @@ npm run test:e2e:live:external  # @external repo + Kaltura round-trips (DU VPN r
 npm run test:predeploy        # the full pre-deploy gate: unit + integration + stubbed + live
 ```
 
+The live suite, and so the pre-deploy gate, needs Elasticsearch running at `ELASTICSEARCH_HOST`. Both check
+it first and stop straight away with a message saying so when it isn't answering.
+
 `@playwright/test` is pinned exactly (see package.json) so local and server runs use identical browser
 behavior. (`tools/install-cdn-libs.js` is maintenance-only — vendored libraries in `public/libs/` are
 committed; a fresh clone does not need it.)

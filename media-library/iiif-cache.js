@@ -102,14 +102,32 @@ const normalize_version = (version) => {
 
 /**
  * Deterministic, filesystem-safe digest of the IIIF transform parameters.
+ *
+ * `page` (the `{uuid};{N}` selector for multi-page PDFs) is folded in here
+ * rather than into the cache PATH on purpose: the path keeps the bare UUID as
+ * its directory, so purge() below and the weekly orphaned-file sweep — both of
+ * which drop a record's derivatives by UUID directory — keep reclaiming every
+ * page. A `uuid;4` directory would survive a record delete.
+ *
+ * Page 1 is the identity request, so it does NOT extend the canonical string:
+ * `{uuid}` and `{uuid};1` hash the same, sharing one derivative and one ETag,
+ * and every derivative cached before page selection existed stays valid. That
+ * matters because the orphan sweep only reclaims a whole UUID directory when
+ * the record is gone — it never reclaims superseded variants inside a live
+ * record's version directory, so re-hashing page 1 would strand all of them.
+ *
  * @param {string} region - IIIF region parameter
  * @param {string} size - IIIF size parameter
  * @param {string} rotation - IIIF rotation parameter
  * @param {string} quality_format - IIIF quality.format parameter
+ * @param {number} [page] - 1-based PDF page selector (defaults to 1)
  * @returns {string} 16-char hex digest
  */
-const variant_digest = (region, size, rotation, quality_format) => {
-    const canonical = `${region}|${size}|${rotation}|${quality_format}`;
+const variant_digest = (region, size, rotation, quality_format, page = 1) => {
+
+    const base = `${region}|${size}|${rotation}|${quality_format}`;
+    const canonical = page > 1 ? `${base}|page=${page}` : base;
+
     return crypto.createHash('sha1').update(canonical).digest('hex').substring(0, 16);
 };
 
@@ -128,10 +146,10 @@ const format_extension = (quality_format) => {
  * Absolute path of the cached derivative for a (uuid, version, params) tuple.
  * @returns {string} Absolute cache file path
  */
-const derivative_path = (uuid, version, region, size, rotation, quality_format) => {
+const derivative_path = (uuid, version, region, size, rotation, quality_format, page = 1) => {
     const [bucket1, bucket2] = get_hash_buckets(uuid);
     const v = normalize_version(version);
-    const variant = variant_digest(region, size, rotation, quality_format);
+    const variant = variant_digest(region, size, rotation, quality_format, page);
     const ext = format_extension(quality_format);
     return path.join(CACHE_ROOT, bucket1, bucket2, uuid, v, `${variant}.${ext}`);
 };
@@ -141,9 +159,9 @@ const derivative_path = (uuid, version, region, size, rotation, quality_format) 
  * change, because it is built from the same version + variant the cache path is.
  * @returns {string} Quoted ETag value
  */
-const compute_etag = (uuid, version, region, size, rotation, quality_format) => {
+const compute_etag = (uuid, version, region, size, rotation, quality_format, page = 1) => {
     const v = normalize_version(version);
-    const variant = variant_digest(region, size, rotation, quality_format);
+    const variant = variant_digest(region, size, rotation, quality_format, page);
     return `"${uuid}-${v}-${variant}"`;
 };
 
@@ -151,10 +169,10 @@ const compute_etag = (uuid, version, region, size, rotation, quality_format) => 
  * Reads a cached derivative if present.
  * @returns {Promise<Buffer|null>} Cached buffer on a hit, null on a miss
  */
-const get_cached = async (uuid, version, region, size, rotation, quality_format) => {
+const get_cached = async (uuid, version, region, size, rotation, quality_format, page = 1) => {
 
     try {
-        const file = derivative_path(uuid, version, region, size, rotation, quality_format);
+        const file = derivative_path(uuid, version, region, size, rotation, quality_format, page);
         return await fsp.readFile(file);
     } catch (error) {
         if (error.code !== 'ENOENT') {
@@ -170,13 +188,13 @@ const get_cached = async (uuid, version, region, size, rotation, quality_format)
  * @param {Buffer} buffer - Transcoded image bytes
  * @returns {Promise<boolean>} True if the derivative was written
  */
-const put_cached = async (uuid, version, region, size, rotation, quality_format, buffer) => {
+const put_cached = async (uuid, version, region, size, rotation, quality_format, buffer, page = 1) => {
 
     if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
         return false;
     }
 
-    const file = derivative_path(uuid, version, region, size, rotation, quality_format);
+    const file = derivative_path(uuid, version, region, size, rotation, quality_format, page);
     const dir = path.dirname(file);
 
     try {

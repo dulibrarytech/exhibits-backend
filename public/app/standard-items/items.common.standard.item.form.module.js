@@ -482,6 +482,12 @@ const itemsCommonStandardItemFormModule = (function () {
     };
 
     /**
+     * Longest wait (ms) for the style presets before the form is revealed
+     * without them
+     */
+    const STYLES_REVEAL_WAIT_MS = 1500;
+
+    /**
      * Checks whether a style object has at least one non-empty property
      * @param {Object} style_obj - Style properties object
      * @returns {boolean}
@@ -828,9 +834,32 @@ const itemsCommonStandardItemFormModule = (function () {
             }
 
             const token = authModule.get_user_token();
+
+            /*
+             * Start fetching the style presets now, in parallel with the auth
+             * check. Assigning styles_promise before the first await keeps
+             * wait_for_styles() from resolving early for the edit module,
+             * whose init runs concurrently with this one.
+             */
+            styles_promise = fetch_and_populate_styles();
+
             await authModule.check_auth(token);
 
             navModule.init();
+
+            /*
+             * The Styles card sits above Item Data, and its preset swatches
+             * are built when the presets arrive. Reveal the form once they
+             * have, so the card does not grow and push the Exhibit Text editor
+             * down after load — capped, since the request has no timeout.
+             * Details pages have no Styles card.
+             */
+            if (document.querySelector('#item-styles-card') !== null) {
+                await Promise.race([
+                    styles_promise,
+                    new Promise(resolve => setTimeout(resolve, STYLES_REVEAL_WAIT_MS))
+                ]);
+            }
 
             helperModule.show_form();
 
@@ -874,9 +903,6 @@ const itemsCommonStandardItemFormModule = (function () {
                 // the initial state stays in sync. Shared wiring — see helperModule.
                 helperModule.bind_embed_description('embed-item', 'item-description-input');
             }
-
-            // Fetch and populate styles dropdown (both media and text paths)
-            styles_promise = fetch_and_populate_styles();
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
