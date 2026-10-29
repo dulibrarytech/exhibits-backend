@@ -623,54 +623,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Setup exhibit action dropdown handlers after each DataTable draw
-     */
-    function setup_exhibit_action_handlers() {
-
-        /*
-         * Bootstrap's data-API (data-toggle="dropdown") creates, opens and closes the menus;
-         * don't construct them here (#208). Rows are reused across draws, so wire each link once.
-         */
-
-        // Preview button handlers (dropdown items)
-        document.querySelectorAll('.btn-preview-exhibit').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                if (uuid) {
-                    const preview_link = `${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`;
-                    exhibitsModule.open_preview(preview_link);
-                }
-            });
-        });
-
-        // Share button handlers (dropdown items)
-        document.querySelectorAll('.btn-share-exhibit').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                if (uuid) {
-                    // Open the share modal
-                    const modal_el = document.querySelector('.shared-url-modal');
-                    if (modal_el) {
-                        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-                            $(modal_el).modal('show');
-                        } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                            const bs_modal = new bootstrap.Modal(modal_el);
-                            bs_modal.show();
-                        }
-                    }
-                    exhibitsModule.create_shared_preview_url(uuid);
-                }
-            });
-        });
-    }
-
-    /**
      * Create date column
      * @param {string} date_string - Date string
      * @param {string} aria_label - ARIA label
@@ -776,9 +728,6 @@ const exhibitsModule = (function () {
                     table.querySelectorAll('thead th').forEach(th => {
                         th.setAttribute('scope', 'col');
                     });
-
-                    // Setup action dropdown handlers after each draw
-                    setup_exhibit_action_handlers();
                 }
             });
 
@@ -791,7 +740,9 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Bind event handlers to DataTable
+     * Bind event handlers to DataTable. Delegated through the table, so they cover rows
+     * whenever they are rendered, including a dropdown rebuilt after publish/suppress.
+     * The kebab menus themselves are Bootstrap's (data-API, #208).
      * @param {Object} exhibit_list - DataTable instance
      */
     function bind_datatable_events(exhibit_list) {
@@ -824,6 +775,38 @@ const exhibitsModule = (function () {
                 } else {
                     console.error('No UUID found on suppress button');
                 }
+            });
+
+            // Preview event (actions menu)
+            exhibit_list.on('click', 'tbody tr .btn-preview-exhibit', (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.getAttribute('data-uuid');
+
+                if (uuid) {
+                    exhibitsModule.open_preview(`${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`);
+                }
+            });
+
+            // Share event (actions menu)
+            exhibit_list.on('click', 'tbody tr .btn-share-exhibit', (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.getAttribute('data-uuid');
+
+                if (!uuid) {
+                    return;
+                }
+
+                // Open the share modal
+                const modal_el = document.querySelector('.shared-url-modal');
+                if (modal_el) {
+                    if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                        $(modal_el).modal('show');
+                    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const bs_modal = new bootstrap.Modal(modal_el);
+                        bs_modal.show();
+                    }
+                }
+                exhibitsModule.create_shared_preview_url(uuid);
             });
 
         } catch (error) {
@@ -1160,9 +1143,6 @@ const exhibitsModule = (function () {
             actions_td.removeChild(actions_td.firstChild);
         }
         actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, 'Exhibit', state_config.is_published));
-
-        // Re-initialize dropdown handlers for this new dropdown
-        setup_exhibit_action_handlers();
     }
 
     /**
