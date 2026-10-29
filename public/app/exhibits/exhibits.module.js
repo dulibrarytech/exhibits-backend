@@ -23,6 +23,7 @@ const exhibitsModule = (function () {
     const APP_PATH = endpointsModule.get_app_path();
     let obj = {};
     let link;
+    let exhibits_data_table = null;  // #exhibits DataTable instance, set by display_exhibits
 
     async function get_exhibits() {
 
@@ -169,6 +170,7 @@ const exhibitsModule = (function () {
 
             // Initialize DataTable
             const exhibit_list = initialize_exhibits_datatable();
+            exhibits_data_table = exhibit_list;
 
             // Bind event handlers
             bind_datatable_events(exhibit_list);
@@ -1114,7 +1116,8 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Updates the exhibit actions UI based on state configuration
+     * Updates the exhibit actions UI based on state configuration. The rebuilt menu keeps
+     * the exhibit's title in its accessible name, as the initial render does.
      * @param {string} clean_uuid - UUID without suffix
      * @param {Object} state_config - State configuration object
      */
@@ -1137,12 +1140,30 @@ const exhibitsModule = (function () {
         }
 
         const encoded_uuid = encodeURIComponent(clean_uuid);
+        const title_element = row.querySelector('.exhibit-title');
+        const title = title_element ? title_element.textContent.trim() : '';
 
         // Rebuild dropdown with new published state using safe DOM construction.
         while (actions_td.firstChild) {
             actions_td.removeChild(actions_td.firstChild);
         }
-        actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, 'Exhibit', state_config.is_published));
+        actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, title, state_config.is_published));
+    }
+
+    /**
+     * Tells DataTables a row's cells changed. It caches each cell's markup from the DOM at
+     * init and, on a narrow screen, Responsive renders the row's child row from that cache;
+     * without this an expanded child row keeps showing the pre-publish status link and menu.
+     * @param {string} clean_uuid - UUID without suffix (the row's id)
+     */
+    function refresh_exhibit_row(clean_uuid) {
+        const row = document.getElementById(clean_uuid);
+
+        if (!row || !exhibits_data_table) {
+            return;
+        }
+
+        exhibits_data_table.row(row).invalidate().draw(false);
     }
 
     /**
@@ -1197,6 +1218,7 @@ const exhibitsModule = (function () {
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.PUBLISHED);
+                refresh_exhibit_row(clean_uuid);
             } else if (!response) {
                 flash_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
             }
@@ -1252,6 +1274,7 @@ const exhibitsModule = (function () {
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.SUPPRESSED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.SUPPRESSED);
+                refresh_exhibit_row(clean_uuid);
             } else if (!response) {
                 flash_message('danger', 'Unable to unpublish exhibit. Please check your connection and try again.');
             }

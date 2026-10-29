@@ -393,4 +393,103 @@ test.describe('Kebab action menus (#208)', () => {
             await expect(page.locator('.dropdown.show, .dropdown-menu.show')).toHaveCount(0);
         });
     });
+
+    /*
+     * Publishing or unpublishing rebuilds the row's status link and ⋮ menu. DataTables
+     * caches each cell's markup from the DOM at init and, on a narrow screen, Responsive
+     * renders the row's child row from that cache, so the module must tell DataTables the
+     * row changed. The rebuilt menu must also keep the exhibit's title in its name.
+     */
+    test.describe('row actions after a publish rebuilds the menu', () => {
+
+        const FIRST_UUID = '00000001-e29b-41d4-a716-446655440000';
+
+        async function stub_publish(page, uuid) {
+            await page.route(`**${APP_PATH}/api/v1/exhibits/${uuid}/publish`, (route) => {
+                if (route.request().method() !== 'POST') {
+                    return route.fallback();
+                }
+                return route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ data: { uuid } }),
+                });
+            });
+        }
+
+        test('exhibits list: the rebuilt menu keeps the title and runs Preview and Share once', async ({ page }) => {
+            await open_exhibits_list(page);
+            await stub_publish(page, FIRST_UUID);
+
+            await page.evaluate(() => {
+                window.__calls = [];
+                /* eslint-disable no-undef */
+                exhibitsModule.open_preview = (link) => { window.__calls.push(`preview:${link}`); };
+                exhibitsModule.create_shared_preview_url = (uuid) => { window.__calls.push(`share:${uuid}`); };
+                /* eslint-enable no-undef */
+            });
+
+            const row = page.locator(`tr[id="${FIRST_UUID}"]`);
+            await row.locator('a.publish-exhibit').click();
+            await expect(row.locator('a.suppress-exhibit')).toHaveCount(1);
+
+            const toggle = row.locator('.exhibit-actions-toggle');
+            const menu = row.locator('.exhibit-actions-menu');
+            await expect(toggle).toHaveCount(1);
+            await expect(toggle).toHaveAttribute('aria-label', 'Actions for Exhibit 1');
+            await expect(menu).toContainText('Details');
+            await expect(menu).not.toContainText('Edit');
+
+            await toggle.click();
+            await menu.locator('.btn-preview-exhibit').click();
+            await toggle.click();
+            await menu.locator('.btn-share-exhibit').click();
+
+            expect(await page.evaluate(() => window.__calls)).toEqual([
+                `preview:${APP_PATH}/preview?uuid=${encodeURIComponent(FIRST_UUID)}`,
+                `share:${FIRST_UUID}`,
+            ]);
+            await expect(page.locator('.dropdown.show, .dropdown-menu.show')).toHaveCount(0);
+        });
+
+        test('exhibits list: on a narrow screen the expanded child row shows the rebuilt status and menu', async ({ page }) => {
+            await page.setViewportSize({ width: 600, height: 900 });
+            await open_exhibits_list(page);
+            await stub_publish(page, FIRST_UUID);
+
+            // Precondition: Responsive has hidden the Actions column (the last one)
+            await expect(page.locator('#exhibits')).toHaveClass(/collapsed/);
+            await expect(page.locator('#exhibits thead th').last()).toBeHidden();
+
+            const row = page.locator(`tr[id="${FIRST_UUID}"]`);
+            const child = page.locator(`tr[id="${FIRST_UUID}"] + tr.child`);
+            await row.locator('td.dtr-control').click({ position: { x: 5, y: 5 } });
+            await expect(child).toBeVisible();
+            await expect(child.locator('.exhibit-actions-menu')).toContainText('Edit');
+
+            // Publish from whichever status link is on screen (the child row's copy when
+            // the Status column is hidden as well)
+            await page.locator(`a.publish-exhibit[id="${FIRST_UUID}-status"]:visible`).click();
+            await expect(page.locator(`a.suppress-exhibit[id="${FIRST_UUID}-status"]:visible`)).toHaveCount(1);
+
+            // The child row was re-rendered from the updated row: one menu, published state
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveCount(1);
+            await expect(child.locator('.exhibit-actions-menu')).toContainText('Details');
+            await expect(child.locator('.exhibit-actions-menu')).not.toContainText('Edit');
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveAttribute('aria-label', 'Actions for Exhibit 1');
+
+            // Back on a desktop width the Actions column returns: the row holds one published
+            // menu and the child row (if another column is still hidden) carries no copy of it
+            await page.setViewportSize({ width: 1280, height: 900 });
+            // On a window resize Responsive reuses the column widths it measured at 600px and
+            // keeps Actions hidden; recalc() re-measures, as a page load at this width would
+            // eslint-disable-next-line no-undef
+            await page.evaluate(() => window.jQuery('#exhibits').DataTable().responsive.recalc());
+            await expect(page.locator('#exhibits thead th').last()).toBeVisible();
+            await expect(row.locator('.exhibit-actions-toggle')).toHaveCount(1);
+            await expect(row.locator('.exhibit-actions-menu')).toContainText('Details');
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveCount(0);
+            await expect(page.locator('#exhibits .exhibit-actions-toggle:visible')).toHaveCount(ROWS.length);
+        });
+    });
 });

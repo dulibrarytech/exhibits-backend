@@ -68,6 +68,12 @@ const mediaLibraryModule = (function() {
     let exhibit_titles_cache = null;   // Map<uuid, title>
     let selected_exhibit_uuid = null;  // Currently selected exhibit UUID for filtering
 
+    /*
+     * The exhibit filter on the page now (its wrapper and close function), read by the one
+     * document click listener that closes it; the filter is rebuilt on every refresh.
+     */
+    let exhibit_filter_current = null;
+
     // Resolve a media row's exhibit UUIDs → titles from the warm cache (loaded with
     // the list, see fetch_exhibit_titles) so every media modal — the upload, repo, and
     // Kaltura view modals AND the edit modal — can show which exhibit(s) the media has
@@ -570,7 +576,7 @@ const mediaLibraryModule = (function() {
             play_action_html = `
                     <a class="dropdown-item btn-play-kaltura" 
                        href="#" 
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        data-name="${escaped_name}"
                        data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}"
                        data-media-type="${sanitize_html(row.media_type || '')}"
@@ -599,7 +605,7 @@ const mediaLibraryModule = (function() {
                     ${play_action_html}
                     <a class="dropdown-item btn-edit-media"
                        href="#"
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Edit
@@ -607,18 +613,18 @@ const mediaLibraryModule = (function() {
                     ${row.ingest_method === 'upload' ? `
                     <a class="dropdown-item btn-replace-media"
                        href="#"
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-exchange mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Replace file
                     </a>` : ''}
                     <a class="dropdown-item btn-delete-media text-danger"
                        href="#" 
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        data-name="${escaped_name}"
                        data-filename="${escaped_filename}"
-                       data-item-type="${item_type}"
-                       data-thumbnail-url="${row.delete_thumbnail_url || ''}"
+                       data-item-type="${sanitize_html(item_type)}"
+                       data-thumbnail-url="${sanitize_html(row.delete_thumbnail_url)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Delete
@@ -781,6 +787,7 @@ const mediaLibraryModule = (function() {
         }
 
         container.innerHTML = '';
+        exhibit_filter_current = null;
 
         if (!titles_map || titles_map.size === 0) {
             return;
@@ -1029,11 +1036,9 @@ const mediaLibraryModule = (function() {
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                close_list();
-            }
-        });
+        // Closed by the document click listener, which is bound once per page
+        exhibit_filter_current = { wrapper, close_list };
+        register_exhibit_filter_outside_click();
 
         // Restore previous selection if set (e.g., after refresh)
         if (selected_exhibit_uuid && titles_map.has(selected_exhibit_uuid)) {
@@ -1042,6 +1047,26 @@ const mediaLibraryModule = (function() {
             caret.classList.add('d-none');
         }
     };
+
+    /**
+     * Registers the document click listener that closes the exhibit filter listbox on a
+     * click outside it. Idempotent — the filter is rebuilt on every refresh, and a listener
+     * bound per build would accumulate; this one reads the current filter at click time.
+     */
+    const register_exhibit_filter_outside_click = (() => {
+        let registered = false;
+
+        return () => {
+            if (registered) return;
+            registered = true;
+
+            document.addEventListener('click', (e) => {
+                if (exhibit_filter_current && !exhibit_filter_current.wrapper.contains(e.target)) {
+                    exhibit_filter_current.close_list();
+                }
+            });
+        };
+    })();
 
     /**
      * Registers the DataTable custom search function for exhibit filtering.
@@ -1210,39 +1235,39 @@ const mediaLibraryModule = (function() {
                                     const repo_tn_url = get_repo_thumbnail_url(row.repo_uuid);
                                     if (repo_tn_url) {
                                         thumbnail_html = `
-                                            <img src="${repo_tn_url}" 
-                                                 alt="Thumbnail for ${display_name}"
+                                            <img src="${sanitize_html(repo_tn_url)}" 
+                                                 alt="Thumbnail for ${sanitize_html(display_name)}"
                                                  class="media-thumbnail media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"
+                                                 data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"
                                                  data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                     } else {
                                         thumbnail_html = `
                                             <img src="${PLACEHOLDER_IMAGE}"
-                                                 alt="Placeholder for ${display_name}"
+                                                 alt="Placeholder for ${sanitize_html(display_name)}"
                                                  class="media-thumbnail-placeholder media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view">`;
+                                                 data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view">`;
                                     }
                                 } else if (row.ingest_method === 'kaltura' && row.kaltura_thumbnail_url) {
                                     // Kaltura item: use kaltura thumbnail URL from database
                                     thumbnail_html = `
-                                        <img src="${row.kaltura_thumbnail_url}" 
-                                             alt="Thumbnail for ${display_name}"
+                                        <img src="${sanitize_html(row.kaltura_thumbnail_url)}" 
+                                             alt="Thumbnail for ${sanitize_html(display_name)}"
                                              class="media-thumbnail media-thumbnail-clickable"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                              loading="lazy"
-                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${row.kaltura_thumbnail_url}" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view"
+                                             data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${sanitize_html(row.kaltura_thumbnail_url)}" data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}" title="Click to view"
                                              data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else if (row.ingest_method === 'kaltura') {
                                     // Kaltura item without thumbnail: show place
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}" 
-                                             alt="Placeholder for ${display_name}"
+                                             alt="Placeholder for ${sanitize_html(display_name)}"
                                              class="media-thumbnail-placeholder media-thumbnail-clickable"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view">`;
+                                             data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}" title="Click to view">`;
                                 } else if (row.has_thumbnail && row.thumbnail_url) {
                                     // Uploaded image/PDF with a server-generated thumbnail, or a repository
                                     // item that has one. Both are clickable to open their details modal —
@@ -1252,12 +1277,12 @@ const mediaLibraryModule = (function() {
                                     const tn_clickable_class = is_clickable ? 'media-thumbnail-clickable' : '';
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                                     thumbnail_html = `
-                                        <img src="${img_url}"
-                                             alt="Thumbnail for ${display_name}"
+                                        <img src="${sanitize_html(img_url)}"
+                                             alt="Thumbnail for ${sanitize_html(display_name)}"
                                              class="media-thumbnail ${tn_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${tn_cursor_style}"
                                              loading="lazy"
-                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}
+                                             ${is_clickable ? `data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}
                                              data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else {
                                     // Placeholder for items without a thumbnail. Clickable for repo items
@@ -1266,10 +1291,10 @@ const mediaLibraryModule = (function() {
                                     const placeholder_cursor_style = is_clickable ? 'cursor: pointer;' : '';
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}"
-                                             alt="Placeholder for ${display_name}"
+                                             alt="Placeholder for ${sanitize_html(display_name)}"
                                              class="media-thumbnail-placeholder ${placeholder_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${placeholder_cursor_style}"
-                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}>`;
+                                             ${is_clickable ? `data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine the thumbnail with the name + ingest-method pill,
