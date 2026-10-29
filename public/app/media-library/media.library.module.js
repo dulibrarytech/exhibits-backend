@@ -628,25 +628,14 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Setup action button event handlers and initialize dropdowns
+     * Setup action button event handlers (Bootstrap's data-API creates the dropdowns)
      */
     const setup_action_handlers = () => {
-        // Inject CSS for dropdown positioning and thumbnail hover
+        // Inject CSS for thumbnail and name hover (the actions menu rule lives in style.css)
         if (!document.getElementById('media-actions-dropdown-styles')) {
             const style = document.createElement('style');
             style.id = 'media-actions-dropdown-styles';
             style.textContent = `
-                .media-actions-menu.dropdown-menu {
-                    right: 0 !important;
-                    left: auto !important;
-                    transform: none !important;
-                    margin-top: 0;
-                }
-                .media-actions-menu.dropdown-menu.show {
-                    right: 0 !important;
-                    left: auto !important;
-                    transform: none !important;
-                }
                 .media-thumbnail-clickable:hover {
                     opacity: 0.8;
                     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
@@ -663,24 +652,15 @@ const mediaLibraryModule = (function() {
             document.head.appendChild(style);
         }
 
-        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
-        document.querySelectorAll('.media-actions-toggle').forEach(toggle => {
-            // Bootstrap 5
-            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
-                new bootstrap.Dropdown(toggle);
-            }
-            // Bootstrap 4 - uses jQuery
-            else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-                $(toggle).dropdown();
-            }
-        });
-
-        // Close dropdowns when clicking outside
-        document.removeEventListener('click', close_open_dropdowns);
-        document.addEventListener('click', close_open_dropdowns);
+        /*
+         * Bootstrap's data-API (data-toggle="dropdown") creates, opens and closes the menus;
+         * don't construct them here (#208). Rows are reused across draws, so wire each element once.
+         */
 
         // Thumbnail click handlers for viewing media
         document.querySelectorAll('.media-thumbnail-clickable').forEach(thumbnail => {
+            if (thumbnail.dataset.bound === 'true') return;
+            thumbnail.dataset.bound = 'true';
             thumbnail.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -737,10 +717,10 @@ const mediaLibraryModule = (function() {
 
         // Edit button handlers (dropdown items)
         document.querySelectorAll('.btn-edit-media').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 handle_edit_click(uuid);
             });
@@ -748,10 +728,10 @@ const mediaLibraryModule = (function() {
 
         // Play button handlers for Kaltura items (dropdown items)
         document.querySelectorAll('.btn-play-kaltura').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_dropdowns();
 
                 // Prefer the full row record (audit fields surface in player metadata).
                 // Fall back to the minimal record assembled from data attributes when
@@ -777,10 +757,10 @@ const mediaLibraryModule = (function() {
 
         // Replace-file button handlers (dropdown items; uploaded rows only)
         document.querySelectorAll('.btn-replace-media').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 handle_replace_click(uuid);
             });
@@ -788,10 +768,10 @@ const mediaLibraryModule = (function() {
 
         // Delete button handlers (dropdown items)
         document.querySelectorAll('.btn-delete-media').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 const name = this.getAttribute('data-name');
                 const filename = this.getAttribute('data-filename');
@@ -799,26 +779,6 @@ const mediaLibraryModule = (function() {
                 const thumbnail_url = this.getAttribute('data-thumbnail-url');
                 handle_delete_click(uuid, name, filename, item_type, thumbnail_url);
             });
-        });
-    };
-
-    /**
-     * Close all open dropdown menus
-     * @param {Event} [e] - Optional click event
-     */
-    const close_open_dropdowns = (e) => {
-        // If event provided, check if click was inside a dropdown
-        if (e && e.target.closest('.dropdown')) {
-            return;
-        }
-
-        // Close all open dropdowns
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-            const toggle = menu.previousElementSibling;
-            if (toggle) {
-                toggle.setAttribute('aria-expanded', 'false');
-            }
         });
     };
 

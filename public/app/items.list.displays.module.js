@@ -1222,44 +1222,6 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Setup item action dropdown handlers
-     * Called after HTML injection and on DataTable redraws
-     */
-    obj.setup_item_action_handlers = function() {
-
-        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
-        document.querySelectorAll('.item-actions-toggle').forEach(toggle => {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
-                new bootstrap.Dropdown(toggle);
-            } else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-                $(toggle).dropdown();
-            }
-        });
-
-        // Close dropdowns when clicking outside
-        document.removeEventListener('click', close_open_item_dropdowns);
-        document.addEventListener('click', close_open_item_dropdowns);
-    };
-
-    /**
-     * Close all open item dropdown menus
-     * @param {Event} [e] - Optional click event
-     */
-    const close_open_item_dropdowns = (e) => {
-        if (e && e.target.closest('.dropdown')) {
-            return;
-        }
-
-        document.querySelectorAll('.item-actions-menu.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-            const toggle = menu.previousElementSibling;
-            if (toggle) {
-                toggle.setAttribute('aria-expanded', 'false');
-            }
-        });
-    };
-
-    /**
      * Build compact item metadata cell with optional thumbnail
      * @param {Object} opts
      * @param {string} opts.title - Item title

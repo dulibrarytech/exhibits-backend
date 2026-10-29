@@ -305,11 +305,6 @@ const itemsGridModule = (function () {
         grid_item_list.textContent = '';
         grid_item_list.appendChild(grid_template.content);
 
-        // Initialize action dropdown handlers
-        if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-            itemsListDisplayModule.setup_item_action_handlers();
-        }
-
         // Initialize DataTable.
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
@@ -469,10 +464,6 @@ const itemsGridModule = (function () {
                     </div>
                 `;
 
-                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                    itemsListDisplayModule.setup_item_action_handlers();
-                }
-
             } else if (response.status === 403) {
                 scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to publish this record.');
@@ -618,10 +609,6 @@ const itemsGridModule = (function () {
                         </div>
                     </div>
                 `;
-
-                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                    itemsListDisplayModule.setup_item_action_handlers();
-                }
 
             } else if (response === undefined) {
                 scrollTo(0, 0);

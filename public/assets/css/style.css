@@ -697,6 +697,19 @@ header .form-inline {
   -webkit-transform: none !important;
           transform: none !important; }
 
+/*
+ * Kebab (row action) menus on the list pages open to the left of their toggle,
+ * top-aligned, so the open menu never covers it (#208). The rule above stops
+ * Popper positioning dropdowns; !important beats the inline top/left it still sets.
+ */
+.exhibit-actions-menu.dropdown-menu,
+.item-actions-menu.dropdown-menu,
+.media-actions-menu.dropdown-menu {
+  top: 0 !important;
+  right: 100% !important;
+  left: auto !important;
+  margin-top: 0; }
+
 .user-area {
   float: right;
   padding-right: 0;

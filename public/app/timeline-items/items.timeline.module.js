@@ -355,11 +355,6 @@ const itemsTimelineModule = (function () {
             elements.timeline_item_list.textContent = '';
             elements.timeline_item_list.appendChild(timeline_template.content);
 
-            // Initialize action dropdown handlers
-            if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                itemsListDisplayModule.setup_item_action_handlers();
-            }
-
             // Initialize DataTable
             new DataTable('#timeline-items', {
                 paging: false,
@@ -507,10 +502,6 @@ const itemsTimelineModule = (function () {
                             </div>
                         </div>
                     `;
-
-                    if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                        itemsListDisplayModule.setup_item_action_handlers();
-                    }
                 }, 0);
             }
 
@@ -634,10 +625,6 @@ const itemsTimelineModule = (function () {
                             </div>
                         </div>
                     `;
-
-                    if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                        itemsListDisplayModule.setup_item_action_handlers();
-                    }
                 }, 0);
 
             } else if (response === undefined) {
