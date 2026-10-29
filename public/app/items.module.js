@@ -307,11 +307,6 @@ const itemsModule = (function() {
                 item_data_element.innerHTML = item_data;
             }
 
-            // Initialize action dropdown handlers
-            if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                itemsListDisplayModule.setup_item_action_handlers();
-            }
-
             // Destroy existing DataTable instance if it exists
             const items_table = document.querySelector('#items');
             if (items_table && DataTable.isDataTable('#items')) {
@@ -975,11 +970,6 @@ const itemsModule = (function() {
                 </div>
             </div>
         `;
-
-        // Re-initialize dropdown handlers
-        if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-            itemsListDisplayModule.setup_item_action_handlers();
-        }
     }
 
     /**

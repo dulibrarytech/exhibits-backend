@@ -627,25 +627,17 @@ const exhibitsModule = (function () {
      */
     function setup_exhibit_action_handlers() {
 
-        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
-        document.querySelectorAll('.exhibit-actions-toggle').forEach(toggle => {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
-                new bootstrap.Dropdown(toggle);
-            } else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-                $(toggle).dropdown();
-            }
-        });
-
-        // Close dropdowns when clicking outside
-        document.removeEventListener('click', close_open_exhibit_dropdowns);
-        document.addEventListener('click', close_open_exhibit_dropdowns);
+        /*
+         * Bootstrap's data-API (data-toggle="dropdown") creates, opens and closes the menus;
+         * don't construct them here (#208). Rows are reused across draws, so wire each link once.
+         */
 
         // Preview button handlers (dropdown items)
         document.querySelectorAll('.btn-preview-exhibit').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_exhibit_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 if (uuid) {
                     const preview_link = `${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`;
@@ -656,10 +648,10 @@ const exhibitsModule = (function () {
 
         // Share button handlers (dropdown items)
         document.querySelectorAll('.btn-share-exhibit').forEach(btn => {
+            if (btn.dataset.bound === 'true') return;
+            btn.dataset.bound = 'true';
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                close_open_exhibit_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 if (uuid) {
                     // Open the share modal
@@ -675,26 +667,6 @@ const exhibitsModule = (function () {
                     exhibitsModule.create_shared_preview_url(uuid);
                 }
             });
-        });
-    }
-
-    /**
-     * Close all open exhibit dropdown menus
-     * @param {Event} [e] - Optional click event
-     */
-    function close_open_exhibit_dropdowns(e) {
-        // If event provided, check if click was inside a dropdown
-        if (e && e.target.closest('.dropdown')) {
-            return;
-        }
-
-        // Close all open dropdowns
-        document.querySelectorAll('.exhibit-actions-menu.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-            const toggle = menu.previousElementSibling;
-            if (toggle) {
-                toggle.setAttribute('aria-expanded', 'false');
-            }
         });
     }
 
