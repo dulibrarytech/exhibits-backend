@@ -23,6 +23,7 @@ const exhibitsModule = (function () {
     const APP_PATH = endpointsModule.get_app_path();
     let obj = {};
     let link;
+    let exhibits_data_table = null;  // #exhibits DataTable instance, set by display_exhibits
 
     async function get_exhibits() {
 
@@ -169,6 +170,7 @@ const exhibitsModule = (function () {
 
             // Initialize DataTable
             const exhibit_list = initialize_exhibits_datatable();
+            exhibits_data_table = exhibit_list;
 
             // Bind event handlers
             bind_datatable_events(exhibit_list);
@@ -623,54 +625,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Setup exhibit action dropdown handlers after each DataTable draw
-     */
-    function setup_exhibit_action_handlers() {
-
-        /*
-         * Bootstrap's data-API (data-toggle="dropdown") creates, opens and closes the menus;
-         * don't construct them here (#208). Rows are reused across draws, so wire each link once.
-         */
-
-        // Preview button handlers (dropdown items)
-        document.querySelectorAll('.btn-preview-exhibit').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                if (uuid) {
-                    const preview_link = `${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`;
-                    exhibitsModule.open_preview(preview_link);
-                }
-            });
-        });
-
-        // Share button handlers (dropdown items)
-        document.querySelectorAll('.btn-share-exhibit').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                if (uuid) {
-                    // Open the share modal
-                    const modal_el = document.querySelector('.shared-url-modal');
-                    if (modal_el) {
-                        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-                            $(modal_el).modal('show');
-                        } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                            const bs_modal = new bootstrap.Modal(modal_el);
-                            bs_modal.show();
-                        }
-                    }
-                    exhibitsModule.create_shared_preview_url(uuid);
-                }
-            });
-        });
-    }
-
-    /**
      * Create date column
      * @param {string} date_string - Date string
      * @param {string} aria_label - ARIA label
@@ -776,9 +730,6 @@ const exhibitsModule = (function () {
                     table.querySelectorAll('thead th').forEach(th => {
                         th.setAttribute('scope', 'col');
                     });
-
-                    // Setup action dropdown handlers after each draw
-                    setup_exhibit_action_handlers();
                 }
             });
 
@@ -791,7 +742,9 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Bind event handlers to DataTable
+     * Bind event handlers to DataTable. Delegated through the table, so they cover rows
+     * whenever they are rendered, including a dropdown rebuilt after publish/suppress.
+     * The kebab menus themselves are Bootstrap's (data-API, #208).
      * @param {Object} exhibit_list - DataTable instance
      */
     function bind_datatable_events(exhibit_list) {
@@ -824,6 +777,38 @@ const exhibitsModule = (function () {
                 } else {
                     console.error('No UUID found on suppress button');
                 }
+            });
+
+            // Preview event (actions menu)
+            exhibit_list.on('click', 'tbody tr .btn-preview-exhibit', (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.getAttribute('data-uuid');
+
+                if (uuid) {
+                    exhibitsModule.open_preview(`${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`);
+                }
+            });
+
+            // Share event (actions menu)
+            exhibit_list.on('click', 'tbody tr .btn-share-exhibit', (event) => {
+                event.preventDefault();
+                const uuid = event.currentTarget.getAttribute('data-uuid');
+
+                if (!uuid) {
+                    return;
+                }
+
+                // Open the share modal
+                const modal_el = document.querySelector('.shared-url-modal');
+                if (modal_el) {
+                    if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                        $(modal_el).modal('show');
+                    } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const bs_modal = new bootstrap.Modal(modal_el);
+                        bs_modal.show();
+                    }
+                }
+                exhibitsModule.create_shared_preview_url(uuid);
             });
 
         } catch (error) {
@@ -1131,7 +1116,8 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Updates the exhibit actions UI based on state configuration
+     * Updates the exhibit actions UI based on state configuration. The rebuilt menu keeps
+     * the exhibit's title in its accessible name, as the initial render does.
      * @param {string} clean_uuid - UUID without suffix
      * @param {Object} state_config - State configuration object
      */
@@ -1154,15 +1140,30 @@ const exhibitsModule = (function () {
         }
 
         const encoded_uuid = encodeURIComponent(clean_uuid);
+        const title_element = row.querySelector('.exhibit-title');
+        const title = title_element ? title_element.textContent.trim() : '';
 
         // Rebuild dropdown with new published state using safe DOM construction.
         while (actions_td.firstChild) {
             actions_td.removeChild(actions_td.firstChild);
         }
-        actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, 'Exhibit', state_config.is_published));
+        actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, title, state_config.is_published));
+    }
 
-        // Re-initialize dropdown handlers for this new dropdown
-        setup_exhibit_action_handlers();
+    /**
+     * Tells DataTables a row's cells changed. It caches each cell's markup from the DOM at
+     * init and, on a narrow screen, Responsive renders the row's child row from that cache;
+     * without this an expanded child row keeps showing the pre-publish status link and menu.
+     * @param {string} clean_uuid - UUID without suffix (the row's id)
+     */
+    function refresh_exhibit_row(clean_uuid) {
+        const row = document.getElementById(clean_uuid);
+
+        if (!row || !exhibits_data_table) {
+            return;
+        }
+
+        exhibits_data_table.row(row).invalidate().draw(false);
     }
 
     /**
@@ -1217,6 +1218,7 @@ const exhibitsModule = (function () {
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.PUBLISHED);
+                refresh_exhibit_row(clean_uuid);
             } else if (!response) {
                 flash_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
             }
@@ -1272,6 +1274,7 @@ const exhibitsModule = (function () {
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.SUPPRESSED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.SUPPRESSED);
+                refresh_exhibit_row(clean_uuid);
             } else if (!response) {
                 flash_message('danger', 'Unable to unpublish exhibit. Please check your connection and try again.');
             }

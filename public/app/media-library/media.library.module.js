@@ -68,6 +68,12 @@ const mediaLibraryModule = (function() {
     let exhibit_titles_cache = null;   // Map<uuid, title>
     let selected_exhibit_uuid = null;  // Currently selected exhibit UUID for filtering
 
+    /*
+     * The exhibit filter on the page now (its wrapper and close function), read by the one
+     * document click listener that closes it; the filter is rebuilt on every refresh.
+     */
+    let exhibit_filter_current = null;
+
     // Resolve a media row's exhibit UUIDs → titles from the warm cache (loaded with
     // the list, see fetch_exhibit_titles) so every media modal — the upload, repo, and
     // Kaltura view modals AND the edit modal — can show which exhibit(s) the media has
@@ -570,10 +576,11 @@ const mediaLibraryModule = (function() {
             play_action_html = `
                     <a class="dropdown-item btn-play-kaltura" 
                        href="#" 
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        data-name="${escaped_name}"
                        data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}"
                        data-media-type="${sanitize_html(row.media_type || '')}"
+                       data-ingest-method="kaltura"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-play-circle mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Play
@@ -598,7 +605,7 @@ const mediaLibraryModule = (function() {
                     ${play_action_html}
                     <a class="dropdown-item btn-edit-media"
                        href="#"
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Edit
@@ -606,18 +613,18 @@ const mediaLibraryModule = (function() {
                     ${row.ingest_method === 'upload' ? `
                     <a class="dropdown-item btn-replace-media"
                        href="#"
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-exchange mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Replace file
                     </a>` : ''}
                     <a class="dropdown-item btn-delete-media text-danger"
                        href="#" 
-                       data-uuid="${uuid}"
+                       data-uuid="${sanitize_html(uuid)}"
                        data-name="${escaped_name}"
                        data-filename="${escaped_filename}"
-                       data-item-type="${item_type}"
-                       data-thumbnail-url="${row.delete_thumbnail_url || ''}"
+                       data-item-type="${sanitize_html(item_type)}"
+                       data-thumbnail-url="${sanitize_html(row.delete_thumbnail_url)}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Delete
@@ -628,158 +635,69 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Setup action button event handlers (Bootstrap's data-API creates the dropdowns)
+     * Opens the view for a row element from its data-* attributes: a clickable thumbnail,
+     * or a Kaltura row's Play item (a Kaltura item's view is the player)
+     * @param {HTMLElement} el - Element carrying the row's data-* attributes
      */
-    const setup_action_handlers = () => {
-        // Inject CSS for thumbnail and name hover (the actions menu rule lives in style.css)
-        if (!document.getElementById('media-actions-dropdown-styles')) {
-            const style = document.createElement('style');
-            style.id = 'media-actions-dropdown-styles';
-            style.textContent = `
-                .media-thumbnail-clickable:hover {
-                    opacity: 0.8;
-                    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-                    transition: opacity 0.2s, box-shadow 0.2s;
-                }
-                .media-name-clickable {
-                    cursor: pointer;
-                }
-                .media-name-clickable:hover {
-                    color: #0d6efd;
-                    text-decoration: underline;
-                }
-            `;
-            document.head.appendChild(style);
+    const open_view = (el) => {
+        const attr = (name) => el.getAttribute(`data-${name}`);
+        handle_view_click(attr('uuid'), attr('name'), attr('filename'), attr('size'), attr('media-type'), attr('ingest-method'),
+            attr('repo-uuid'), attr('repo-handle'), attr('kaltura-thumbnail-url'), attr('kaltura-entry-id'), attr('call-number'));
+    };
+
+    /**
+     * Sets up the row actions once, at init: one click listener on the table for every row's
+     * thumbnail, name and actions-menu items (hover styles live in media.library.css). The table
+     * element survives each draw and the destroy/re-create in display_media_records, so the
+     * listener covers rows whenever they are rendered. The kebab menus themselves are
+     * Bootstrap's (data-API, #208).
+     */
+    const init_row_actions = () => {
+        const table = document.querySelector('#items');
+
+        if (!table) {
+            return;
         }
 
         /*
-         * Bootstrap's data-API (data-toggle="dropdown") creates, opens and closes the menus;
-         * don't construct them here (#208). Rows are reused across draws, so wire each element once.
+         * Capture phase, so a thumbnail or name click can stop before it reaches the row: on a
+         * collapsed (narrow) table, DataTables Responsive toggles the row's details on any
+         * first-column click. Menu-item clicks carry on, so Bootstrap closes the menu.
          */
+        table.addEventListener('click', (e) => {
+            const target = e.target.closest('.media-thumbnail-clickable, .media-name-clickable, .btn-edit-media, .btn-play-kaltura, .btn-replace-media, .btn-delete-media');
 
-        // Thumbnail click handlers for viewing media
-        document.querySelectorAll('.media-thumbnail-clickable').forEach(thumbnail => {
-            if (thumbnail.dataset.bound === 'true') return;
-            thumbnail.dataset.bound = 'true';
-            thumbnail.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const uuid = this.getAttribute('data-uuid');
-                const name = this.getAttribute('data-name');
-                const filename = this.getAttribute('data-filename');
-                const size = this.getAttribute('data-size');
-                const media_type = this.getAttribute('data-media-type');
-                const ingest_method = this.getAttribute('data-ingest-method');
-                const repo_uuid = this.getAttribute('data-repo-uuid');
-                const repo_handle = this.getAttribute('data-repo-handle');
-                const kaltura_thumbnail_url = this.getAttribute('data-kaltura-thumbnail-url');
-                const kaltura_entry_id = this.getAttribute('data-kaltura-entry-id');
-                const call_number = this.getAttribute('data-call-number');
-                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id, call_number);
-            });
-        });
-
-        // Name click handlers - mirror thumbnail-click behavior so users can open
-        // the view modal by clicking either the thumbnail or the name text.
-        // Only wires up rows whose thumbnail is itself clickable (the existing
-        // gating logic for previewable items); rows where the thumbnail isn't
-        // clickable (e.g. uploaded audio) keep a plain, non-interactive name.
-        document.querySelectorAll('.media-name-cell').forEach(cell => {
-            const thumbnail = cell.querySelector('.media-thumbnail-clickable');
-            const name_el = cell.querySelector('.media-name');
-            if (!thumbnail || !name_el || name_el.dataset.viewBound === 'true') return;
-
-            name_el.classList.add('media-name-clickable');
-            // Set cursor inline (matches how the thumbnail inline-styles its own
-            // cursor) so the pointer always wins regardless of any class/UA rule.
-            name_el.style.cursor = 'pointer';
-            if (!name_el.getAttribute('title')) {
-                name_el.setAttribute('title', 'Click to view');
+            if (!target) {
+                return;
             }
-            name_el.dataset.viewBound = 'true';
-            name_el.addEventListener('click', function(e) {
-                e.preventDefault();
+
+            e.preventDefault();
+
+            if (target.classList.contains('media-thumbnail-clickable')) {
                 e.stopPropagation();
-                const uuid = thumbnail.getAttribute('data-uuid');
-                const name = thumbnail.getAttribute('data-name');
-                const filename = thumbnail.getAttribute('data-filename');
-                const size = thumbnail.getAttribute('data-size');
-                const media_type = thumbnail.getAttribute('data-media-type');
-                const ingest_method = thumbnail.getAttribute('data-ingest-method');
-                const repo_uuid = thumbnail.getAttribute('data-repo-uuid');
-                const repo_handle = thumbnail.getAttribute('data-repo-handle');
-                const kaltura_thumbnail_url = thumbnail.getAttribute('data-kaltura-thumbnail-url');
-                const kaltura_entry_id = thumbnail.getAttribute('data-kaltura-entry-id');
-                const call_number = thumbnail.getAttribute('data-call-number');
-                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id, call_number);
-            });
-        });
-
-        // Edit button handlers (dropdown items)
-        document.querySelectorAll('.btn-edit-media').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                handle_edit_click(uuid);
-            });
-        });
-
-        // Play button handlers for Kaltura items (dropdown items)
-        document.querySelectorAll('.btn-play-kaltura').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-
-                // Prefer the full row record (audit fields surface in player metadata).
-                // Fall back to the minimal record assembled from data attributes when
-                // the row isn't in the map for some reason.
-                const uuid = this.getAttribute('data-uuid');
-                const record = (uuid && view_record_map.get(uuid)) || {
-                    kaltura_entry_id: this.getAttribute('data-kaltura-entry-id'),
-                    name: this.getAttribute('data-name'),
-                    item_type: this.getAttribute('data-media-type') || ''
-                };
-
-                // Resolve exhibit titles so the player modal's Exhibit(s) row shows here
-                // too (same as the click-dispatch path).
-                resolve_exhibit_names(record);
-
-                if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_player_modal === 'function') {
-                    kalturaModalsModule.open_kaltura_player_modal(record);
-                } else {
-                    console.error('kalturaModalsModule.open_kaltura_player_modal not available');
+                open_view(target);
+            } else if (target.classList.contains('media-name-clickable')) {
+                e.stopPropagation();
+                const thumbnail = target.closest('.media-name-cell').querySelector('.media-thumbnail-clickable');
+                if (thumbnail) {
+                    open_view(thumbnail);
                 }
-            });
-        });
-
-        // Replace-file button handlers (dropdown items; uploaded rows only)
-        document.querySelectorAll('.btn-replace-media').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                handle_replace_click(uuid);
-            });
-        });
-
-        // Delete button handlers (dropdown items)
-        document.querySelectorAll('.btn-delete-media').forEach(btn => {
-            if (btn.dataset.bound === 'true') return;
-            btn.dataset.bound = 'true';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const uuid = this.getAttribute('data-uuid');
-                const name = this.getAttribute('data-name');
-                const filename = this.getAttribute('data-filename');
-                const item_type = this.getAttribute('data-item-type');
-                const thumbnail_url = this.getAttribute('data-thumbnail-url');
-                handle_delete_click(uuid, name, filename, item_type, thumbnail_url);
-            });
-        });
+            } else if (target.classList.contains('btn-edit-media')) {
+                handle_edit_click(target.getAttribute('data-uuid'));
+            } else if (target.classList.contains('btn-play-kaltura')) {
+                open_view(target);
+            } else if (target.classList.contains('btn-replace-media')) {
+                handle_replace_click(target.getAttribute('data-uuid'));
+            } else {
+                handle_delete_click(
+                    target.getAttribute('data-uuid'),
+                    target.getAttribute('data-name'),
+                    target.getAttribute('data-filename'),
+                    target.getAttribute('data-item-type'),
+                    target.getAttribute('data-thumbnail-url')
+                );
+            }
+        }, true);
     };
 
     // ==================== EXHIBIT FILTER ====================
@@ -869,6 +787,7 @@ const mediaLibraryModule = (function() {
         }
 
         container.innerHTML = '';
+        exhibit_filter_current = null;
 
         if (!titles_map || titles_map.size === 0) {
             return;
@@ -1117,11 +1036,9 @@ const mediaLibraryModule = (function() {
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                close_list();
-            }
-        });
+        // Closed by the document click listener, which is bound once per page
+        exhibit_filter_current = { wrapper, close_list };
+        register_exhibit_filter_outside_click();
 
         // Restore previous selection if set (e.g., after refresh)
         if (selected_exhibit_uuid && titles_map.has(selected_exhibit_uuid)) {
@@ -1130,6 +1047,26 @@ const mediaLibraryModule = (function() {
             caret.classList.add('d-none');
         }
     };
+
+    /**
+     * Registers the document click listener that closes the exhibit filter listbox on a
+     * click outside it. Idempotent — the filter is rebuilt on every refresh, and a listener
+     * bound per build would accumulate; this one reads the current filter at click time.
+     */
+    const register_exhibit_filter_outside_click = (() => {
+        let registered = false;
+
+        return () => {
+            if (registered) return;
+            registered = true;
+
+            document.addEventListener('click', (e) => {
+                if (exhibit_filter_current && !exhibit_filter_current.wrapper.contains(e.target)) {
+                    exhibit_filter_current.close_list();
+                }
+            });
+        };
+    })();
 
     /**
      * Registers the DataTable custom search function for exhibit filtering.
@@ -1289,76 +1226,75 @@ const mediaLibraryModule = (function() {
                                 const display_name = data || 'Untitled';
                                 let thumbnail_html = '';
                                 const is_repo = row.ingest_method === 'repository';
+                                // Repository and Kaltura items always open a view; uploads only for images and PDFs
+                                const is_clickable = is_repo || row.ingest_method === 'kaltura'
+                                    || (row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf'));
 
                                 if (is_repo && row.repo_uuid) {
                                     // Repository item: use repo thumbnail endpoint
                                     const repo_tn_url = get_repo_thumbnail_url(row.repo_uuid);
                                     if (repo_tn_url) {
                                         thumbnail_html = `
-                                            <img src="${repo_tn_url}" 
-                                                 alt="Thumbnail for ${display_name}"
+                                            <img src="${sanitize_html(repo_tn_url)}" 
+                                                 alt="Thumbnail for ${sanitize_html(display_name)}"
                                                  class="media-thumbnail media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"
+                                                 data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"
                                                  data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                     } else {
                                         thumbnail_html = `
                                             <img src="${PLACEHOLDER_IMAGE}"
-                                                 alt="Placeholder for ${display_name}"
+                                                 alt="Placeholder for ${sanitize_html(display_name)}"
                                                  class="media-thumbnail-placeholder media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view">`;
+                                                 data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view">`;
                                     }
                                 } else if (row.ingest_method === 'kaltura' && row.kaltura_thumbnail_url) {
                                     // Kaltura item: use kaltura thumbnail URL from database
                                     thumbnail_html = `
-                                        <img src="${row.kaltura_thumbnail_url}" 
-                                             alt="Thumbnail for ${display_name}"
+                                        <img src="${sanitize_html(row.kaltura_thumbnail_url)}" 
+                                             alt="Thumbnail for ${sanitize_html(display_name)}"
                                              class="media-thumbnail media-thumbnail-clickable"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                              loading="lazy"
-                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${row.kaltura_thumbnail_url}" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view"
+                                             data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${sanitize_html(row.kaltura_thumbnail_url)}" data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}" title="Click to view"
                                              data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else if (row.ingest_method === 'kaltura') {
                                     // Kaltura item without thumbnail: show place
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}" 
-                                             alt="Placeholder for ${display_name}"
+                                             alt="Placeholder for ${sanitize_html(display_name)}"
                                              class="media-thumbnail-placeholder media-thumbnail-clickable"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view">`;
+                                             data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}" title="Click to view">`;
                                 } else if (row.has_thumbnail && row.thumbnail_url) {
                                     // Uploaded image/PDF with a server-generated thumbnail, or a repository
                                     // item that has one. Both are clickable to open their details modal —
                                     // repo rows dispatch to the repo view modal, keyed off the media uuid
                                     // (they reach this branch when they carry a local thumbnail but no repo_uuid).
-                                    const is_clickable = row.ingest_method === 'repository'
-                                        || (row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf'));
                                     const tn_cursor_style = is_clickable ? 'cursor: pointer;' : '';
                                     const tn_clickable_class = is_clickable ? 'media-thumbnail-clickable' : '';
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                                     thumbnail_html = `
-                                        <img src="${img_url}"
-                                             alt="Thumbnail for ${display_name}"
+                                        <img src="${sanitize_html(img_url)}"
+                                             alt="Thumbnail for ${sanitize_html(display_name)}"
                                              class="media-thumbnail ${tn_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${tn_cursor_style}"
                                              loading="lazy"
-                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}
+                                             ${is_clickable ? `data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}
                                              data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else {
                                     // Placeholder for items without a thumbnail. Clickable for repo items
                                     // (open their details modal) and for uploaded images/PDFs.
-                                    const is_clickable = row.ingest_method === 'repository'
-                                        || (row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf'));
                                     const placeholder_clickable_class = is_clickable ? 'media-thumbnail-clickable' : '';
                                     const placeholder_cursor_style = is_clickable ? 'cursor: pointer;' : '';
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}"
-                                             alt="Placeholder for ${display_name}"
+                                             alt="Placeholder for ${sanitize_html(display_name)}"
                                              class="media-thumbnail-placeholder ${placeholder_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${placeholder_cursor_style}"
-                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}>`;
+                                             ${is_clickable ? `data-uuid="${sanitize_html(row.uuid)}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${sanitize_html(row.size_display)}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${sanitize_html(row.repo_uuid)}" data-repo-handle="${sanitize_html(row.repo_handle)}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine the thumbnail with the name + ingest-method pill,
@@ -1367,11 +1303,15 @@ const mediaLibraryModule = (function() {
                                 const ingest_badge_html = ingest_label
                                     ? `<span class="media-ingest-badge">${sanitize_html(ingest_label)}</span>`
                                     : '';
+
+                                // The name opens the view too, but only where the thumbnail does
+                                // (rows like uploaded audio keep a plain name).
+                                const name_class = is_clickable ? 'media-name media-name-clickable' : 'media-name';
                                 return `
                                     <div class="media-name-cell" style="display: flex; align-items: center;">
                                         ${thumbnail_html}
                                         <div class="media-name-meta" style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
-                                            <small class="media-name" title="${sanitize_html(display_name)}">${sanitize_html(display_name)}</small>
+                                            <small class="${name_class}" title="${sanitize_html(display_name)}">${sanitize_html(display_name)}</small>
                                             ${ingest_badge_html}
                                         </div>
                                     </div>`;
@@ -1540,9 +1480,6 @@ const mediaLibraryModule = (function() {
                         th.setAttribute('scope', 'col');
                     });
 
-                    // Setup action button handlers after each draw
-                    setup_action_handlers();
-
                     // Wire CSP-safe <img> error handlers on the new
                     // thumbnails. Row markup carries data-fallback="placeholder"
                     // / data-fallback-src="..." instead of inline onerror.
@@ -1699,6 +1636,9 @@ const mediaLibraryModule = (function() {
 
             // Initialize Kaltura view modal close handlers
             init_kaltura_view_modal();
+
+            // Row actions are wired once; the table listener covers every render
+            init_row_actions();
 
             // Initialize page - display media records in DataTable
             await obj.display_media_records();

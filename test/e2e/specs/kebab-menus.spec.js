@@ -273,53 +273,223 @@ test.describe('Kebab action menus (#208)', () => {
     });
 
     /*
-     * The row actions are wired in drawCallback, and DataTables reuses row
-     * nodes, so before the fix every redraw added another click listener: after
-     * three redraws one click ran the action four times. The module functions
-     * are swapped for counters so no modal or window opens.
+     * Row actions are handled by one listener on each table, wired once (#212). These run
+     * every action after the table has redrawn (and, for the media library, been destroyed
+     * and rebuilt by a refresh): each must run exactly once. The module functions are swapped
+     * for recorders so no modal or window opens.
      */
-    test.describe('row actions run once per click after table redraws', () => {
+    test.describe('row actions run once per click after redraws', () => {
 
-        test('media library Edit', async ({ page }) => {
-            await open_media_library(page);
+        test('media library: thumbnail, name and every menu item', async ({ page }) => {
+            await seedAuth(page);
+            await stubAuthPermissionsApi(page);
+            await stubVerifyTokenApi(page);
+            await stubExhibitsApi(page, { records: [] });
+            await stubMediaLibraryListApi(page, {
+                records: [
+                    mediaRecordFixture({ uuid: 'media-image', name: 'An image', original_filename: 'photo.jpg', ingest_method: 'upload', media_type: 'image' }),
+                    mediaRecordFixture({ uuid: 'media-audio', name: 'An audio file', original_filename: 'clip.mp3', ingest_method: 'upload', media_type: 'audio', thumbnail_path: null }),
+                    mediaRecordFixture({ uuid: 'media-kaltura', name: 'A Kaltura clip', original_filename: null, ingest_method: 'kaltura', kaltura_entry_id: 'entry-1', media_type: 'video', mime_type: 'video/mp4' }),
+                ],
+            });
+            await page.goto(`${APP_PATH}/media/library`);
+            await expect(page.locator('.media-actions-toggle')).toHaveCount(3);
+
             await redraw(page, '#items', 3);
+            // eslint-disable-next-line no-undef
+            await page.evaluate(() => mediaLibraryModule.refresh_media_records());
+            await expect(page.locator('.media-actions-toggle')).toHaveCount(3);
 
             await page.evaluate(() => {
-                window.__edit_calls = [];
-                // eslint-disable-next-line no-undef
-                mediaEditModalModule.open_edit_media_modal = async (uuid) => {
-                    window.__edit_calls.push(uuid);
+                window.__calls = [];
+                const recorder = (action) => (arg) => {
+                    window.__calls.push(`${action}:${arg && arg.uuid ? arg.uuid : arg}`);
                 };
+                /* eslint-disable no-undef */
+                mediaModalsModule.open_view_media_modal = recorder('view');
+                mediaEditModalModule.open_edit_media_modal = recorder('edit');
+                mediaReplaceModalModule.open_replace_media_modal = recorder('replace');
+                mediaDeleteModalModule.open_delete_media_modal = recorder('delete');
+                kalturaModalsModule.open_kaltura_player_modal = recorder('play');
+                /* eslint-enable no-undef */
             });
 
-            const first_row_uuid = await page.locator('.btn-edit-media').first().getAttribute('data-uuid');
-            await page.locator('.media-actions-toggle').first().click();
-            await page.locator('.media-actions-menu').first().locator('.btn-edit-media').click();
+            const row = (uuid) => page.locator('#items tbody tr', { has: page.locator(`.btn-edit-media[data-uuid="${uuid}"]`) });
 
-            expect(await page.evaluate(() => window.__edit_calls)).toEqual([first_row_uuid]);
-            // Bootstrap closed the menu: nothing is left marked open, wrapper included
+            const image_row = row('media-image');
+            // The pointer comes from media.library.css, whose rule must follow the .media-name rule
+            await expect(image_row.locator('.media-name')).toHaveCSS('cursor', 'pointer');
+            await image_row.locator('img.media-thumbnail-clickable').click();
+            await image_row.locator('.media-name').click();
+            for (const item of ['.btn-edit-media', '.btn-replace-media', '.btn-delete-media']) {
+                await image_row.locator('.media-actions-toggle').click();
+                await image_row.locator(item).click();
+            }
+
+            const kaltura_row = row('media-kaltura');
+            await kaltura_row.locator('.media-actions-toggle').click();
+            await kaltura_row.locator('.btn-play-kaltura').click();
+
+            // Uploaded audio has no preview, so its name is plain text, not a link
+            const audio_name = row('media-audio').locator('.media-name');
+            await expect(audio_name).not.toHaveClass(/media-name-clickable/);
+            await expect(audio_name).toHaveCSS('cursor', 'default');
+            await audio_name.click();
+
+            expect(await page.evaluate(() => window.__calls)).toEqual([
+                'view:media-image',
+                'view:media-image',
+                'edit:media-image',
+                'replace:media-image',
+                'delete:media-image',
+                'play:media-kaltura',
+            ]);
+            // Bootstrap closed the menus: nothing is left marked open, wrappers included
             await expect(page.locator('.dropdown.show, .dropdown-menu.show')).toHaveCount(0);
         });
 
-        test('exhibits list Preview', async ({ page }) => {
+        test('media library: on a narrow screen a thumbnail click opens the view without expanding the row', async ({ page }) => {
+            await page.setViewportSize({ width: 600, height: 900 });
+            await open_media_library(page);
+
+            // Precondition: DataTables Responsive has hidden columns, so first-column clicks expand rows
+            await expect(page.locator('#items')).toHaveClass(/collapsed/);
+
+            await page.evaluate(() => {
+                window.__views = 0;
+                // eslint-disable-next-line no-undef
+                mediaModalsModule.open_view_media_modal = () => { window.__views += 1; };
+            });
+
+            await page.locator('img.media-thumbnail-clickable').first().click();
+
+            expect(await page.evaluate(() => window.__views)).toBe(1);
+            await expect(page.locator('#items tr.child')).toHaveCount(0);
+        });
+
+        test('exhibits list: Preview and Share', async ({ page }) => {
             await open_exhibits_list(page);
             await redraw(page, '#exhibits', 3);
 
             await page.evaluate(() => {
-                window.__preview_calls = [];
-                // eslint-disable-next-line no-undef
-                exhibitsModule.open_preview = (link) => {
-                    window.__preview_calls.push(link);
-                };
+                window.__calls = [];
+                /* eslint-disable no-undef */
+                exhibitsModule.open_preview = (link) => { window.__calls.push(`preview:${link}`); };
+                exhibitsModule.create_shared_preview_url = (uuid) => { window.__calls.push(`share:${uuid}`); };
+                /* eslint-enable no-undef */
             });
 
+            const uuid = await page.locator('.btn-preview-exhibit').first().getAttribute('data-uuid');
             await page.locator('.exhibit-actions-toggle').first().click();
             await page.locator('.exhibit-actions-menu').first().locator('.btn-preview-exhibit').click();
+            await page.locator('.exhibit-actions-toggle').first().click();
+            await page.locator('.exhibit-actions-menu').first().locator('.btn-share-exhibit').click();
 
-            const calls = await page.evaluate(() => window.__preview_calls);
-            expect(calls).toHaveLength(1);
-            expect(calls[0]).toContain(`${APP_PATH}/preview?uuid=`);
+            expect(await page.evaluate(() => window.__calls)).toEqual([
+                `preview:${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`,
+                `share:${uuid}`,
+            ]);
+            await expect(page.locator('.shared-url-modal')).toHaveClass(/show/);
             await expect(page.locator('.dropdown.show, .dropdown-menu.show')).toHaveCount(0);
+        });
+    });
+
+    /*
+     * Publishing or unpublishing rebuilds the row's status link and ⋮ menu. DataTables
+     * caches each cell's markup from the DOM at init and, on a narrow screen, Responsive
+     * renders the row's child row from that cache, so the module must tell DataTables the
+     * row changed. The rebuilt menu must also keep the exhibit's title in its name.
+     */
+    test.describe('row actions after a publish rebuilds the menu', () => {
+
+        const FIRST_UUID = '00000001-e29b-41d4-a716-446655440000';
+
+        async function stub_publish(page, uuid) {
+            await page.route(`**${APP_PATH}/api/v1/exhibits/${uuid}/publish`, (route) => {
+                if (route.request().method() !== 'POST') {
+                    return route.fallback();
+                }
+                return route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ data: { uuid } }),
+                });
+            });
+        }
+
+        test('exhibits list: the rebuilt menu keeps the title and runs Preview and Share once', async ({ page }) => {
+            await open_exhibits_list(page);
+            await stub_publish(page, FIRST_UUID);
+
+            await page.evaluate(() => {
+                window.__calls = [];
+                /* eslint-disable no-undef */
+                exhibitsModule.open_preview = (link) => { window.__calls.push(`preview:${link}`); };
+                exhibitsModule.create_shared_preview_url = (uuid) => { window.__calls.push(`share:${uuid}`); };
+                /* eslint-enable no-undef */
+            });
+
+            const row = page.locator(`tr[id="${FIRST_UUID}"]`);
+            await row.locator('a.publish-exhibit').click();
+            await expect(row.locator('a.suppress-exhibit')).toHaveCount(1);
+
+            const toggle = row.locator('.exhibit-actions-toggle');
+            const menu = row.locator('.exhibit-actions-menu');
+            await expect(toggle).toHaveCount(1);
+            await expect(toggle).toHaveAttribute('aria-label', 'Actions for Exhibit 1');
+            await expect(menu).toContainText('Details');
+            await expect(menu).not.toContainText('Edit');
+
+            await toggle.click();
+            await menu.locator('.btn-preview-exhibit').click();
+            await toggle.click();
+            await menu.locator('.btn-share-exhibit').click();
+
+            expect(await page.evaluate(() => window.__calls)).toEqual([
+                `preview:${APP_PATH}/preview?uuid=${encodeURIComponent(FIRST_UUID)}`,
+                `share:${FIRST_UUID}`,
+            ]);
+            await expect(page.locator('.dropdown.show, .dropdown-menu.show')).toHaveCount(0);
+        });
+
+        test('exhibits list: on a narrow screen the expanded child row shows the rebuilt status and menu', async ({ page }) => {
+            await page.setViewportSize({ width: 600, height: 900 });
+            await open_exhibits_list(page);
+            await stub_publish(page, FIRST_UUID);
+
+            // Precondition: Responsive has hidden the Actions column (the last one)
+            await expect(page.locator('#exhibits')).toHaveClass(/collapsed/);
+            await expect(page.locator('#exhibits thead th').last()).toBeHidden();
+
+            const row = page.locator(`tr[id="${FIRST_UUID}"]`);
+            const child = page.locator(`tr[id="${FIRST_UUID}"] + tr.child`);
+            await row.locator('td.dtr-control').click({ position: { x: 5, y: 5 } });
+            await expect(child).toBeVisible();
+            await expect(child.locator('.exhibit-actions-menu')).toContainText('Edit');
+
+            // Publish from whichever status link is on screen (the child row's copy when
+            // the Status column is hidden as well)
+            await page.locator(`a.publish-exhibit[id="${FIRST_UUID}-status"]:visible`).click();
+            await expect(page.locator(`a.suppress-exhibit[id="${FIRST_UUID}-status"]:visible`)).toHaveCount(1);
+
+            // The child row was re-rendered from the updated row: one menu, published state
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveCount(1);
+            await expect(child.locator('.exhibit-actions-menu')).toContainText('Details');
+            await expect(child.locator('.exhibit-actions-menu')).not.toContainText('Edit');
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveAttribute('aria-label', 'Actions for Exhibit 1');
+
+            // Back on a desktop width the Actions column returns: the row holds one published
+            // menu and the child row (if another column is still hidden) carries no copy of it
+            await page.setViewportSize({ width: 1280, height: 900 });
+            // On a window resize Responsive reuses the column widths it measured at 600px and
+            // keeps Actions hidden; recalc() re-measures, as a page load at this width would
+            // eslint-disable-next-line no-undef
+            await page.evaluate(() => window.jQuery('#exhibits').DataTable().responsive.recalc());
+            await expect(page.locator('#exhibits thead th').last()).toBeVisible();
+            await expect(row.locator('.exhibit-actions-toggle')).toHaveCount(1);
+            await expect(row.locator('.exhibit-actions-menu')).toContainText('Details');
+            await expect(child.locator('.exhibit-actions-toggle')).toHaveCount(0);
+            await expect(page.locator('#exhibits .exhibit-actions-toggle:visible')).toHaveCount(ROWS.length);
         });
     });
 });
