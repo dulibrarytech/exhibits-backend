@@ -261,31 +261,73 @@ test.describe('Media library list page (media.library.module.js — display_medi
         // class and data-uuid. A name that closed the alt early injected attributes the
         // parser kept (the first duplicate wins), so this thumbnail opened another record's
         // view — and, with inline scripts allowed by the CSP, could run an event handler.
+        // The upload, repository and Kaltura thumbnails come from separate branches of the
+        // Name column, so one record of each kind carries the injecting name.
         const injecting_name = 'x" data-uuid="other';
         await stubMediaLibraryListApi(page, {
             records: [
                 mediaRecordFixture({ uuid: 'other', name: 'Other record', ingest_method: 'upload' }),
                 mediaRecordFixture({ uuid: 'quoted', name: injecting_name, ingest_method: 'upload' }),
+                mediaRecordFixture({
+                    uuid: 'quoted-repo',
+                    name: injecting_name,
+                    original_filename: null,
+                    ingest_method: 'repository',
+                    repo_uuid: 'repo-uuid-1',
+                    repo_handle: 'http://example.com/handle/1',
+                    media_type: 'object',
+                }),
+                mediaRecordFixture({
+                    uuid: 'quoted-kaltura',
+                    name: injecting_name,
+                    original_filename: null,
+                    ingest_method: 'kaltura',
+                    kaltura_entry_id: 'entry-1',
+                    kaltura_thumbnail_url: 'https://cdnapisec.kaltura.com/thumb.jpg',
+                    media_type: 'video',
+                    mime_type: 'video/mp4',
+                }),
             ],
         });
+        // Menu items per row: uploads also get Replace file, Kaltura rows also get Play
+        const quoted_rows = [
+            { uuid: 'quoted', items: ['.btn-edit-media', '.btn-replace-media', '.btn-delete-media'] },
+            { uuid: 'quoted-repo', items: ['.btn-edit-media', '.btn-delete-media'] },
+            { uuid: 'quoted-kaltura', items: ['.btn-play-kaltura', '.btn-edit-media', '.btn-delete-media'] },
+        ];
 
         await page.goto(`${APP_PATH}/media/library`);
-        await expect(page.locator('#media-data tr')).toHaveCount(2);
+        await expect(page.locator('#media-data tr')).toHaveCount(4);
 
-        const quoted_row = page.locator('#media-data tr', { has: page.locator('a.btn-edit-media[data-uuid="quoted"]') });
-        const thumbnail = quoted_row.locator('img.media-thumbnail-clickable');
-        await expect(thumbnail).toHaveAttribute('alt', `Thumbnail for ${injecting_name}`);
-        await expect(thumbnail).toHaveAttribute('data-uuid', 'quoted');
+        const row = (uuid) => page.locator('#media-data tr', { has: page.locator(`a.btn-edit-media[data-uuid="${uuid}"]`) });
+
+        for (const { uuid, items } of quoted_rows) {
+            const thumbnail = row(uuid).locator('img.media-thumbnail-clickable');
+            await expect(thumbnail).toHaveAttribute('alt', `Thumbnail for ${injecting_name}`);
+            await expect(thumbnail).toHaveAttribute('data-uuid', uuid);
+            // Every menu item still carries the row's own uuid
+            await expect(row(uuid).locator('a.dropdown-item')).toHaveCount(items.length);
+            for (const item of items) {
+                await expect(row(uuid).locator(`a.dropdown-item${item}`)).toHaveAttribute('data-uuid', uuid);
+            }
+            await expect(row(uuid).locator('[data-uuid="other"]')).toHaveCount(0);
+        }
         await expect(page.locator('img[data-uuid="other"]')).toHaveCount(1);
 
-        // Clicking it opens its own record
+        // Clicking each thumbnail opens its own record (a Kaltura record's view is the player)
         await page.evaluate(() => {
             window.__views = [];
-            // eslint-disable-next-line no-undef
-            mediaModalsModule.open_view_media_modal = (uuid) => { window.__views.push(uuid); };
+            const record_view = (arg) => { window.__views.push(arg && arg.uuid ? arg.uuid : arg); };
+            /* eslint-disable no-undef */
+            mediaModalsModule.open_view_media_modal = record_view;
+            repoModalsModule.open_view_media_modal = record_view;
+            kalturaModalsModule.open_kaltura_player_modal = record_view;
+            /* eslint-enable no-undef */
         });
-        await thumbnail.click();
-        expect(await page.evaluate(() => window.__views)).toEqual(['quoted']);
+        for (const { uuid } of quoted_rows) {
+            await row(uuid).locator('img.media-thumbnail-clickable').click();
+        }
+        expect(await page.evaluate(() => window.__views)).toEqual(['quoted', 'quoted-repo', 'quoted-kaltura']);
     });
 
     test('shows associated exhibit names in the Exhibits column', async ({ page }) => {
