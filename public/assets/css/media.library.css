@@ -52,6 +52,26 @@
     font-weight: 600;            /* the name is the prominent element */
 }
 
+/*
+ * Thumbnails and names that open the view modal (media.library.module.js renders
+ * the -clickable classes). The name rules must stay after the .media-name rule above:
+ * same specificity, so source order decides the cursor.
+ */
+.media-thumbnail-clickable:hover {
+    opacity: 0.8;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+.media-name-cell .media-name-clickable {
+    cursor: pointer;
+}
+
+.media-name-cell .media-name-clickable:hover {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+
 /* Ingest-method pill shown under the media name. Deliberately smaller and lighter
    than the (bold) name so it reads as secondary metadata and doesn't compete. */
 .media-name-cell .media-ingest-badge {
