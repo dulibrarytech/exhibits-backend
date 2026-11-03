@@ -17,7 +17,7 @@
                 <div class="alert alert-danger">
                     <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
                     <strong>"STOP! Do not use Development Site"</strong>&nbsp;&nbsp;&nbsp;
-                    <a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a>
+                    <a class="btn btn-info" href="https://ebd.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a>
                 </div>
             <% } %>
         </div>
@@ -27,7 +27,7 @@
         </p>
     </main>
     <div class="clearfix"></div>
-    <script>window.sessionStorage.clear();</script>
+    <%- include('partials/clear-session-storage.ejs'); %>
     <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
     <script src="/exhibits-dashboard/static/app/dist/http.module.min.js?<%=build_version%>"></script>
     <script src="/exhibits-dashboard/static/app/dist/helper.module.min.js?<%=build_version%>"></script>

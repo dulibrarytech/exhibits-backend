@@ -20,6 +20,7 @@
 
 const CONFIG = require('../config/app_config')();
 const SSO_CONFIG = require('../config/webservices_config')();
+const TOKENS = require('../libs/tokens');
 
 exports.default = function (req, res) {
     res.status(403).send({
@@ -658,6 +659,7 @@ exports.get_dashboard_session_out = function (req, res) {
 };
 
 exports.get_dashboard_logout = function (req, res) {
+    TOKENS.clear_auth_cookie(res);
     template_config.sso_logout_url = SSO_CONFIG.sso_logout_url;
     res.render('dist/dashboard-logout', {
         ...template_config,

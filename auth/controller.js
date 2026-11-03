@@ -28,11 +28,11 @@ const APP_PATH = APP_CONFIG.app_path;
 
 exports.get_auth_landing = function (req, res) {
     res.render('dist/auth-landing', {
-        host: CONFIG.host,
-        appname: CONFIG.app_name,
-        appversion: CONFIG.app_version,
-        organization: CONFIG.organization,
-        build_version: CONFIG.build_version,
+        host: APP_CONFIG.host,
+        appname: APP_CONFIG.app_name,
+        appversion: APP_CONFIG.app_version,
+        organization: APP_CONFIG.organization,
+        build_version: APP_CONFIG.build_version,
         is_dev_env: process.env.NODE_ENV !== 'production'
     });
 };

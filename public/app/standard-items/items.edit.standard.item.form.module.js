@@ -52,7 +52,7 @@ const itemsEditStandardItemFormModule = (function () {
                 domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    window.location.replace(APP_PATH + '/auth');
                 }, 1000);
 
                 return false;
