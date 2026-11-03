@@ -25,6 +25,29 @@ const authModule = (function () {
     // null even on a cold cache (first login) — no broken `null/...` redirects.
     const APP_PATH = endpointsModule.get_app_path();
     const init_endpoints = endpointsModule.init();
+
+    /*
+     * The dashboard's own storage keys. clear() removes only these: other
+     * apps share the domain, so storage.clear() would erase their data too.
+     * The sidebar preference (exhibits_sidebar_collapsed) is kept on purpose.
+     * views/partials/clear-session-storage.ejs repeats the session list.
+     */
+    const SESSION_STORAGE_KEYS = [
+        'exhibits_token',
+        'exhibits_user',
+        'exhibits_endpoints_refresh_attempted'
+    ];
+
+    const LOCAL_STORAGE_KEYS = [
+        'exhibits_app_path',
+        'exhibits_endpoints',
+        'exhibits_endpoints_users',
+        'exhibits_endpoints_indexer',
+        'exhibits_endpoints_media_library',
+        'exhibits_endpoints_version',
+        'items'
+    ];
+
     let obj = {};
 
     obj.get_user_token = function () {
@@ -1041,8 +1064,18 @@ const authModule = (function () {
     };
 
     obj.clear = function () {
-        window.sessionStorage.clear();
-        window.localStorage.clear();
+
+        const remove_keys = function (storage_name, keys) {
+            try {
+                const storage = window[storage_name];
+                keys.forEach((key) => storage.removeItem(key));
+            } catch (error) {
+                console.error(`Unable to clear ${storage_name}:`, error.message);
+            }
+        };
+
+        remove_keys('sessionStorage', SESSION_STORAGE_KEYS);
+        remove_keys('localStorage', LOCAL_STORAGE_KEYS);
     };
 
     obj.logout = function () {

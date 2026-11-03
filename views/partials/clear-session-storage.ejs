@@ -1,0 +1,17 @@
+<%#
+    Removes the dashboard's own sessionStorage keys (sign-in and
+    session-expired pages). Clearing all of sessionStorage would also erase
+    other apps' data on a shared domain. Keep the list in sync with
+    SESSION_STORAGE_KEYS in public/app/utils/auth.module.js.
+-%>
+<script>
+    (function () {
+        try {
+            ['exhibits_token', 'exhibits_user', 'exhibits_endpoints_refresh_attempted'].forEach(function (key) {
+                window.sessionStorage.removeItem(key);
+            });
+        } catch (e) {
+            console.error('Unable to clear stored session data:', e.message);
+        }
+    })();
+</script>

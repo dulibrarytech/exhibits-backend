@@ -660,6 +660,32 @@ function derive_cookie_max_age(token) {
 }
 
 /**
+ * Builds the session cookie's Set-Cookie value. set_auth_cookie and
+ * clear_auth_cookie share it because a browser replaces a cookie only
+ * when the name, Path and Domain match, so the two must not drift apart.
+ * @param {string} value   - Cookie value, already URI-encoded
+ * @param {number} max_age - Max-Age in seconds; 0 expires the cookie
+ * @returns {string}
+ * @private
+ */
+function build_auth_cookie(value, max_age) {
+
+    const parts = [
+        `${TOKEN_COOKIE_NAME}=${value}`,
+        'Path=/',
+        'HttpOnly',
+        'SameSite=Lax',
+        `Max-Age=${max_age}`
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+        parts.push('Secure');
+    }
+
+    return parts.join('; ');
+}
+
+/**
  * Writes the session JWT into an HttpOnly cookie. Lets preview windows
  * and media <img> requests authenticate without the token appearing in
  * URLs, browser history, Referer headers, or access logs.
@@ -674,17 +700,20 @@ exports.set_auth_cookie = function (res, token) {
 
     const max_age = derive_cookie_max_age(token);
 
-    const parts = [
-        `${TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}`,
-        'Path=/',
-        'HttpOnly',
-        'SameSite=Lax',
-        `Max-Age=${max_age}`
-    ];
+    res.append('Set-Cookie', build_auth_cookie(encodeURIComponent(token), max_age));
+};
 
-    if (process.env.NODE_ENV === 'production') {
-        parts.push('Secure');
+/**
+ * Expires the session cookie (logout). Without it the browser kept
+ * sending the cookie after logout, and verify() / verify_page()
+ * accepted it until the JWT itself expired.
+ * @param {Object} res - Express response object
+ */
+exports.clear_auth_cookie = function (res) {
+
+    if (!res) {
+        return;
     }
 
-    res.append('Set-Cookie', parts.join('; '));
+    res.append('Set-Cookie', build_auth_cookie('', 0));
 };
