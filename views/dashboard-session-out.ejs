@@ -15,7 +15,7 @@
         <div class="alert alert-danger" role="alert"><i class="fa fa-exclamation" aria-hidden="true"></i> Session Expired. One moment please...</div>
     </main>
     <div class="clearfix"></div>
-    <script>window.sessionStorage.clear();</script>
+    <%- include('partials/clear-session-storage.ejs'); %>
     <script src="/exhibits-dashboard/static/app/dist/endpoints.module.min.js"></script>
     <script src="/exhibits-dashboard/static/app/dist/auth.module.min.js"></script>
     <script>authModule.redirect_to_auth();</script>

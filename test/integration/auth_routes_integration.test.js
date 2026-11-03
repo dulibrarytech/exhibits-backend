@@ -19,6 +19,16 @@
  */
 process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 
+/*
+ * The sign-in page takes its footer and cache-buster values from
+ * app_config; known values let the landing test check them.
+ */
+process.env.HOST = 'ebd.test.du.edu';
+process.env.APP_NAME = 'Exhibits Builder Test';
+process.env.APP_VERSION = '2.0.0-test';
+process.env.ORGANIZATION = 'Test Libraries';
+process.env.BUILD_VERSION = '999';
+
 const express = require('express');
 const request = require('supertest');
 
@@ -137,6 +147,18 @@ describe('Auth Routes Integration (real router)', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.view).toBe('dist/auth-landing');
+        });
+
+        test('fills the footer and cache-busters from app_config', async () => {
+            const response = await request(app).get(`${APP_PATH}/auth`);
+
+            expect(response.body.data).toMatchObject({
+                host: 'ebd.test.du.edu',
+                appname: 'Exhibits Builder Test',
+                appversion: '2.0.0-test',
+                organization: 'Test Libraries',
+                build_version: '999'
+            });
         });
     });
 

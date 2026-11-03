@@ -475,6 +475,69 @@ describe('libs/tokens', () => {
         });
     });
 
+    // ==================== clear_auth_cookie() ====================
+
+    describe('clear_auth_cookie', () => {
+
+        function capture_cookies(write) {
+            const cookies = [];
+            write({
+                append: (name, value) => { if (name === 'Set-Cookie') cookies.push(value); }
+            });
+            return cookies;
+        }
+
+        /*
+         * Everything after name=value except Max-Age. A browser replaces a
+         * cookie only when the name, Path and Domain match, so a mismatch
+         * here would leave the real cookie in place after logout.
+         */
+        const scope_attributes = (cookie) => cookie
+            .split('; ')
+            .slice(1)
+            .filter((part) => !part.startsWith('Max-Age='));
+
+        const with_node_env = (env, fn) => {
+            const original = process.env.NODE_ENV;
+            process.env.NODE_ENV = env;
+            try {
+                return fn();
+            } finally {
+                process.env.NODE_ENV = original;
+            }
+        };
+
+        it('expires the exhibits_token cookie immediately with an empty value', () => {
+            const cookies = capture_cookies((res) => TOKENS.clear_auth_cookie(res));
+
+            expect(cookies.length).toBe(1);
+            expect(cookies[0]).toMatch(/^exhibits_token=;/);
+            expect(cookies[0]).toContain('Max-Age=0');
+        });
+
+        it('uses the same Path and flags as set_auth_cookie', () => {
+            const [set_cookie] = capture_cookies((res) => TOKENS.set_auth_cookie(res, sign_token()));
+            const [cleared] = capture_cookies((res) => TOKENS.clear_auth_cookie(res));
+
+            expect(scope_attributes(cleared)).toEqual(['Path=/', 'HttpOnly', 'SameSite=Lax']);
+            expect(scope_attributes(cleared)).toEqual(scope_attributes(set_cookie));
+        });
+
+        it('adds Secure in production, like set_auth_cookie', () => {
+            with_node_env('production', () => {
+                const [set_cookie] = capture_cookies((res) => TOKENS.set_auth_cookie(res, sign_token()));
+                const [cleared] = capture_cookies((res) => TOKENS.clear_auth_cookie(res));
+
+                expect(cleared).toContain('Secure');
+                expect(scope_attributes(cleared)).toEqual(scope_attributes(set_cookie));
+            });
+        });
+
+        it('is a no-op for a missing response', () => {
+            expect(() => TOKENS.clear_auth_cookie(null)).not.toThrow();
+        });
+    });
+
     // ==================== TEST BYPASS GATE ====================
 
     describe('test auth bypass two-key gate', () => {

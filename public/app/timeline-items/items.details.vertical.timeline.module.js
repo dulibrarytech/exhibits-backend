@@ -107,7 +107,7 @@ const itemsDetailsVerticalTimelineModule = (function () {
                 display_message(message_element, 'danger', 'Authentication required. Redirecting...');
 
                 setTimeout(() => {
-                    const auth_url = `${APP_PATH}/exhibits-dashboard/auth`;
+                    const auth_url = `${APP_PATH}/auth`;
                     window.location.replace(auth_url);
                 }, 3000);
 
