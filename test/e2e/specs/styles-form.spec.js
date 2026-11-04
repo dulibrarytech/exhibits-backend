@@ -17,9 +17,9 @@ const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
  */
 async function fill_required_style_fields(page) {
     await page.evaluate(() => {
-        const sections = ['introduction', 'navigation', 'heading1', 'item1'];
+        const sections = ['introduction', 'navigation', 'heading1', 'accent1', 'item1'];
         const suffixes = [
-            '-background-color', '-font-color', '-font-size',
+            '-background-color', '-font-color', '-accent-color', '-font-size',
             '-font', '-margins', '-text-align',
         ];
         for (const section of sections) {

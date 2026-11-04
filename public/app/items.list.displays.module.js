@@ -713,6 +713,14 @@ const itemsListDisplayModule = (function() {
         }
     };
 
+    obj.get_grid_item_path = function(item_type) {
+        if (item_type === 'text') {
+            return 'text';
+        }
+
+        return item_type === 'content_block' ? 'content-block' : 'media';
+    };
+
     /**
      * Display grid items (items within a grid container)
      */
@@ -843,11 +851,9 @@ const itemsListDisplayModule = (function() {
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const grid_id = encodeURIComponent(item.is_member_of_grid);
             const item_id = encodeURIComponent(item.uuid);
-            const details_url = item.item_type === 'text'
-                ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                : item.item_type === 'media'
-                    ? `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                    : `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+            const item_path = `${APP_PATH}/items/grid/item/${obj.get_grid_item_path(item.item_type)}`;
+            const item_params = `exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+            const details_url = `${item_path}/details?${item_params}`;
 
             // Compact item cell
             tr.appendChild(build_compact_item_cell({
@@ -868,20 +874,7 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(status_td);
 
             // Actions dropdown
-            let edit_url;
-            if (item.is_published === 1) {
-                edit_url = item.item_type === 'text'
-                    ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                    : item.item_type === 'media'
-                        ?  `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                        :  `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-            } else {
-                edit_url = item.item_type === 'text'
-                    ? `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                    : item.item_type === 'media'
-                        ? `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
-                        : `${APP_PATH}/items/grid/item/content-block/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-            }
+            const edit_url = item.is_published === 1 ? details_url : `${item_path}/edit?${item_params}`;
 
             const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
 

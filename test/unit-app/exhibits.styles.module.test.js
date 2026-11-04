@@ -28,9 +28,12 @@ const STYLE_SECTIONS = [
     'introduction',
     'navigation',
     'heading1',
+    'accent1',
     'item1',
     'heading2',
     'heading3',
+    'accent2',
+    'accent3',
     'item2',
     'item3',
 ];
@@ -39,8 +42,25 @@ const REQUIRED_SECTIONS = [
     'introduction',
     'navigation',
     'heading1',
+    'accent1',
     'item1',
 ];
+
+function build_accent_fragment(key) {
+    if (!key.includes('accent')) {
+        return '';
+    }
+
+    return `
+            <div class="field-row">
+                <div class="input-group">
+                    <input type="text" id="${key}-accent-color" />
+                    <input type="color" id="${key}-accent-color-picker" />
+                </div>
+            </div>
+            <span id="swatch-${key}-accent"></span>
+    `;
+}
 
 function build_section_fragment(key) {
     return `
@@ -83,6 +103,7 @@ function build_section_fragment(key) {
             </div>
             <span id="swatch-${key}-bg"></span>
             <span id="swatch-${key}-font"></span>
+            ${build_accent_fragment(key)}
         </div>
     `;
 }
@@ -102,6 +123,10 @@ function fill_required_sections() {
         set_value(`#${key}-font-color`, '#000000');
         set_value(`#${key}-font-size`, '16');
         set_value(`#${key}-font`, 'Arial');
+
+        if (key.includes('accent')) {
+            set_value(`#${key}-accent-color`, '#336699');
+        }
     }
 }
 
@@ -170,12 +195,19 @@ describe('exhibitsStylesModule', () => {
             const result = globalThis.exhibitsStylesModule.get_styles();
             expect(result.exhibit.heading2).toEqual({
                 backgroundColor: '',
+                accentColor: '',
                 color: '',
                 fontSize: '',
                 fontFamily: '',
                 margins: 'medium',
                 textAlign: 'left',
             });
+        });
+
+        it('reads the accent color for accent sections', () => {
+            set_value('#accent2-accent-color', ' #336699 ');
+            const result = globalThis.exhibitsStylesModule.get_styles();
+            expect(result.exhibit.accent2.accentColor).toBe('#336699');
         });
     });
 
@@ -210,6 +242,19 @@ describe('exhibitsStylesModule', () => {
                 .toBe('rgb(255, 0, 0)');
             expect(document.querySelector('#swatch-introduction-font').style.backgroundColor)
                 .toBe('rgb(0, 255, 0)');
+        });
+
+        it('populates the accent color input, picker, and swatch for an accent section', () => {
+            globalThis.exhibitsStylesModule.set_styles({
+                exhibit: {
+                    accent1: { accentColor: '#0000ff' },
+                },
+            });
+
+            expect(document.querySelector('#accent1-accent-color').value).toBe('#0000ff');
+            expect(document.querySelector('#accent1-accent-color-picker').value).toBe('#0000ff');
+            expect(document.querySelector('#swatch-accent1-accent').style.backgroundColor)
+                .toBe('rgb(0, 0, 255)');
         });
 
         it('rejects a JSON string payload (current behavior — see note)', () => {

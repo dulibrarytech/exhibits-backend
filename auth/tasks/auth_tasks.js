@@ -455,6 +455,7 @@ const Auth_tasks = class {
                 'exhibit': this.TABLE.exhibit_records,
                 'item': this.TABLE.item_records,
                 'heading': this.TABLE.heading_records,
+                'content-block': this.TABLE.content_block_records,
                 'grid': this.TABLE.grid_records,
                 'grid_item': this.TABLE.grid_item_records,
                 'timeline': this.TABLE.timeline_records,

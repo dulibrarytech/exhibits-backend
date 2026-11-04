@@ -54,7 +54,7 @@ const recycleModule = (function () {
     }
 
     function display_label(record) {
-        let raw = record.title || record.text || record.name || '';
+        let raw = record.title || record.text || record.name || (record.content_type === 'divider' ? `${record.size} divider` : '');
         let label;
         try {
             label = helperModule.strip_html(helperModule.unescape(raw));
@@ -74,6 +74,7 @@ const recycleModule = (function () {
             case 'grid': return 'fa fa-th';
             case 'timeline': return 'fa fa-clock-o';
             case 'exhibit': return 'fa fa-folder-open-o';
+            case 'content-block': return 'ti-widget';
             default: {
                 const map = {
                     text: 'fa fa-file-text-o',

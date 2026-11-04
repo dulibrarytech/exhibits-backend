@@ -22,7 +22,7 @@ const RECYCLE_MODEL = require('../exhibits/recycle_model');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 
-const VALID_TYPES = ['exhibit', 'heading', 'item', 'grid', 'timeline'];
+const VALID_TYPES = ['exhibit', 'heading', 'item', 'grid', 'timeline', 'content-block'];
 
 function has_authorize() {
     return AUTHORIZE && typeof AUTHORIZE.check_permission === 'function';
@@ -39,8 +39,8 @@ function deny(res) {
 /**
  * Map a per-record recycle operation to the SAME permission + ownership rule the
  * app already uses to delete that record type:
- *   exhibit                    -> delete_exhibit / delete_any_exhibit, owned via the exhibit uuid
- *   heading|item|grid|timeline -> delete_item / delete_any_item, owned via the parent exhibit
+ *   exhibit                                  -> delete_exhibit / delete_any_exhibit, owned via the exhibit uuid
+ *   heading|item|grid|timeline|content-block -> delete_item / delete_any_item, owned via the parent exhibit
  * A full grant (both base + _any) bypasses ownership; a base grant falls back to
  * ownership of the parent exhibit (AUTHORIZE.check_permission / check_ownership).
  */

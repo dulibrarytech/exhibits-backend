@@ -152,6 +152,22 @@ describe('PUT /recycle/:exhibit_id/:uuid/:type — restore', () => {
         expect(mockRestore).toHaveBeenCalledWith('item', ITEM_UUID);
     });
 
+    test('content block uses delete_item / delete_any_item + parent-exhibit ownership', async () => {
+        mockCheckPermission.mockResolvedValue(true);
+        mockRestore.mockResolvedValue({ status: 200, message: 'Record restored' });
+
+        const res = await request(app).put(`${BASE}/${EXHIBIT_UUID}/${ITEM_UUID}/content-block`).set('x-access-token', 'jwt');
+
+        expect(res.status).toBe(200);
+        expect(mockCheckPermission.mock.calls[0][0]).toMatchObject({
+            permissions: ['delete_item', 'delete_any_item'],
+            record_type: 'content-block',
+            parent_id: EXHIBIT_UUID,
+            child_id: ITEM_UUID
+        });
+        expect(mockRestore).toHaveBeenCalledWith('content-block', ITEM_UUID);
+    });
+
     test('exhibit record uses delete_exhibit / delete_any_exhibit + exhibit ownership', async () => {
         mockCheckPermission.mockResolvedValue(true);
         mockRestore.mockResolvedValue({ status: 200, message: 'Record restored' });

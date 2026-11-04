@@ -95,6 +95,13 @@ const mockTimelinesModel = {
 
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
+const mockContentBlocksModel = {
+    publish_content_block_record: jest.fn(),
+    suppress_content_block_record: jest.fn()
+};
+
+jest.mock('../../exhibits/content_blocks_model', () => mockContentBlocksModel);
+
 const mockExhibitsModel = {
     get_exhibit_record: jest.fn()
 };

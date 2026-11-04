@@ -52,7 +52,8 @@ describe('Auth_tasks', () => {
             grid_records: 'tbl_grids',
             grid_item_records: 'tbl_grid_items',
             timeline_records: 'tbl_timelines',
-            timeline_item_records: 'tbl_timeline_items'
+            timeline_item_records: 'tbl_timeline_items',
+            content_block_records: 'tbl_content_block_items'
         };
 
         mockDB = jest.fn();
@@ -888,7 +889,7 @@ describe('Auth_tasks', () => {
         });
 
         it('should handle all valid record types', async () => {
-            const recordTypes = ['item', 'heading', 'grid', 'grid_item', 'timeline', 'timeline_item', 'exhibit'];
+            const recordTypes = ['item', 'heading', 'grid', 'grid_item', 'timeline', 'timeline_item', 'content-block', 'exhibit'];
 
             for (const recordType of recordTypes) {
                 const chainMock = createChainableMock([{ owner: 5 }]);

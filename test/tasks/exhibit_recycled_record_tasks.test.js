@@ -37,7 +37,8 @@ describe('Recycled_record_tasks', () => {
         heading_records: 'tbl_heading_items',
         item_records: 'tbl_standard_items',
         grid_records: 'tbl_grids',
-        timeline_records: 'tbl_timelines'
+        timeline_records: 'tbl_timelines',
+        content_block_records: 'tbl_content_block_items'
     };
 
     const createMockQuery = () => ({
@@ -64,7 +65,8 @@ describe('Recycled_record_tasks', () => {
             ['get_recycled_heading_records', 'tbl_heading_items', 'heading'],
             ['get_recycled_item_records', 'tbl_standard_items', 'item'],
             ['get_recycled_grid_records', 'tbl_grids', 'grid'],
-            ['get_recycled_timeline_records', 'tbl_timelines', 'timeline']
+            ['get_recycled_timeline_records', 'tbl_timelines', 'timeline'],
+            ['get_recycled_content_block_records', 'tbl_content_block_items', 'content-block']
         ];
 
         test.each(READ_CASES)('%s reads only is_deleted rows from %s and tags them "%s"', async (method, table, type) => {

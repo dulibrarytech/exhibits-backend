@@ -9,6 +9,7 @@ const {
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const ITEM_UUID = '660e8400-e29b-41d4-a716-446655440099';
+const BLOCK_UUID = '770e8400-e29b-41d4-a716-446655440098';
 
 /*
  * Stubs GET /api/v1/recycle with fixture rows plus the record-level
@@ -76,6 +77,16 @@ const RECYCLED_ITEM = {
     is_deleted: 1,
 };
 
+const RECYCLED_DIVIDER = {
+    uuid: BLOCK_UUID,
+    type: 'content-block',
+    content_type: 'divider',
+    size: 'small',
+    is_member_of_exhibit: EXHIBIT_UUID,
+    created_by: 'tester',
+    is_deleted: 1,
+};
+
 test.describe('Recycle bin page (recycle.module.js)', () => {
 
     test.beforeEach(async ({ page }) => {
@@ -126,6 +137,22 @@ test.describe('Recycle bin page (recycle.module.js)', () => {
         await expect.poll(() => state.lastRestoreUrl).not.toBeNull();
         const u = new URL(state.lastRestoreUrl);
         expect(u.pathname).toBe(`${APP_PATH}/api/v1/recycle/${EXHIBIT_UUID}/${ITEM_UUID}/item`);
+    });
+
+    test('lists a recycled content block and restores it through its own route', async ({ page }) => {
+        const state = await stubRecycleApi(page, { records: [RECYCLED_DIVIDER] });
+
+        await page.goto(`${APP_PATH}/recycle`);
+
+        await expect(page.locator('.recycle-title')).toContainText('small divider');
+        await expect(page.locator('.recycle-type')).toContainText('content-block');
+
+        await page.locator('.recycle-actions-toggle').click();
+        await page.locator('.recycle-restore').click();
+
+        await expect.poll(() => state.lastRestoreUrl).not.toBeNull();
+        const u = new URL(state.lastRestoreUrl);
+        expect(u.pathname).toBe(`${APP_PATH}/api/v1/recycle/${EXHIBIT_UUID}/${BLOCK_UUID}/content-block`);
     });
 
     test('Permanently Delete requires modal confirmation before the DELETE fires', async ({ page }) => {

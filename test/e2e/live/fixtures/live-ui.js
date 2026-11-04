@@ -18,10 +18,11 @@
 async function fillRequiredStyles(page) {
     await page.evaluate(() => {
         // 'template' ("Exhibit") section removed 2026-07-02 — required sections only.
-        const sections = ['introduction', 'navigation', 'heading1', 'item1'];
+        const sections = ['introduction', 'navigation', 'heading1', 'accent1', 'item1'];
         const fields = [
             { suffix: '-background-color', value: '#ffffff' },
             { suffix: '-font-color', value: '#111111' },
+            { suffix: '-accent-color', value: '#336699' },
             { suffix: '-font-size', value: '16' },
             { suffix: '-font', value: '' } // selects resolve below
         ];

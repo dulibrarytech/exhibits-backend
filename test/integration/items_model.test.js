@@ -85,6 +85,7 @@ jest.mock('../../config/db_tables_config', () => () => ({
         exhibit_records: 'tbl_exhibits_exhibit_records',
         item_records: 'tbl_exhibits_item_records',
         heading_records: 'tbl_exhibits_heading_records',
+        content_block_records: 'tbl_exhibits_content_block_records',
         grid_records: 'tbl_exhibits_grid_records',
         grid_item_records: 'tbl_exhibits_grid_item_records',
         timeline_records: 'tbl_exhibits_timeline_records'
@@ -131,6 +132,14 @@ const mockHeadingRecordTask = {
 
 jest.mock('../../exhibits/tasks/exhibit_heading_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockHeadingRecordTask);
+});
+
+const mockContentBlockRecordTask = {
+    get_content_block_records: jest.fn().mockResolvedValue([])
+};
+
+jest.mock('../../exhibits/tasks/exhibit_content_block_record_tasks', () => {
+    return jest.fn().mockImplementation(() => mockContentBlockRecordTask);
 });
 
 // Mock Grid Record Tasks
@@ -242,6 +251,7 @@ describe('Items Model Integration Tests', () => {
         mockItemRecordTask.set_item_to_suppress.mockResolvedValue(true);
         mockItemRecordTask.reorder_items.mockResolvedValue(true);
         mockHeadingRecordTask.get_heading_records.mockResolvedValue([]);
+        mockContentBlockRecordTask.get_content_block_records.mockResolvedValue([]);
         mockGridRecordTask.get_grid_records.mockResolvedValue([]);
         mockGridRecordTask.get_grid_item_records.mockResolvedValue([]);
         mockTimelineRecordTask.get_timeline_records.mockResolvedValue([]);
@@ -359,6 +369,17 @@ describe('Items Model Integration Tests', () => {
 
             expect(result.status).toBe(200);
             expect(result.data).toHaveLength(4);
+        });
+
+        test('should include content blocks in order with the other records', async () => {
+            mockItemRecordTask.get_item_records.mockResolvedValue([{ uuid: '1', order: 1, type: 'item' }]);
+            mockHeadingRecordTask.get_heading_records.mockResolvedValue([{ uuid: '3', order: 3, type: 'heading' }]);
+            mockContentBlockRecordTask.get_content_block_records.mockResolvedValue([{ uuid: '2', order: 2, type: 'content-block' }]);
+
+            const result = await ITEMS_MODEL.get_item_records(TEST_EXHIBIT_UUID);
+
+            expect(result.status).toBe(200);
+            expect(result.data.map((record) => record.uuid)).toEqual(['1', '2', '3']);
         });
     });
 

@@ -83,6 +83,12 @@ const mockTimelinesModel = {
 };
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
+const mockContentBlocksModel = {
+    publish_content_block_record: jest.fn().mockResolvedValue({ status: true }),
+    suppress_content_block_record: jest.fn().mockResolvedValue({ status: true })
+};
+jest.mock('../../exhibits/content_blocks_model', () => mockContentBlocksModel);
+
 // Mock Exhibits Model
 const mockExhibitsModel = {
     get_exhibit_record: jest.fn().mockResolvedValue({ data: { is_published: 0 } }),

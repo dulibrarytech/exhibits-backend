@@ -24,5 +24,11 @@ exports.up = function(knex) {
 };
 
 exports.down = function(knex) {
-  return knex.schema.dropTable('tbl_content_block_items');
+  return knex.schema.alterTable('tbl_grid_items', (table) => {
+    table.dropColumn('size');
+    table.dropColumn('url');
+    table.dropColumn('attribution');
+    table.dropColumn('content_type');
+    table.dropColumn('transparent');
+  }).then(() => knex.schema.dropTable('tbl_content_block_items'));
 };

@@ -24,17 +24,18 @@ const TABLES = DB_TABLES.exhibits;
 const EXHIBIT_RECYCLED_RECORD_TASKS = require('../exhibits/tasks/exhibit_recycled_record_tasks');
 const LOGGER = require('../libs/log4');
 
-// The five record types that carry is_deleted, mapped to their physical table.
+// The six record types that carry is_deleted, mapped to their physical table.
 const TYPE_TABLE = {
     exhibit: TABLES.exhibit_records,
     heading: TABLES.heading_records,
     item: TABLES.item_records,
     grid: TABLES.grid_records,
-    timeline: TABLES.timeline_records
+    timeline: TABLES.timeline_records,
+    'content-block': TABLES.content_block_records
 };
 
 /**
- * Get recycled records across all five record types.
+ * Get recycled records across all six record types.
  * @param {string|null} created_by - when set, only that owner's records are
  *        returned; when null, all owners' records are returned (the caller must
  *        already have authorized a system-wide view).
@@ -45,18 +46,19 @@ exports.get_recycled_records = async function (created_by = null) {
 
         const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
 
-        const [exhibits, headings, items, grids, timelines] = await Promise.all([
+        const [exhibits, headings, items, grids, timelines, content_blocks] = await Promise.all([
             TASKS.get_recycled_exhibit_records(created_by),
             TASKS.get_recycled_heading_records(created_by),
             TASKS.get_recycled_item_records(created_by),
             TASKS.get_recycled_grid_records(created_by),
-            TASKS.get_recycled_timeline_records(created_by)
+            TASKS.get_recycled_timeline_records(created_by),
+            TASKS.get_recycled_content_block_records(created_by)
         ]);
 
         return {
             status: 200,
             message: 'Recycled records',
-            data: [...exhibits, ...headings, ...items, ...grids, ...timelines]
+            data: [...exhibits, ...headings, ...items, ...grids, ...timelines, ...content_blocks]
         };
 
     } catch (error) {
@@ -67,7 +69,7 @@ exports.get_recycled_records = async function (created_by = null) {
 
 /**
  * Permanently delete a single recycled record.
- * @param {string} type - exhibit|heading|item|grid|timeline
+ * @param {string} type - exhibit|heading|item|grid|timeline|content-block
  * @param {string} uuid - record uuid
  */
 exports.delete_recycled_record = async function (type, uuid) {
@@ -121,7 +123,7 @@ exports.delete_all_recycled_records = async function (created_by = null) {
 
 /**
  * Restore a single recycled record (clears is_deleted).
- * @param {string} type - exhibit|heading|item|grid|timeline
+ * @param {string} type - exhibit|heading|item|grid|timeline|content-block
  * @param {string} uuid - record uuid
  */
 exports.restore_recycled_record = async function (type, uuid) {

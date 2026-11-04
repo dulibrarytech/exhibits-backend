@@ -74,10 +74,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                             <div class="col-md-12 style-field mb-3">
                             <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Use the same background colors for accent styles and item styles to keep the theme consistent.</em></small>
                             </div>
-                            <div class="col-md-4 style-field mb-3">
-                            <% } else { %>
-                            <div class="col-md-6 style-field mb-3">
                             <% } %>
+                            <div class="<%= section.key.includes('accent') ? 'col-md-4' : 'col-md-6' %> style-field mb-3">
                                 <label for="<%= section.key %>-background-color">Background Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -97,11 +95,7 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                            placeholder="i.e. #FFFFFF">
                                 </div>
                             </div>
-                            <% if (section.key.includes('accent')) { %>
-                            <div class="col-md-4 style-field mb-3">
-                            <% } else { %>
-                            <div class="col-md-6 style-field mb-3">
-                            <% } %>
+                            <div class="<%= section.key.includes('accent') ? 'col-md-4' : 'col-md-6' %> style-field mb-3">
                                 <label for="<%= section.key %>-font-color">Font Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -123,7 +117,7 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                             </div>
                             <% if (section.key.includes('accent')) { %>
                             <div class="col-md-4 style-field mb-3">
-                                <label for="<%= section.key %>-font-color">Accent Color</label>
+                                <label for="<%= section.key %>-accent-color">Accent Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <input title="Accent color picker for <%= section.label %>"
@@ -245,10 +239,8 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                             <div class="col-md-12 style-field mb-3">
                             <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>To ensure that accent styles are coherent within the context of other items, you should apply the same background colors used in adjoining item styles.</em></small>
                             </div>
-                            <div class="col-md-4 style-field mb-3">
-                            <% } else { %>
-                            <div class="col-md-6 style-field mb-3">
                             <% } %>
+                            <div class="<%= section.key.includes('accent') ? 'col-md-4' : 'col-md-6' %> style-field mb-3">
                                 <label for="<%= section.key %>-background-color">Background Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -268,11 +260,7 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                            placeholder="i.e. #FFFFFF">
                                 </div>
                             </div>
-                            <% if (section.key.includes('accent')) { %>
-                            <div class="col-md-4 style-field mb-3">
-                            <% } else { %>
-                            <div class="col-md-6 style-field mb-3">
-                            <% } %>
+                            <div class="<%= section.key.includes('accent') ? 'col-md-4' : 'col-md-6' %> style-field mb-3">
                                 <label for="<%= section.key %>-font-color">Font Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -294,7 +282,7 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                             </div>
                             <% if (section.key.includes('accent')) { %>
                             <div class="col-md-4 style-field mb-3">
-                                <label for="<%= section.key %>-font-color">Accent Color</label>
+                                <label for="<%= section.key %>-accent-color">Accent Color</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <input title="Accent color picker for <%= section.label %>"

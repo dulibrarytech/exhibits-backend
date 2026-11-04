@@ -417,16 +417,9 @@ const itemsGridModule = (function () {
                     }
                 });
 
-                let type = uuid_found.split('_');
-                let details_path;
-
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    details_path = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else if (type[1] === 'griditem' && type[2] === 'media') {
-                    details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else if (type[1] === 'griditem' && type[2] === 'content-block') {
-                    details_path = `${APP_PATH}/items/grid/item/content-block/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
+                const item_type = uuid_found.split('_').slice(2).join('_');
+                const item_path = itemsListDisplayModule.get_grid_item_path(item_type);
+                const details_path = `${APP_PATH}/items/grid/item/${item_path}/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 
                 const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 
@@ -568,14 +561,9 @@ const itemsGridModule = (function () {
                     }
                 });
 
-                let type = uuid_found.split('_');
-                let edit_path;
-
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    edit_path = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
+                const item_type = uuid_found.split('_').slice(2).join('_');
+                const item_path = itemsListDisplayModule.get_grid_item_path(item_type);
+                const edit_path = `${APP_PATH}/items/grid/item/${item_path}/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 
                 const delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 

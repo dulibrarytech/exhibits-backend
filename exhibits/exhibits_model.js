@@ -28,6 +28,7 @@ const EXHIBIT_ITEM_RECORD_TASKS = require('./tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
+const EXHIBIT_CONTENT_BLOCK_RECORD_TASKS = require('./tasks/exhibit_content_block_record_tasks');
 const EXHIBIT_MEDIA_LIBRARY_TASKS = require('./tasks/exhibit_media_library_tasks');
 const MEDIA_REFERENCE_TASKS = require('../media-library/tasks/media_reference_tasks');
 const HELPER = require('../libs/helper');
@@ -67,6 +68,7 @@ const item_record_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+const content_block_record_task = new EXHIBIT_CONTENT_BLOCK_RECORD_TASKS(DB, TABLES);
 const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
 const media_reference_task = new MEDIA_REFERENCE_TASKS(DB, TABLES);
 
@@ -561,12 +563,6 @@ const delete_all_exhibit_items = async (uuid) => {
 
     try {
 
-        const item_records = await item_record_task.get_item_records(uuid);
-
-        if (!item_records || item_records.length === 0) {
-            return;
-        }
-
         const items_result = await ITEMS_MODEL.get_item_records(uuid);
 
         if (!items_result.data || items_result.data.length === 0) {
@@ -724,11 +720,12 @@ exports.build_exhibit_preview = async (uuid) => {
  * @returns {Promise<Object>} Object containing counts
  */
 const get_exhibit_counts = async (uuid) => {
-    const [heading_count, item_count, grid_count, timeline_count] = await Promise.all([
+    const [heading_count, item_count, grid_count, timeline_count, content_block_count] = await Promise.all([
         heading_record_task.get_record_count(uuid),
         item_record_task.get_record_count(uuid),
         grid_record_task.get_record_count(uuid),
-        timeline_record_task.get_record_count(uuid)
+        timeline_record_task.get_record_count(uuid),
+        content_block_record_task.get_record_count(uuid)
     ]);
 
     return {
@@ -736,7 +733,8 @@ const get_exhibit_counts = async (uuid) => {
         item_count,
         grid_count,
         timeline_count,
-        total_count: heading_count + item_count + grid_count + timeline_count
+        content_block_count,
+        total_count: heading_count + item_count + grid_count + timeline_count + content_block_count
     };
 };
 
@@ -752,6 +750,7 @@ const set_all_to_publish = async (uuid) => {
         heading_record_task.set_to_publish(uuid),
         grid_record_task.set_to_publish(uuid),
         timeline_record_task.set_to_publish(uuid),
+        content_block_record_task.set_to_publish(uuid),
         grid_record_task.set_exhibit_grid_items_to_publish(uuid),
         timeline_record_task.set_exhibit_timeline_items_to_publish(uuid)
     ]);
@@ -910,6 +909,7 @@ const set_all_to_suppress = async (uuid) => {
         heading_record_task.set_to_suppress(uuid),
         grid_record_task.set_to_suppress(uuid),
         timeline_record_task.set_to_suppress(uuid),
+        content_block_record_task.set_to_suppress(uuid),
         grid_record_task.set_exhibit_grid_items_to_suppress(uuid),
         timeline_record_task.set_exhibit_timeline_items_to_suppress(uuid)
     ]);
@@ -921,14 +921,15 @@ const set_all_to_suppress = async (uuid) => {
  * @returns {Promise<Object>} Object containing all records
  */
 const get_all_exhibit_records = async (uuid) => {
-    const [headings, items, grids, timelines] = await Promise.all([
+    const [headings, items, grids, timelines, content_blocks] = await Promise.all([
         heading_record_task.get_heading_records(uuid),
         item_record_task.get_item_records(uuid),
         grid_record_task.get_grid_records(uuid),
-        timeline_record_task.get_timeline_records(uuid)
+        timeline_record_task.get_timeline_records(uuid),
+        content_block_record_task.get_content_block_records(uuid)
     ]);
 
-    return { headings, items, grids, timelines };
+    return { headings, items, grids, timelines, content_blocks };
 };
 
 /**
@@ -1113,7 +1114,8 @@ const suppress_exhibit = async (uuid) => {
             delete_items_from_index(records.items),
             delete_grids_from_index(records.grids),
             delete_timelines_from_index(records.timelines),
-            delete_headings_from_index(records.headings)
+            delete_headings_from_index(records.headings),
+            delete_items_from_index(records.content_blocks)
         ]);
 
         return {
@@ -1181,7 +1183,8 @@ exports.delete_exhibit_preview = async (uuid) => {
             delete_items_from_index(records.items),
             delete_grids_from_index(records.grids),
             delete_timelines_from_index(records.timelines),
-            delete_headings_from_index(records.headings)
+            delete_headings_from_index(records.headings),
+            delete_items_from_index(records.content_blocks)
         ]);
 
         return {

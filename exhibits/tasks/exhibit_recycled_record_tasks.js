@@ -43,7 +43,7 @@ const Recycled_record_tasks = class extends Base_tasks {
     /**
      * Fetch recycled rows from a table, owner-scoped and tagged with their type.
      * @param {string} table - resolved table name
-     * @param {string} type - record type tag added to each row (exhibit|heading|item|grid|timeline)
+     * @param {string} type - record type tag added to each row (exhibit|heading|item|grid|timeline|content-block)
      * @param {string|null} created_by - when set, restrict to this owner's rows; null = all owners
      * @private
      */
@@ -80,6 +80,10 @@ const Recycled_record_tasks = class extends Base_tasks {
 
     async get_recycled_timeline_records(created_by = null) {
         return this._get_recycled(this.TABLE.timeline_records, 'timeline', created_by);
+    }
+
+    async get_recycled_content_block_records(created_by = null) {
+        return this._get_recycled(this.TABLE.content_block_records, 'content-block', created_by);
     }
 
     /**

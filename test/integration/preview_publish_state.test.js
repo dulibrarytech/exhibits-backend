@@ -44,6 +44,7 @@ jest.mock('../../config/db_config', () => () => jest.fn(() => ({})));
 const EXHIBIT_UUID = '9a8403ea-6016-4942-a611-a07140106c4f';
 const GRID_UUID = 'ffffffff-6666-4666-8666-666666666666';
 const TIMELINE_UUID = 'ffffffff-6666-4666-8666-666666666667';
+const CONTENT_BLOCK_UUID = 'ffffffff-6666-4666-8666-666666666668';
 
 const mockExhibitTask = {
     set_to_publish: jest.fn().mockResolvedValue(true),
@@ -95,7 +96,15 @@ const mockTimelineTask = {
     set_exhibit_timeline_items_to_publish: jest.fn().mockResolvedValue({ success: true })
 };
 
+const mockContentBlockTask = {
+    get_content_block_records: jest.fn().mockResolvedValue([{ uuid: CONTENT_BLOCK_UUID }]),
+    get_record_count: jest.fn().mockResolvedValue(1),
+    set_to_publish: jest.fn().mockResolvedValue(true),
+    set_to_suppress: jest.fn().mockResolvedValue(true)
+};
+
 jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => jest.fn().mockImplementation(() => mockExhibitTask));
+jest.mock('../../exhibits/tasks/exhibit_content_block_record_tasks', () => jest.fn().mockImplementation(() => mockContentBlockTask));
 jest.mock('../../exhibits/tasks/exhibit_item_record_tasks', () => jest.fn().mockImplementation(() => mockItemTask));
 jest.mock('../../exhibits/tasks/exhibit_heading_record_tasks', () => jest.fn().mockImplementation(() => mockHeadingTask));
 jest.mock('../../exhibits/tasks/exhibit_grid_record_tasks', () => jest.fn().mockImplementation(() => mockGridTask));
@@ -116,6 +125,7 @@ jest.mock('../../indexer/model', () => ({
 
 const EXHIBITS_MODEL = require('../../exhibits/exhibits_model');
 const INDEXER_MODEL = require('../../indexer/model');
+const ITEMS_MODEL = require('../../exhibits/items_model');
 
 const container_item_writers = () => ([
     ...Object.entries(mockGridTask),
@@ -190,6 +200,88 @@ describe('publish publishes container items through the exhibit-scoped writer', 
     });
 });
 
+describe('exhibit actions include standalone content blocks', () => {
+
+    const set_counts = (count) => {
+        for (const task of [mockItemTask, mockHeadingTask, mockGridTask, mockTimelineTask]) {
+            task.get_record_count.mockResolvedValue(count);
+        }
+    };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        set_counts(1);
+        mockContentBlockTask.get_record_count.mockResolvedValue(1);
+        mockMediaReferenceTask.get_deleted_media_references.mockResolvedValue([]);
+    });
+
+    afterEach(() => set_counts(1));
+
+    test('publish_exhibit publishes the blocks', async () => {
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(true);
+        expect(mockContentBlockTask.set_to_publish).toHaveBeenCalledWith(EXHIBIT_UUID);
+    });
+
+    test('publish_exhibit fails when the blocks cannot be published', async () => {
+        mockContentBlockTask.set_to_publish.mockResolvedValueOnce(false);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(false);
+        expect(INDEXER_MODEL.index_exhibit).not.toHaveBeenCalled();
+    });
+
+    test('an exhibit holding only blocks can be published', async () => {
+        set_counts(0);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(true);
+    });
+
+    test('an exhibit with no records at all still cannot be published', async () => {
+        set_counts(0);
+        mockContentBlockTask.get_record_count.mockResolvedValue(0);
+
+        const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe('no_items');
+    });
+
+    test('suppress_exhibit suppresses the blocks and removes them from the index', async () => {
+        const result = await EXHIBITS_MODEL.suppress_exhibit(EXHIBIT_UUID);
+
+        expect(result.status).toBe(true);
+        expect(mockContentBlockTask.set_to_suppress).toHaveBeenCalledWith(EXHIBIT_UUID);
+        expect(INDEXER_MODEL.delete_record).toHaveBeenCalledWith(CONTENT_BLOCK_UUID);
+    });
+
+    test('delete_exhibit_preview removes the blocks from the index without changing their publish state', async () => {
+        const result = await EXHIBITS_MODEL.delete_exhibit_preview(EXHIBIT_UUID);
+
+        expect(result.status).toBe(true);
+        expect(INDEXER_MODEL.delete_record).toHaveBeenCalledWith(CONTENT_BLOCK_UUID);
+        expect(mockContentBlockTask.set_to_suppress).not.toHaveBeenCalled();
+    });
+
+    test('delete_exhibit_record deletes the blocks when the exhibit has no standard items', async () => {
+        mockExhibitTask.delete_exhibit_record = jest.fn().mockResolvedValue(true);
+        mockItemTask.delete_item_record = jest.fn().mockResolvedValue(true);
+        const get_item_records = jest.spyOn(ITEMS_MODEL, 'get_item_records').mockResolvedValue({
+            data: [{ uuid: CONTENT_BLOCK_UUID, type: 'content-block', is_member_of_exhibit: EXHIBIT_UUID }]
+        });
+
+        const result = await EXHIBITS_MODEL.delete_exhibit_record(EXHIBIT_UUID);
+
+        get_item_records.mockRestore();
+
+        expect(result.status).toBe(204);
+        expect(mockItemTask.delete_item_record).toHaveBeenCalledWith(EXHIBIT_UUID, CONTENT_BLOCK_UUID, 'content-block');
+    });
+});
+
 describe('publish_exhibit deleted-media gate', () => {
 
     beforeEach(() => {
@@ -250,6 +342,7 @@ describe('publish_exhibit deleted-media gate', () => {
         mockHeadingTask.get_record_count.mockResolvedValue(0);
         mockGridTask.get_record_count.mockResolvedValue(0);
         mockTimelineTask.get_record_count.mockResolvedValue(0);
+        mockContentBlockTask.get_record_count.mockResolvedValue(0);
 
         const result = await EXHIBITS_MODEL.publish_exhibit(EXHIBIT_UUID);
 

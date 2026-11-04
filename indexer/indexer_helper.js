@@ -579,7 +579,6 @@ const construct_item_index_record = (record) => {
         size: record.size,
         content_type: record.content_type,
         transparent: record.transparent,
-        text: record.text,
         wrap_text: record.wrap_text,
         description: record.description,
         type: record.type,

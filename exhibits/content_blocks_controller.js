@@ -95,7 +95,6 @@ exports.get_content_block_record = async function (req, res) {
 
             const data = await CONTENT_BLOCKS_MODEL.get_content_block_edit_record(uid, is_member_of_exhibit, uuid);
             res.status(data.status).send(data);
-            console.log(2)
             return false;
         }
 

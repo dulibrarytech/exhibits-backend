@@ -317,6 +317,31 @@ describe('itemsListDisplayModule', () => {
             );
         });
 
+        it.each([
+            ['image', 'media'],
+            ['pdf', 'media'],
+            ['video', 'media'],
+            ['audio', 'media'],
+            ['text', 'text'],
+            ['content_block', 'content-block'],
+        ])('links a %s grid item to the %s pages', async (item_type, path) => {
+            const item_query = 'exhibit_id=exhibit-uuid-1&amp;grid_id=grid-uuid-1&amp;item_id=grid-item-uuid-1';
+            const details_url = `${APP_PATH}/items/grid/item/${path}/details?${item_query}`;
+            const edit_url = `${APP_PATH}/items/grid/item/${path}/edit?${item_query}`;
+
+            const unpublished = await itemsListDisplayModule.display_grid_items(
+                grid_member_item({ item_type, content_type: 'quote' })
+            );
+            expect(unpublished).toContain(details_url);
+            expect(unpublished).toContain(edit_url);
+
+            const published = await itemsListDisplayModule.display_grid_items(
+                grid_member_item({ item_type, content_type: 'quote', is_published: 1 })
+            );
+            expect(published).toContain(details_url);
+            expect(published).not.toContain(edit_url);
+        });
+
         it('returns an empty string and writes an alert when grid item is invalid', async () => {
             const html = await itemsListDisplayModule.display_grid_items({});
             expect(html).toBe('');
