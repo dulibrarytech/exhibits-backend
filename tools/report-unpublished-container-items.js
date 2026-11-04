@@ -15,7 +15,7 @@
  * Run: node tools/report-unpublished-container-items.js
  */
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 const knex = require('knex');
 

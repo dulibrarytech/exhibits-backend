@@ -65,7 +65,7 @@ process.chdir(PROJECT_ROOT);
 
 // Load environment variables from project root .env
 try {
-    require('dotenv').config();
+    require('dotenv').config({ quiet: true });
 } catch (e) {
     // dotenv is optional if environment variables are set externally
 }

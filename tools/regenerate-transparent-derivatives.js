@@ -13,7 +13,7 @@
  * Apply:              node tools/regenerate-transparent-derivatives.js --apply
  */
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 const FS = require('fs');
 const knex = require('knex');

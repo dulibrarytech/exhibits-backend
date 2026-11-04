@@ -41,7 +41,7 @@ const REPORT_PATH = PATH.join(__dirname, 'rte-migration-report.txt');
  */
 function connect() {
 
-    require('dotenv').config();
+    require('dotenv').config({ quiet: true });
 
     return knex({
         client: 'mysql2',

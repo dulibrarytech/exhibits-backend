@@ -35,7 +35,7 @@
 
 'use strict';
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 // Silence the application logger pulled in transitively by Auth_tasks.
 jest.mock('../../libs/log4', () => ({

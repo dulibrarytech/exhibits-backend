@@ -42,7 +42,7 @@
  * One record:         node tools/heal-blank-pdf-thumbnails.js --apply --uuid=<uuid>
  */
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 const FS = require('fs');
 const PATH = require('path');

@@ -15,7 +15,7 @@
  * artifact goes stale.
  */
 
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 process.env.APP_PATH = '__APP_PATH__';
 
 const FS = require('fs');

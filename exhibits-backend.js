@@ -19,7 +19,7 @@
 'use strict';
 
 // dotenv >=5 replaced the legacy .load() with .config().
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
