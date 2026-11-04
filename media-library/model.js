@@ -670,8 +670,6 @@ exports.remove_exhibit_from_media_record = async (media_id, exhibit_uuid, media_
  * plain-text alert. Recycled containers/exhibits are called out: they are
  * hidden in the dashboard, but restoring them brings the reference back.
  */
-const strip_tags = (value) => String(value || '').replace(/<[^>]*>/g, '').trim();
-
 const KIND_LABELS = {
     item: 'item',
     grid_item: 'grid item',
@@ -687,7 +685,7 @@ const describe_media_references = (references) => {
 
         if (!by_exhibit.has(key)) {
             by_exhibit.set(key, {
-                title: strip_tags(reference.exhibit_title) || 'an untitled exhibit',
+                title: RTE_VOCABULARY.strip_tags(reference.exhibit_title) || 'an untitled exhibit',
                 recycled: reference.exhibit_is_deleted === 1,
                 counts: new Map()
             });

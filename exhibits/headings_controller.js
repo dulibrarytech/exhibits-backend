@@ -68,7 +68,7 @@ exports.get_heading_record = async function (req, res) {
         const uid = req.query.uid;
         const type = req.query.type;
 
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        if ((uuid === undefined || uuid.length === 0) || (is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -99,6 +99,9 @@ exports.get_heading_record = async function (req, res) {
             return false;
         }
 
+        res.status(400).send('Bad request.');
+        return false;
+
     } catch (error) {
         res.status(500).send({message: `Unable to get heading record. ${error.message}`});
     }
@@ -112,7 +115,7 @@ exports.update_heading_record = async function (req, res) {
         const heading_id = req.params.heading_id;
         const data = req.body;
 
-        if (heading_id === undefined || heading_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        if ((heading_id === undefined || heading_id.length === 0) || (is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }

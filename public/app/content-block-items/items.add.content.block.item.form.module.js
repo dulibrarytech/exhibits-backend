@@ -120,7 +120,7 @@ const itemsAddContentBlockItemFormModule = (function () {
 
             // Validate response
             if (!response || response.status !== 201) {
-                throw new Error('Failed to create item record');
+                throw new Error(response?.status === 400 && response.data?.message ? response.data.message : 'Failed to create item record');
             }
 
             const new_item_id = response.data?.data;

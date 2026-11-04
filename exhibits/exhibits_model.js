@@ -761,13 +761,11 @@ const set_all_to_publish = async (uuid) => {
  * the dashboard: standard items by position, grid/timeline items by container
  * and title, exhibit media by role. Titles are rich text, so tags are stripped.
  */
-const strip_tags = (value) => String(value || '').replace(/<[^>]*>/g, '').trim();
-
 const describe_deleted_media_references = (references) => {
 
     return references.map((reference) => {
 
-        const media = strip_tags(reference.media_name) || 'untitled media';
+        const media = RTE_VOCABULARY.strip_tags(reference.media_name) || 'untitled media';
         const as_thumbnail = reference.role === 'thumbnail' ? ' as thumbnail' : '';
 
         if (reference.record_type === 'exhibit') {
@@ -779,8 +777,8 @@ const describe_deleted_media_references = (references) => {
         }
 
         const container = reference.record_type === 'grid_item' ? 'grid' : 'timeline';
-        const container_name = strip_tags(reference.container_name) || 'untitled';
-        const title = strip_tags(reference.item_title);
+        const container_name = RTE_VOCABULARY.strip_tags(reference.container_name) || 'untitled';
+        const title = RTE_VOCABULARY.strip_tags(reference.item_title);
 
         return `${container} "${container_name}" item ${title ? `"${title}"` : reference.order} ("${media}"${as_thumbnail})`;
     }).join('; ');

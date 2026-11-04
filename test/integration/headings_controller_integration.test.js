@@ -67,6 +67,13 @@ describe('Headings controller — exceptions return 500 (was 408)', () => {
         expect(r.body.message).toMatch(/Unable to get heading record/);
     });
 
+    test('get: an unknown ?type answers 400 instead of leaving the request open', async () => {
+        const r = await request(app).get(`/heading/${EX}/${HID}?type=view`);
+        expect(r.status).toBe(400);
+        expect(mockHeadingsModel.get_heading_record).not.toHaveBeenCalled();
+        expect(mockHeadingsModel.get_heading_edit_record).not.toHaveBeenCalled();
+    });
+
     test('update: model throws -> 500 (was 408)', async () => {
         mockHeadingsModel.update_heading_record.mockRejectedValue(new Error('boom'));
         const r = await request(app).put(`/heading/${EX}/${HID}`).send({ text: 'H2' });

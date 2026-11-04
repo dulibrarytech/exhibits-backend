@@ -134,13 +134,13 @@ exports.index_exhibit = async (uuid, type) => {
             timeline_index_records
         ] = await Promise.all([
             Promise.resolve(
-                content_block_records && content_block_records.length > 0
-                    ? content_block_records.map(h => construct_content_block_index_record(h))
+                heading_records && heading_records.length > 0
+                    ? heading_records.map(h => construct_heading_index_record(h))
                     : []
             ),
             Promise.resolve(
-                heading_records && heading_records.length > 0
-                    ? heading_records.map(h => construct_heading_index_record(h))
+                content_block_records && content_block_records.length > 0
+                    ? content_block_records.map(h => construct_content_block_index_record(h))
                     : []
             ),
             Promise.resolve(

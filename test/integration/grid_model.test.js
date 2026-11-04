@@ -29,6 +29,19 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_rich_full: jest.fn((value) => value),
     sanitize_rich_reduced: jest.fn((value) => value),
     sanitize_plain: jest.fn((value) => value),
+    normalize_href: jest.fn((value) => {
+        const href = String(value).trim();
+
+        if (/^(?:https?:|mailto:|tel:|\/(?!\/)|#)/i.test(href)) {
+            return href;
+        }
+
+        if (/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[/?#]\S*)?$/i.test(href)) {
+            return 'https://' + href;
+        }
+
+        return null;
+    })
 }));
 
 jest.mock('../../libs/log4', () => ({
@@ -442,6 +455,44 @@ describe('Grid Model Integration Tests', () => {
             const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
 
             expect(result.status).toBe(201);
+        });
+
+        test('should refuse a content block button whose url is not a web address', async () => {
+            const itemData = { item_type: 'content_block', content_type: 'button', text: '<p>Go</p>', size: 'small', url: 'javascript:alert(1)' };
+
+            const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
+
+            expect(result.status).toBe(400);
+            expect(result.message).toMatch(/^Button URL/);
+            expect(mockGridRecordTask.create_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('should store a bare-host button url with https://', async () => {
+            const itemData = { item_type: 'content_block', content_type: 'button', text: '<p>Go</p>', size: 'small', url: 'www.du.edu' };
+
+            const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.create_grid_item_record.mock.calls[0][0].url).toBe('https://www.du.edu');
+        });
+
+        test('should refuse a content block button url update that is not a web address', async () => {
+            const itemData = { item_type: 'content_block', content_type: 'button', text: '<p>Go</p>', size: 'small', url: 'data:text/html,x' };
+
+            const result = await GRID_MODEL.update_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID, itemData);
+
+            expect(result.status).toBe(400);
+            expect(result.message).toMatch(/^Button URL/);
+            expect(mockGridRecordTask.update_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('should sanitize a content block attribution as plain text', async () => {
+            const RTE = require('../../libs/rte_vocabulary');
+            const itemData = { item_type: 'content_block', content_type: 'quote', text: '<p>Q</p>', attribution: 'A' };
+
+            await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
+
+            expect(RTE.apply).toHaveBeenCalledWith(expect.any(Object), expect.objectContaining({ attribution: 'plain' }));
         });
 
         // Media is no longer processed inline (the old process_uploaded_media

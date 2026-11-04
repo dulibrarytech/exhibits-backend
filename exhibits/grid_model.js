@@ -31,7 +31,8 @@ const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
     prepare_styles,
-    validate_internal_name
+    validate_internal_name,
+    validate_link_field
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -178,7 +179,8 @@ const GRID_ITEM_RTE_PROFILES = {
     text: 'full',
     description: 'full',
     caption: 'linked_text',
-    alt_text: 'plain'
+    alt_text: 'plain',
+    attribution: 'plain'
 };
 
 exports.create_grid_record = async (is_member_of_exhibit, data) => {
@@ -423,6 +425,12 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid data provided'
             );
+        }
+
+        const url_error = validate_link_field(data, 'url', 'Button URL');
+
+        if (url_error !== null) {
+            return url_error;
         }
 
         // Prepare data
@@ -721,6 +729,12 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid data provided'
             );
+        }
+
+        const url_error = validate_link_field(data, 'url', 'Button URL');
+
+        if (url_error !== null) {
+            return url_error;
         }
 
         // Prepare data

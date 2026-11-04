@@ -22,6 +22,7 @@
  */
 jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_for_profile: jest.fn((value) => value),
+    strip_tags: jest.fn((value) => String(value || '').replace(/<[^>]*>/g, '').trim()),
     PROFILES: {}
 }));
 

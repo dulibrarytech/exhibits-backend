@@ -86,6 +86,24 @@ test.describe('Content blocks (live)', () => {
         }
     });
 
+    test('a button whose URL is not a web address is refused', async ({ request }) => {
+        exhibit_id = await create_exhibit_owned_by(request, 'administrator');
+
+        const res = await request.post(block_url(exhibit_id), {
+            headers: role_headers('administrator'),
+            data: {
+                ...BLOCKS.button,
+                url: 'javascript:alert(document.cookie)',
+                content_type: 'button',
+                owner: role_auth('administrator').user.id,
+                created_by: 'pw-e2e'
+            }
+        });
+
+        expect(res.status()).toBe(400);
+        expect((await res.json()).message).toMatch(/^Button URL/);
+    });
+
     test('a card keeps its heading through create and update', async ({ request }) => {
         exhibit_id = await create_exhibit_owned_by(request, 'administrator');
 

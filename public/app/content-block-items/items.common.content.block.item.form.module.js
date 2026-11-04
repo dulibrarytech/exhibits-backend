@@ -233,12 +233,17 @@ const itemsCommonContentBlockFormModule = (function () {
                 item_content_block.transparent = get_checkbox_value('#button-transparent');
 
                 // Validate
-                ['url', 'text'].forEach(val => {
+                for (const val of ['url', 'text']) {
                     if (!item_content_block[val] || item_content_block[val].length === 0) {
                         show_error(`Please enter button ${val}`, `#button-${val}-input`);
                         return false;
                     }
-                })
+                }
+
+                if (!helperModule.is_valid_link_url(item_content_block.url)) {
+                    show_error('Please enter a web address, such as https://library.du.edu', '#button-url-input');
+                    return false;
+                }
 
                 if (!item_content_block.size || item_content_block.size.length === 0) {
                     show_error('Please select button size', '#button-size');
@@ -249,12 +254,12 @@ const itemsCommonContentBlockFormModule = (function () {
                 item_content_block.text = rteModule.get_html('card-text-input');
 
                 // Validate
-                ['title', 'text'].forEach(val => {
+                for (const val of ['title', 'text']) {
                     if (!item_content_block[val] || item_content_block[val].length === 0) {
                         show_error(`Please enter card ${val}`, `#card-${val}-input`);
                         return false;
                     }
-                })
+                }
             } else if (item_content_block.content_type === 'divider') {
                 item_content_block.size = get_element_value('#divider-size');
 

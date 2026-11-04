@@ -495,3 +495,17 @@ exports.apply = function (record, field_profiles) {
 
     return record;
 };
+
+exports.strip_tags = function (value) {
+
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    const container = WINDOW.document.createElement('div');
+    container.innerHTML = exports.sanitize_plain(String(value));
+
+    return (container.textContent || '').replace(/\s+/g, ' ').trim();
+};
+
+exports.normalize_href = normalize_href;

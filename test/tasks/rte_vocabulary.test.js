@@ -274,3 +274,42 @@ describe('libs/rte_vocabulary — apply()', () => {
         expect(vocabulary.apply({other: 1}, {text: 'full'})).toEqual({other: 1});
     });
 });
+
+describe('libs/rte_vocabulary — normalize_href (shared with the content block button URL)', () => {
+
+    test('passes allowed schemes through and prefixes bare hosts', () => {
+        expect(vocabulary.normalize_href('https://du.edu/a?b=1&c=2')).toBe('https://du.edu/a?b=1&c=2');
+        expect(vocabulary.normalize_href('  www.du.edu  ')).toBe('https://www.du.edu');
+        expect(vocabulary.normalize_href('mailto:ask@du.edu')).toBe('mailto:ask@du.edu');
+        expect(vocabulary.normalize_href('/exhibits/x')).toBe('/exhibits/x');
+        expect(vocabulary.normalize_href('#section')).toBe('#section');
+    });
+
+    test('returns null for anything that cannot be a safe link', () => {
+        for (const href of ['javascript:alert(1)', 'data:text/html;base64,AAAA', 'vbscript:x', '//cdn.example/x', '', '   ', 'not a url']) {
+            expect(vocabulary.normalize_href(href), href).toBeNull();
+        }
+    });
+});
+
+describe('libs/rte_vocabulary — strip_tags (plain text for staff-facing messages)', () => {
+
+    test('drops markup, keeps word boundaries and collapses whitespace', () => {
+        expect(vocabulary.strip_tags('<p>The <strong>Magna</strong>   Carta</p>')).toBe('The Magna Carta');
+        expect(vocabulary.strip_tags('<p>First</p><p>Second</p>')).toBe('First Second');
+        expect(vocabulary.strip_tags('<script>alert(1)</script>Plain')).toBe('Plain');
+    });
+
+    test('returns decoded text, not HTML', () => {
+        expect(vocabulary.strip_tags('Tom &amp; Jerry')).toBe('Tom & Jerry');
+        expect(vocabulary.strip_tags('<p>Smith &amp; Sons</p>')).toBe('Smith & Sons');
+        expect(vocabulary.strip_tags('a < b and c')).toBe('a < b and c');
+    });
+
+    test('tolerates empty and non-string values', () => {
+        expect(vocabulary.strip_tags(null)).toBe('');
+        expect(vocabulary.strip_tags(undefined)).toBe('');
+        expect(vocabulary.strip_tags('   ')).toBe('');
+        expect(vocabulary.strip_tags(42)).toBe('42');
+    });
+});

@@ -156,6 +156,7 @@ exports.get_timeline_item_record = async function (req, res) {
         if (type === undefined) {
             const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
             res.status(result.status).send(result);
+            return false;
         }
 
         if (type === 'details') {
@@ -177,6 +178,9 @@ exports.get_timeline_item_record = async function (req, res) {
             res.status(result.status).send(result);
             return false;
         }
+
+        res.status(400).send('Bad request.');
+        return false;
 
     } catch (error) {
         handle_error(res, 'Unable to get timeline item.', error);
@@ -221,7 +225,7 @@ exports.publish_timeline_item_record = async function (req, res) {
         const timeline_item_id = req.params.timeline_item_id;
         let result;
 
-        if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
+        if ((exhibit_id === undefined || exhibit_id.length === 0) || (timeline_id === undefined || timeline_id.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -259,7 +263,7 @@ exports.suppress_timeline_item_record = async function (req, res) {
         const timeline_item_id = req.params.timeline_item_id;
         let result;
 
-        if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
+        if ((exhibit_id === undefined || exhibit_id.length === 0) || (timeline_id === undefined || timeline_id.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -297,7 +301,7 @@ exports.delete_timeline_item_record = async function (req, res) {
         const timeline_item_id = req.params.item_id;
         const record_type = req.query.type;
 
-        if (timeline_item_id === undefined || timeline_item_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
+        if ((timeline_item_id === undefined || timeline_item_id.length === 0) || (timeline_id === undefined || timeline_id.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }

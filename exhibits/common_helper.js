@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../libs/log4');
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 
 // ==================== VALIDATION HELPERS ====================
 
@@ -148,6 +149,33 @@ const validate_internal_name = (data, required, label) => {
     return null;
 };
 
+const validate_link_field = (data, field, label) => {
+
+    const value = data[field];
+
+    if (value === undefined || value === null) {
+        return null;
+    }
+
+    if (typeof value !== 'string') {
+        return build_response(400, `${label} must be a web address, such as https://library.du.edu`);
+    }
+
+    if (value.trim() === '') {
+        data[field] = '';
+        return null;
+    }
+
+    const normalized = RTE_VOCABULARY.normalize_href(value);
+
+    if (normalized === null) {
+        return build_response(400, `${label} must be a web address, such as https://library.du.edu`);
+    }
+
+    data[field] = normalized;
+    return null;
+};
+
 // ==================== MEDIA HELPERS ====================
 
 /**
@@ -195,5 +223,6 @@ module.exports = {
     prepare_styles,
     build_response,
     validate_internal_name,
+    validate_link_field,
     process_media_files
 };

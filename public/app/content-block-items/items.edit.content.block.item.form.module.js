@@ -510,9 +510,14 @@ const itemsEditContentBlockFormModule = (function () {
                 }, 3000);
 
                 return true;
-            } else {
-                throw new Error('Unexpected response from server');
             }
+
+            if (response?.status === 400 && response.data?.message) {
+                display_status_message(message_element, 'danger', response.data.message);
+                return false;
+            }
+
+            throw new Error('Unexpected response from server');
 
         } catch (error) {
             console.error('Error updating content block record:', error);

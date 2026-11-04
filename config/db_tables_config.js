@@ -20,21 +20,37 @@
 
 const HELPER = require("../libs/helper");
 const HELPER_TASK = new HELPER();
-const TABLES = {
-    exhibit_records: process.env.EXHIBIT_RECORDS,
-    item_records: process.env.ITEM_RECORDS,
-    heading_records: process.env.HEADING_RECORDS,
-    content_block_records: process.env.CONTENT_BLOCK_RECORDS,
-    grid_item_records: process.env.GRID_ITEM_RECORDS,
-    grid_records: process.env.GRID_RECORDS,
-    timeline_records: process.env.TIMELINE_RECORDS,
-    timeline_item_records: process.env.TIMELINE_ITEM_RECORDS,
-    user_records: process.env.USER_RECORDS,
-    roles_records: process.env.ROLES_RECORDS,
-    users_roles: process.env.USERS_ROLES,
-    media_library_records: process.env.MEDIA_LIBRARY_RECORDS,
-    exhibit_media_records: process.env.EXHIBIT_MEDIA_RECORDS
+const TABLE_ENV = {
+    exhibit_records: 'EXHIBIT_RECORDS',
+    item_records: 'ITEM_RECORDS',
+    heading_records: 'HEADING_RECORDS',
+    content_block_records: 'CONTENT_BLOCK_RECORDS',
+    grid_item_records: 'GRID_ITEM_RECORDS',
+    grid_records: 'GRID_RECORDS',
+    timeline_records: 'TIMELINE_RECORDS',
+    timeline_item_records: 'TIMELINE_ITEM_RECORDS',
+    user_records: 'USER_RECORDS',
+    roles_records: 'ROLES_RECORDS',
+    users_roles: 'USERS_ROLES',
+    media_library_records: 'MEDIA_LIBRARY_RECORDS',
+    exhibit_media_records: 'EXHIBIT_MEDIA_RECORDS'
 };
+const TABLES = {};
+const MISSING_TABLE_ENV = [];
+
+for (const [key, env_name] of Object.entries(TABLE_ENV)) {
+
+    if (typeof process.env[env_name] !== 'string' || process.env[env_name].trim() === '') {
+        MISSING_TABLE_ENV.push(env_name);
+        continue;
+    }
+
+    TABLES[key] = process.env[env_name];
+}
+
+if (MISSING_TABLE_ENV.length > 0) {
+    throw new Error(`Missing table name(s) in .env: ${MISSING_TABLE_ENV.join(', ')}. Add every *_RECORDS key from env-example before starting the app.`);
+}
 const DB_TABLES_CONFIG = {
     exhibits: HELPER_TASK.check_config(TABLES)
 };

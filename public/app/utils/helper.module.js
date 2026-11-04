@@ -336,6 +336,18 @@ const helperModule = (function () {
         }
     }
 
+    obj.is_valid_link_url = function (value) {
+
+        if (typeof value !== 'string') {
+            return false;
+        }
+
+        const link = value.trim();
+
+        return /^(?:https?:|mailto:|tel:|\/(?!\/)|#)/i.test(link)
+            || /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d{1,5})?(?:[/?#]\S*)?$/i.test(link);
+    };
+
     obj.get_checked_radio_button = function (radio_buttons) {
 
         try {

@@ -33,6 +33,7 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_rich_full: jest.fn((value) => value),
     sanitize_rich_reduced: jest.fn((value) => value),
     sanitize_plain: jest.fn((value) => value),
+    strip_tags: jest.fn((value) => String(value || '').replace(/<[^>]*>/g, '').trim()),
 }));
 
 jest.mock('../../libs/log4', () => ({

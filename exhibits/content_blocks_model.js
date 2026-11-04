@@ -34,7 +34,8 @@ const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
     validate_input,
-    prepare_styles
+    prepare_styles,
+    validate_link_field
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -104,6 +105,7 @@ const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 const CONTENT_BLOCK_RTE_PROFILES = {
     text: 'full',
     title: 'full',
+    attribution: 'plain',
 };
 
 exports.create_content_block_record = async (is_member_of_exhibit, data) => {
@@ -124,6 +126,12 @@ exports.create_content_block_record = async (is_member_of_exhibit, data) => {
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid data provided'
             );
+        }
+
+        const url_error = validate_link_field(data, 'url', 'Button URL');
+
+        if (url_error !== null) {
+            return url_error;
         }
 
         // Prepare data
@@ -284,6 +292,12 @@ exports.update_content_block_record = async (is_member_of_exhibit, uuid, data) =
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid data provided'
             );
+        }
+
+        const url_error = validate_link_field(data, 'url', 'Button URL');
+
+        if (url_error !== null) {
+            return url_error;
         }
 
         // Prepare data

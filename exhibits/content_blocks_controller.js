@@ -68,7 +68,7 @@ exports.get_content_block_record = async function (req, res) {
         const uid = req.query.uid;
         const type = req.query.type;
 
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        if ((uuid === undefined || uuid.length === 0) || (is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -98,6 +98,9 @@ exports.get_content_block_record = async function (req, res) {
             return false;
         }
 
+        res.status(400).send('Bad request.');
+        return false;
+
     } catch (error) {
         res.status(500).send({message: `Unable to get content block record. ${error.message}`});
     }
@@ -111,7 +114,7 @@ exports.update_content_block_record = async function (req, res) {
         const content_block_id = req.params.content_block_id;
         const data = req.body;
 
-        if (content_block_id === undefined || content_block_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        if ((content_block_id === undefined || content_block_id.length === 0) || (is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0)) {
             res.status(400).send('Bad request.');
             return false;
         }
