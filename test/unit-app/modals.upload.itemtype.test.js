@@ -39,7 +39,6 @@ function fresh_helper() {
         get_media_type_icon: () => 'fa-file-o',
         get_media_type_label: () => 'Type',
         format_file_size: () => '1 KB',
-        clean_filename_for_title: (s) => s,
         build_media_url: () => '',
         get_thumbnail_url_for_media: () => '/ph.png',
         HTTP_STATUS: { OK: 200, CREATED: 201, BAD_REQUEST: 400, FORBIDDEN: 403, NOT_FOUND: 404 },

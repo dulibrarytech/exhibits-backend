@@ -243,21 +243,6 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
-     * Clean a filename for use as a default display title
-     * Strips extension, replaces underscores/hyphens with spaces
-     * @param {string} filename - Original filename
-     * @returns {string} Cleaned title string
-     */
-    obj.clean_filename_for_title = (filename) => {
-        if (!filename) return '';
-        return filename
-            .replace(/\.[^/.]+$/, '')
-            .replace(/[_-]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
-
-    /**
      * Safely get media library endpoints configuration
      * @returns {Object|null} Endpoints configuration object
      */
