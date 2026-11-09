@@ -42,7 +42,6 @@ function fresh_helper() {
         get_media_type_icon: () => 'fa-file-image-o',
         get_media_type_label: () => 'Image',
         format_file_size: () => '97.9 KB',
-        clean_filename_for_title: (s) => s,
         build_media_url: () => '',
         // Sentinel placeholder so fallback is unambiguous in assertions.
         get_thumbnail_url_for_media: () => PLACEHOLDER,

@@ -21,7 +21,8 @@ const {
     APP_PATH,
     apiCreateMediaRecord,
     apiFindMediaByName,
-    apiDeleteMediaRecord
+    apiDeleteMediaRecord,
+    role_auth
 } = require('./fixtures/live-api');
 
 const FIXTURE_IMAGE = path.join(__dirname, 'fixtures', 'assets', 'pw-e2e-image.png');
@@ -140,6 +141,32 @@ test.describe('Media library CRUD (live)', () => {
 
         const record = await apiFindMediaByName(request, updated);
         expect(record).not.toBeNull();
+        expect(record.uuid).toBe(media_uuid);
+    });
+
+    test('the API refuses a blank Name on create and update', async ({ request }) => {
+
+        const marker = `pw3-media-blank-${Date.now()}-${test.info().workerIndex}`;
+        media_uuid = await apiCreateMediaRecord(request, marker);
+        const headers = { 'x-access-token': role_auth('administrator').token };
+
+        for (const name of ['', '   ', '<b></b>']) {
+            const created = await request.post(`${APP_PATH}/api/v1/media/library`, {
+                headers,
+                data: { name, media_type: 'image', ingest_method: 'upload' }
+            });
+            expect(created.status()).toBe(400);
+            expect((await created.json()).message).toBe('Please provide a name.');
+
+            const updated = await request.put(`${APP_PATH}/api/v1/media/library/record/${media_uuid}`, {
+                headers,
+                data: { name }
+            });
+            expect(updated.status()).toBe(400);
+            expect((await updated.json()).message).toBe('Please provide a name.');
+        }
+
+        const record = await apiFindMediaByName(request, marker);
         expect(record.uuid).toBe(media_uuid);
     });
 

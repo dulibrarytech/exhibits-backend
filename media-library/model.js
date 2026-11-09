@@ -152,6 +152,10 @@ const MEDIA_RTE_PROFILES = {
     alt_text: 'plain'
 };
 
+const BLANK_NAME_MESSAGE = 'Please provide a name.';
+
+const is_blank_name = (name) => name !== undefined && (typeof name !== 'string' || name.trim() === '');
+
 exports.check_duplicate = async (field_name, field_value) => {
 
     try {
@@ -198,6 +202,10 @@ exports.create_media_record = async (data) => {
         // Validate input data
         if (!data || typeof data !== 'object') {
             return build_response(false, 'Invalid media data provided');
+        }
+
+        if (is_blank_name(data.name)) {
+            return build_response(false, BLANK_NAME_MESSAGE);
         }
 
         // Validate required fields/types against the create schema (ajv) — parity
@@ -373,6 +381,10 @@ exports.update_media_record = async (media_id, data) => {
 
         if (!data || typeof data !== 'object') {
             return build_response(false, 'Invalid update data provided');
+        }
+
+        if (is_blank_name(data.name)) {
+            return build_response(false, BLANK_NAME_MESSAGE);
         }
 
         // Set updated timestamp

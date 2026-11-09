@@ -202,23 +202,6 @@ describe('helperMediaLibraryModule', () => {
         });
     });
 
-    describe('clean_filename_for_title', () => {
-        it('strips the extension', () => {
-            expect(helperMediaLibraryModule.clean_filename_for_title('photo.jpg')).toBe('photo');
-            expect(helperMediaLibraryModule.clean_filename_for_title('archive.tar.gz')).toBe('archive.tar');
-        });
-
-        it('replaces underscores and hyphens with spaces and collapses whitespace', () => {
-            expect(helperMediaLibraryModule.clean_filename_for_title('first_name-last_name.png'))
-                .toBe('first name last name');
-        });
-
-        it('returns empty string for falsy input', () => {
-            expect(helperMediaLibraryModule.clean_filename_for_title('')).toBe('');
-            expect(helperMediaLibraryModule.clean_filename_for_title(null)).toBe('');
-        });
-    });
-
     describe('get_app_path', () => {
         it('returns the value seeded in localStorage', () => {
             window.localStorage.setItem('exhibits_app_path', '/custom-base');

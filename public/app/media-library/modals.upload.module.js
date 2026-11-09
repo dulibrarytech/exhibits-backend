@@ -24,7 +24,6 @@ const mediaModalsModule = (function() {
     const get_media_type_icon = helperMediaLibraryModule.get_media_type_icon;
     const get_media_type_label = helperMediaLibraryModule.get_media_type_label;
     const format_file_size = helperMediaLibraryModule.format_file_size;
-    const clean_filename_for_title = helperMediaLibraryModule.clean_filename_for_title;
     const build_media_url = helperMediaLibraryModule.build_media_url;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
     const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
@@ -155,7 +154,13 @@ const mediaModalsModule = (function() {
             subjects_valid = repoSubjectsModule.validate_required_fields(card);
         }
 
-        if (!form.checkValidity() || !subjects_valid) return;
+        const name_input = form.querySelector('.file-name');
+        if (name_input) name_input.value = name_input.value.trim();
+
+        if (!form.checkValidity() || !subjects_valid) {
+            form.querySelector('input:invalid')?.focus();
+            return;
+        }
 
         const form_data = new FormData(form);
         
@@ -354,9 +359,6 @@ const mediaModalsModule = (function() {
         const escaped_original_name = escape_html(file_data.original_name || file_data.filename);
         const escaped_mime = escape_html(file_data.mime_type);
 
-        // Default name from filename
-        const default_name = clean_filename_for_title(file_data.original_name || file_data.filename);
-
         // Preview HTML
         let preview_html;
         if (is_image || is_pdf) {
@@ -415,7 +417,7 @@ const mediaModalsModule = (function() {
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="file-name-' + index + '">Name <span class="badge badge-required">Required</span></label>';
-        html += '<input type="text" class="form-control file-name" id="file-name-' + index + '" name="name" value="' + escape_html(default_name) + '" placeholder="Enter a name" required aria-required="true">';
+        html += '<input type="text" class="form-control file-name" id="file-name-' + index + '" name="name" placeholder="Enter a name" required aria-required="true">';
         html += '<div class="invalid-feedback">Please provide a name.</div>';
         html += '</div>';
         html += alt_text_html;
