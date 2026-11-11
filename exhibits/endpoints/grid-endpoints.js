@@ -20,6 +20,14 @@ module.exports = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id`,
             params: 'token or api_key',
             body: 'is_member_of_exhibit, grid_id, record data'
+        },
+        with_items: {
+            post: {
+                description: 'Creates grid record and its grid item records in one request',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/with-items`,
+                params: 'token or api_key',
+                body: 'grid (record data), items (array of grid item record data in display order)'
+            }
         }
     },
     grid_item_records: {

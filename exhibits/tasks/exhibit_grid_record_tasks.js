@@ -23,6 +23,23 @@ const HELPER = require('../../libs/helper');
 const Base_tasks = require('./tasks_helper');
 const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
+// `internal_name` is dashboard-only: stored and listed, never indexed.
+const GRID_CREATE_FIELDS = [
+    'uuid', 'is_member_of_exhibit', 'type', 'columns', 'margins', 'text_alignment',
+    'text', 'internal_name', 'styles', 'order', 'is_published', 'owner', 'created_by'
+];
+
+const GRID_ITEM_CREATE_FIELDS = [
+    'uuid', 'is_member_of_grid', 'is_member_of_exhibit',
+    'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type', 'url',
+    'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'description',
+    'type', 'layout', 'media_width', 'media_padding', 'alt_text', 'attribution', 'size',
+    'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles', 'content_type',
+    'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded', 'transparent',
+    'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'is_deleted',
+    'owner'
+];
+
 /**
  * Object contains tasks used to manage exhibit grid and grid item records
  * @param DB
@@ -243,19 +260,13 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      */
     async create_grid_record(data, created_by = null) {
 
-        // `internal_name` is dashboard-only: stored and listed, never indexed.
-        const ALLOWED_FIELDS = [
-            'uuid', 'is_member_of_exhibit', 'type', 'columns', 'margins', 'text_alignment',
-            'text', 'internal_name', 'styles', 'order', 'is_published', 'owner', 'created_by'
-        ];
-
         try {
 
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('grid_records');
 
-            const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
+            const {sanitized_data} = this._sanitize_data(data, GRID_CREATE_FIELDS);
 
             if (Object.keys(sanitized_data).length === 0) {
                 throw new Error('No valid fields provided for insert');
@@ -306,6 +317,102 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
             this._handle_error(error, 'create_grid_record', {
                 data_keys: Object.keys(data || {}),
                 created_by
+            });
+        }
+    }
+
+    async create_grid_with_items(grid, items) {
+
+        try {
+
+            this._validate_data_object(grid);
+            this._validate_database();
+            this._validate_table('grid_records');
+            this._validate_table('grid_item_records');
+            this._validate_table('exhibit_records');
+
+            if (!Array.isArray(items) || items.length === 0) {
+                throw new Error('At least one grid item is required');
+            }
+
+            const grid_uuid = this._validate_uuid(grid.uuid, 'grid UUID');
+            const exhibit_uuid = this._validate_uuid(grid.is_member_of_exhibit, 'exhibit UUID');
+
+            const {sanitized_data: grid_row} = this._sanitize_data(grid, GRID_CREATE_FIELDS);
+
+            if (grid_row.columns === undefined || grid_row.columns === null) {
+                throw new Error('Grid columns are required');
+            }
+
+            this._set_grid_defaults(grid_row);
+            grid_row.created = this.DB.fn.now();
+            grid_row.updated = this.DB.fn.now();
+
+            const item_rows = items.map((item, index) => {
+
+                this._validate_data_object(item);
+
+                const {sanitized_data} = this._sanitize_data(item, GRID_ITEM_CREATE_FIELDS);
+
+                sanitized_data.uuid = this._validate_uuid(item.uuid, 'grid item UUID');
+                sanitized_data.is_member_of_grid = grid_uuid;
+                sanitized_data.is_member_of_exhibit = exhibit_uuid;
+                sanitized_data.order = index + 1;
+                this._set_grid_item_defaults(sanitized_data);
+
+                return sanitized_data;
+            });
+
+            const is_exhibit_found = await this.DB.transaction(async (trx) => {
+
+                const exhibits_updated = await trx(this.TABLE.exhibit_records)
+                    .where({uuid: exhibit_uuid, is_deleted: 0})
+                    .update({updated: trx.fn.now()})
+                    .timeout(this.QUERY_TIMEOUT);
+
+                if (exhibits_updated === 0) {
+                    return false;
+                }
+
+                await trx(this.TABLE.grid_records)
+                    .insert(grid_row)
+                    .timeout(this.QUERY_TIMEOUT);
+
+                await trx(this.TABLE.grid_item_records)
+                    .insert(item_rows)
+                    .timeout(this.QUERY_TIMEOUT);
+
+                return true;
+            });
+
+            if (is_exhibit_found === false) {
+                LOGGER.module().warn('Grid not created: exhibit record not found', {
+                    exhibit_uuid
+                });
+
+                return {
+                    success: false,
+                    exhibit_not_found: true
+                };
+            }
+
+            const item_uuids = item_rows.map((row) => row.uuid);
+
+            this._log_success('Grid and grid items created successfully', {
+                grid_uuid,
+                item_count: item_uuids.length
+            });
+
+            return {
+                success: true,
+                grid_uuid,
+                item_uuids
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'create_grid_with_items', {
+                grid_uuid: grid?.uuid,
+                item_count: Array.isArray(items) ? items.length : 0
             });
         }
     }
@@ -649,17 +756,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      */
     async create_grid_item_record(data, created_by = null) {
 
-        const ALLOWED_FIELDS = [
-            'uuid', 'is_member_of_grid', 'is_member_of_exhibit',
-            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type', 'url',
-            'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'description',
-            'type', 'layout', 'media_width', 'media_padding', 'alt_text', 'attribution', 'size',
-            'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles', 'content_type',
-            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded', 'transparent',
-            'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'is_deleted',
-            'owner'
-        ];
-
         try {
 
             this._validate_data_object(data);
@@ -672,7 +768,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
                 [data.is_member_of_exhibit]: 'exhibit UUID'
             });
 
-            const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
+            const {sanitized_data} = this._sanitize_data(data, GRID_ITEM_CREATE_FIELDS);
 
             // Set defaults
             this._set_grid_item_defaults(sanitized_data);

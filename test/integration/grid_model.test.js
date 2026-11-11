@@ -13,6 +13,7 @@
 const TEST_EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_GRID_UUID = '660e8400-e29b-41d4-a716-446655440001';
 const TEST_GRID_ITEM_UUID = '770e8400-e29b-41d4-a716-446655440002';
+const TEST_MEDIA_UUID = '880e8400-e29b-41d4-a716-446655440003';
 const TEST_USER_UID = '1'; // numeric tbl_users.id (the lock owner), NOT a UUID
 
 // ==================== MOCK SETUP ====================
@@ -84,11 +85,13 @@ jest.mock('../../libs/helper', () => {
 // Mock Grid Record Tasks
 const mockGridRecordTask = {
     create_grid_record: jest.fn().mockResolvedValue(true),
+    create_grid_with_items: jest.fn().mockResolvedValue(true),
     update_grid_record: jest.fn().mockResolvedValue(true),
     get_grid_record: jest.fn().mockResolvedValue({}),
     create_grid_item_record: jest.fn().mockResolvedValue(true),
     get_grid_item_records: jest.fn().mockResolvedValue([]),
     get_grid_item_record: jest.fn().mockResolvedValue({}),
+    get_grid_item_count: jest.fn().mockResolvedValue(4),
     get_grid_item_edit_record: jest.fn().mockResolvedValue({}),
     update_grid_item_record: jest.fn().mockResolvedValue(true),
     delete_grid_item_record: jest.fn().mockResolvedValue(true),
@@ -144,6 +147,10 @@ describe('Grid Model Integration Tests', () => {
         mockGridRecordTask.create_grid_item_record.mockResolvedValue(true);
         mockGridRecordTask.get_grid_item_records.mockResolvedValue([]);
         mockGridRecordTask.get_grid_item_record.mockResolvedValue({});
+        mockGridRecordTask.get_grid_item_count.mockResolvedValue(4);
+        mockGridRecordTask.update_grid_item_record.mockResolvedValue(true);
+        mockGridRecordTask.delete_grid_item_record.mockResolvedValue(true);
+        mockGridRecordTask.create_grid_with_items.mockResolvedValue(true);
         mockGridRecordTask.reorder_grids.mockResolvedValue(true);
         mockGridRecordTask.reorder_grid_items.mockResolvedValue(true);
         mockExhibitRecordTask.update_exhibit_timestamp.mockResolvedValue(true);
@@ -293,6 +300,298 @@ describe('Grid Model Integration Tests', () => {
         });
     });
 
+    describe('create_grid_with_items', () => {
+
+        const ITEM_UUIDS = [
+            'a0000000-0000-4000-8000-000000000001',
+            'a0000000-0000-4000-8000-000000000002',
+            'a0000000-0000-4000-8000-000000000003'
+        ];
+        const SAVE_MESSAGE = 'Grids cannot have less items than there are columns. ' +
+            'Reduce the amount of columns or add more items before saving.';
+
+        const media_item = () => ({ item_type: 'image', mime_type: 'image/jpeg', media_uuid: TEST_MEDIA_UUID });
+        const text_item = (text = '<p>Text</p>') => ({ item_type: 'text', mime_type: 'text/plain', text });
+        const button_item = () => ({
+            item_type: 'content_block',
+            type: 'content_block',
+            content_type: 'button',
+            text: 'Go',
+            url: 'https://www.du.edu',
+            size: 'small'
+        });
+        const valid_payload = () => ({
+            grid: { internal_name: 'Test Grid', columns: '3', text: '<p>Intro</p>' },
+            items: [media_item(), text_item(), button_item()]
+        });
+
+        beforeEach(() => {
+            const uuids = [TEST_GRID_UUID, ...ITEM_UUIDS];
+            let uuid_calls = 0;
+
+            mockHelperInstance.create_uuid.mockImplementation(() => uuids[uuid_calls++]);
+            mockHelperInstance.order_exhibit_items.mockResolvedValue(7);
+            mockGridRecordTask.create_grid_with_items.mockImplementation(async (grid, items) => ({
+                success: true,
+                grid_uuid: grid.uuid,
+                item_uuids: items.map((item) => item.uuid)
+            }));
+        });
+
+        test('creates the grid and its items through one task call', async () => {
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, valid_payload());
+
+            expect(result.status).toBe(201);
+            expect(result.data).toEqual({ grid_uuid: TEST_GRID_UUID, item_uuids: ITEM_UUIDS });
+            expect(mockGridRecordTask.create_grid_with_items).toHaveBeenCalledTimes(1);
+            expect(mockGridRecordTask.create_grid_record).not.toHaveBeenCalled();
+            expect(mockGridRecordTask.create_grid_item_record).not.toHaveBeenCalled();
+
+            const [grid, items] = mockGridRecordTask.create_grid_with_items.mock.calls[0];
+
+            expect(grid).toEqual(expect.objectContaining({
+                uuid: TEST_GRID_UUID,
+                is_member_of_exhibit: TEST_EXHIBIT_UUID,
+                internal_name: 'Test Grid',
+                columns: 3,
+                order: 7
+            }));
+            expect(items.map((item) => item.uuid)).toEqual(ITEM_UUIDS);
+            expect(items.map((item) => item.item_type)).toEqual(['image', 'text', 'content_block']);
+        });
+
+        test('accepts more items than columns', async () => {
+            const payload = valid_payload();
+            payload.grid.columns = 2;
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.create_grid_with_items.mock.calls[0][1]).toHaveLength(3);
+        });
+
+        test('gives an item sent without a title an empty one', async () => {
+            const payload = valid_payload();
+            payload.items[0].title = 'Kept title';
+            payload.items[1].title = null;
+
+            await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            const items = mockGridRecordTask.create_grid_with_items.mock.calls[0][1];
+
+            expect(items.map((item) => item.title)).toEqual(['Kept title', '', '']);
+        });
+
+        test('requires columns and never falls back to a default', async () => {
+            for (const missing of [undefined, null, '']) {
+                const payload = valid_payload();
+                payload.grid.columns = missing;
+
+                const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+                expect(result.status).toBe(400);
+                expect(result.errors).toEqual([
+                    { index: null, field: 'columns', message: 'Please select the number of columns' }
+                ]);
+            }
+
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('refuses columns outside the allowed set (2-4)', async () => {
+            for (const bad of [1, 5, 'invalid']) {
+                const payload = valid_payload();
+                payload.grid.columns = bad;
+
+                const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+                expect(result.status).toBe(400);
+                expect(result.errors).toEqual([
+                    { index: null, field: 'columns', message: 'Grid columns must be 2, 3, or 4' }
+                ]);
+            }
+
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('requires an internal name', async () => {
+            const payload = valid_payload();
+            payload.grid.internal_name = '   ';
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(400);
+            expect(result.errors).toEqual([
+                { index: null, field: 'internal_name', message: 'Grid internal name is required' }
+            ]);
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('refuses a grid with fewer items than columns', async () => {
+            const payload = valid_payload();
+            payload.items.pop();
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(SAVE_MESSAGE);
+            expect(result.errors).toBeUndefined();
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('refuses a grid with no items', async () => {
+            const payload = valid_payload();
+            payload.items = [];
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(SAVE_MESSAGE);
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('saves nothing when the third item is invalid and reports its position', async () => {
+            const payload = valid_payload();
+            payload.items[2] = text_item('');
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe(
+                'Some required information is missing or not valid. Check the marked fields and try again.'
+            );
+            expect(result.errors).toEqual([
+                { index: 2, field: 'text', message: 'Please enter the text for this item' }
+            ]);
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+            expect(mockExhibitRecordTask.update_exhibit_timestamp).not.toHaveBeenCalled();
+        });
+
+        test('reports every invalid item and grid field in one response', async () => {
+            const payload = valid_payload();
+            payload.grid.columns = '';
+            delete payload.items[0].media_uuid;
+            payload.items[2].url = '';
+            payload.items[2].size = '';
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(400);
+            expect(result.errors).toEqual([
+                { index: null, field: 'columns', message: 'Please select the number of columns' },
+                { index: 0, field: 'media_uuid', message: 'Please select a media item' },
+                { index: 2, field: 'url', message: 'Please enter the button URL' },
+                { index: 2, field: 'size', message: 'Please select a button size' }
+            ]);
+        });
+
+        test('refuses a content block item with no or an unknown content_type', async () => {
+            for (const [content_type, message] of [
+                [undefined, 'Please select a content block type'],
+                ['', 'Please select a content block type'],
+                ['divider', 'Content block type must be Button, Card, Emphasis or Quote']
+            ]) {
+                const payload = valid_payload();
+                payload.items[1] = { item_type: 'content_block', type: 'content_block', content_type, text: 'x' };
+
+                const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+                expect(result.status).toBe(400);
+                expect(result.errors).toEqual([{ index: 1, field: 'content_type', message }]);
+            }
+
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('refuses a button whose url is not a web address', async () => {
+            const payload = valid_payload();
+            payload.items[2].url = 'javascript:alert(1)';
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(400);
+            expect(result.errors).toHaveLength(1);
+            expect(result.errors[0]).toEqual(expect.objectContaining({ index: 2, field: 'url' }));
+            expect(result.errors[0].message).toMatch(/^Button URL/);
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('stores a bare-host button url with https://', async () => {
+            const payload = valid_payload();
+            payload.items[2].url = 'www.du.edu';
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, payload);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.create_grid_with_items.mock.calls[0][1][2].url).toBe('https://www.du.edu');
+        });
+
+        test('sanitizes the grid and every item with the same rich-text profiles as the single creates', async () => {
+            const RTE = require('../../libs/rte_vocabulary');
+
+            await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, valid_payload());
+
+            expect(RTE.apply).toHaveBeenCalledWith(
+                expect.objectContaining({ internal_name: 'Test Grid' }),
+                { text: 'full', internal_name: 'plain' }
+            );
+
+            for (const item_type of ['image', 'text', 'content_block']) {
+                expect(RTE.apply).toHaveBeenCalledWith(
+                    expect.objectContaining({ item_type }),
+                    expect.objectContaining({ title: 'reduced', text: 'full', attribution: 'plain' })
+                );
+            }
+        });
+
+        test('returns 400 for a malformed request', async () => {
+            const bad_requests = [
+                ['', valid_payload()],
+                [TEST_EXHIBIT_UUID, null],
+                [TEST_EXHIBIT_UUID, { items: [text_item()] }],
+                [TEST_EXHIBIT_UUID, { grid: [], items: [text_item()] }],
+                [TEST_EXHIBIT_UUID, { grid: { internal_name: 'x', columns: 2 } }],
+                [TEST_EXHIBIT_UUID, { grid: { internal_name: 'x', columns: 2 }, items: 'two' }],
+                [TEST_EXHIBIT_UUID, { grid: { internal_name: 'x', columns: 2 }, items: [text_item(), 'second'] }]
+            ];
+
+            for (const [exhibit_id, payload] of bad_requests) {
+                const result = await GRID_MODEL.create_grid_with_items(exhibit_id, payload);
+
+                expect(result.status).toBe(400);
+                expect(result.errors).toBeUndefined();
+            }
+
+            expect(mockGridRecordTask.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('returns 404 when the exhibit does not exist', async () => {
+            mockGridRecordTask.create_grid_with_items.mockResolvedValue({ success: false, exhibit_not_found: true });
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, valid_payload());
+
+            expect(result.status).toBe(404);
+            expect(result.message).toBe('Exhibit not found');
+        });
+
+        test('returns 500 without database details when the save fails', async () => {
+            mockGridRecordTask.create_grid_with_items.mockRejectedValue(new Error('ER_DUP_ENTRY tbl_grid_items'));
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, valid_payload());
+
+            expect(result.status).toBe(500);
+            expect(result.message).toBe('Unable to create grid. Nothing was saved.');
+        });
+
+        test('returns 500 when the task reports no success', async () => {
+            mockGridRecordTask.create_grid_with_items.mockResolvedValue(false);
+
+            const result = await GRID_MODEL.create_grid_with_items(TEST_EXHIBIT_UUID, valid_payload());
+
+            expect(result.status).toBe(500);
+        });
+    });
+
     // ==================== UPDATE GRID RECORD ====================
 
     describe('update_grid_record', () => {
@@ -370,6 +669,102 @@ describe('Grid Model Integration Tests', () => {
             }
 
             expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('update_grid_record items-vs-columns guard', () => {
+
+        const SAVE_MESSAGE = 'Grids cannot have less items than there are columns. ' +
+            'Reduce the amount of columns or add more items before saving.';
+
+        const arrange = (stored_columns, item_count) => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: stored_columns,
+                internal_name: 'Staff grid name'
+            });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(item_count);
+        };
+
+        const update_columns = (columns) => GRID_MODEL.update_grid_record(
+            TEST_EXHIBIT_UUID,
+            TEST_GRID_UUID,
+            { internal_name: 'Staff grid name', columns }
+        );
+
+        test('refuses raising columns above the item count', async () => {
+            arrange(3, 3);
+
+            const result = await update_columns(4);
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(SAVE_MESSAGE);
+            expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
+            expect(mockExhibitRecordTask.update_exhibit_timestamp).not.toHaveBeenCalled();
+        });
+
+        test('refuses the raise when columns arrive as a string', async () => {
+            arrange(3, 3);
+
+            const result = await update_columns('4');
+
+            expect(result.status).toBe(422);
+        });
+
+        test('allows raising columns when the grid holds enough items', async () => {
+            arrange(2, 4);
+
+            const result = await update_columns(4);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.update_grid_record.mock.calls[0][0].columns).toBe(4);
+        });
+
+        test('allows saving a short legacy grid when its columns are unchanged', async () => {
+            arrange(4, 1);
+
+            const result = await update_columns(4);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.update_grid_record).toHaveBeenCalled();
+        });
+
+        test('allows lowering columns on a grid that is still short of items', async () => {
+            arrange(4, 1);
+
+            const result = await update_columns(2);
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.update_grid_record.mock.calls[0][0].columns).toBe(2);
+        });
+
+        test('refuses raising columns on a grid that is already short of items', async () => {
+            arrange(3, 1);
+
+            const result = await update_columns(4);
+
+            expect(result.status).toBe(422);
+            expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('treats a stored column value outside 2-4 as the smallest allowed count', async () => {
+            arrange(1, 1);
+
+            const kept = await update_columns(2);
+            expect(kept.status).toBe(201);
+
+            const raised = await update_columns(3);
+            expect(raised.status).toBe(422);
+        });
+
+        test('leaves a missing grid to the update task', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue(null);
+            mockGridRecordTask.update_grid_record.mockResolvedValue(false);
+
+            const result = await update_columns(4);
+
+            expect(result.status).toBe(500);
+            expect(mockGridRecordTask.get_grid_item_count).not.toHaveBeenCalled();
         });
     });
 
@@ -545,6 +940,227 @@ describe('Grid Model Integration Tests', () => {
 
             expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create grid item record');
+        });
+    });
+
+    describe('create_grid_item_record content block checks', () => {
+
+        const BUTTON = { item_type: 'content_block', content_type: 'button', text: 'Go', url: 'https://www.du.edu', size: 'small' };
+        const CARD = { item_type: 'content_block', content_type: 'card', title: 'Heading', text: '<p>Body</p>' };
+        const EMPHASIS = { item_type: 'content_block', content_type: 'emphasis', text: '<p>Note</p>' };
+        const QUOTE = { item_type: 'content_block', content_type: 'quote', text: '<p>Quote</p>' };
+
+        test.each([
+            ['a content block with no content_type', { item_type: 'content_block', text: 'x' }, 'Please select a content block type'],
+            [
+                'what the Add Content Block page sends with no type chosen',
+                { content_type: '', is_published: '0', styles: null, type: 'content_block', item_type: 'content_block', title: '' },
+                'Please select a content block type'
+            ],
+            ['an unknown content_type', { item_type: 'content_block', content_type: 'divider', size: 'small' }, 'Content block type must be Button, Card, Emphasis or Quote'],
+            ['a content_type inherited from Object', { item_type: 'content_block', content_type: 'constructor' }, 'Content block type must be Button, Card, Emphasis or Quote'],
+            ['a button with no text', { ...BUTTON, text: '' }, 'Please enter the button text'],
+            ['a button with no url', { ...BUTTON, url: '   ' }, 'Please enter the button URL'],
+            ['a button with no size', { ...BUTTON, size: undefined }, 'Please select a button size'],
+            ['a card with no heading', { ...CARD, title: '' }, 'Please enter the card heading'],
+            ['a card with no body', { ...CARD, text: null }, 'Please enter the card body'],
+            ['emphasis with no text', { ...EMPHASIS, text: '' }, 'Please enter the emphasis text'],
+            ['a quote with no text', { ...QUOTE, text: '' }, 'Please enter the quote text']
+        ])('refuses %s', async (label, itemData, message) => {
+            const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, { ...itemData });
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe(message);
+            expect(mockGridRecordTask.create_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test.each([
+            ['a button', BUTTON],
+            ['a card', CARD],
+            ['emphasis', EMPHASIS],
+            ['a quote without attribution', QUOTE],
+            ['a text item', { item_type: 'text', text: '<p>Text</p>' }],
+            ['a media item', { item_type: 'pdf', media_uuid: TEST_MEDIA_UUID }]
+        ])('accepts %s', async (label, itemData) => {
+            const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, { ...itemData });
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.create_grid_item_record).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('update_grid_item_record content block checks', () => {
+
+        const update_item = (data) => GRID_MODEL.update_grid_item_record(
+            TEST_EXHIBIT_UUID,
+            TEST_GRID_UUID,
+            TEST_GRID_ITEM_UUID,
+            data
+        );
+
+        test('refuses a content block saved with no type chosen', async () => {
+            const result = await update_item({ content_type: '', is_published: '0', styles: null, updated_by: 'tester' });
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Please select a content block type');
+            expect(mockGridRecordTask.update_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('refuses a content block missing a field its type requires', async () => {
+            const result = await update_item({ content_type: 'card', title: '', text: '<p>Body</p>' });
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Please enter the card heading');
+            expect(mockGridRecordTask.update_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('saves a complete content block', async () => {
+            const result = await update_item({ content_type: 'quote', text: '<p>Quote</p>', attribution: '' });
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.update_grid_item_record).toHaveBeenCalledTimes(1);
+        });
+
+        test('leaves updates that name no content_type as they were', async () => {
+            for (const data of [{ title: 'Renamed' }, { item_type: 'text', text: '' }, { title: 'Echoed', content_type: null }]) {
+                const result = await update_item(data);
+
+                expect(result.status).toBe(201);
+            }
+
+            expect(mockGridRecordTask.update_grid_item_record).toHaveBeenCalledTimes(3);
+        });
+    });
+
+    describe('delete_grid_item_record', () => {
+
+        const DELETE_MESSAGE = 'Grids cannot contain less items than there are columns. ' +
+            'Reduce the amount of columns to delete items.';
+        const ADD_ITEMS_MESSAGE = 'Grids cannot contain less items than there are columns. ' +
+            'Add more items before deleting this one, or delete the whole grid.';
+
+        const delete_item = (...options) => GRID_MODEL.delete_grid_item_record(
+            TEST_EXHIBIT_UUID,
+            TEST_GRID_UUID,
+            TEST_GRID_ITEM_UUID,
+            ...options
+        );
+
+        beforeEach(() => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, columns: 3 });
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue({ uuid: TEST_GRID_ITEM_UUID, is_deleted: 0 });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(4);
+            mockGridRecordTask.delete_grid_item_record.mockResolvedValue({ success: true });
+        });
+
+        test('deletes an item when the grid keeps at least as many items as columns', async () => {
+            const result = await delete_item();
+
+            expect(result.status).toBe(204);
+            expect(mockGridRecordTask.delete_grid_item_record).toHaveBeenCalledWith(
+                TEST_EXHIBIT_UUID,
+                TEST_GRID_UUID,
+                TEST_GRID_ITEM_UUID
+            );
+            expect(mockExhibitRecordTask.update_exhibit_timestamp).toHaveBeenCalledWith(TEST_EXHIBIT_UUID);
+        });
+
+        test('refuses a delete that would leave fewer items than columns', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(3);
+
+            const result = await delete_item();
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(DELETE_MESSAGE);
+            expect(mockGridRecordTask.delete_grid_item_record).not.toHaveBeenCalled();
+            expect(mockExhibitRecordTask.update_exhibit_timestamp).not.toHaveBeenCalled();
+        });
+
+        test('refuses a delete from a grid that is already short of items', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(1);
+
+            const result = await delete_item();
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(ADD_ITEMS_MESSAGE);
+            expect(mockGridRecordTask.delete_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test.each([
+            [4, 4, DELETE_MESSAGE],
+            [4, 3, DELETE_MESSAGE],
+            [3, 3, DELETE_MESSAGE],
+            [4, 2, ADD_ITEMS_MESSAGE],
+            [3, 2, ADD_ITEMS_MESSAGE],
+            [3, 1, ADD_ITEMS_MESSAGE],
+            [2, 2, ADD_ITEMS_MESSAGE],
+            [2, 1, ADD_ITEMS_MESSAGE]
+        ])('says to reduce the columns only when fewer columns would allow the delete: %i columns, %i items', async (columns, item_count, message) => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, columns });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(item_count);
+
+            const result = await delete_item();
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(message);
+            expect(mockGridRecordTask.delete_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('counts every item in the grid, published or not', async () => {
+            await delete_item();
+
+            expect(mockGridRecordTask.get_grid_item_count).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+        });
+
+        test('skips the check when enforce_minimum_items is false', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(1);
+
+            const result = await delete_item({ enforce_minimum_items: false });
+
+            expect(result.status).toBe(204);
+            expect(mockGridRecordTask.get_grid_item_count).not.toHaveBeenCalled();
+            expect(mockGridRecordTask.delete_grid_item_record).toHaveBeenCalledTimes(1);
+        });
+
+        test('uses the smallest allowed count for a stored column value outside 2-4', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, columns: 6 });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(3);
+
+            const allowed = await delete_item();
+            expect(allowed.status).toBe(204);
+
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(2);
+
+            const refused = await delete_item();
+            expect(refused.status).toBe(422);
+        });
+
+        test('leaves an item that is missing or already deleted to the delete task', async () => {
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue(null);
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(3);
+
+            const result = await delete_item();
+
+            expect(result.status).toBe(204);
+            expect(mockGridRecordTask.get_grid_item_count).not.toHaveBeenCalled();
+            expect(mockGridRecordTask.delete_grid_item_record).toHaveBeenCalledTimes(1);
+        });
+
+        test('does not block when the grid itself is missing or deleted', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue(null);
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(0);
+
+            const result = await delete_item();
+
+            expect(result.status).toBe(204);
+        });
+
+        test('returns 400 for an invalid UUID', async () => {
+            const result = await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, '');
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Invalid UUID provided');
+            expect(mockGridRecordTask.get_grid_record).not.toHaveBeenCalled();
         });
     });
 

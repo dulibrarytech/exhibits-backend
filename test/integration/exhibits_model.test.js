@@ -163,12 +163,15 @@ jest.mock('../../indexer/model', () => ({
 
 // Mock Items Model
 jest.mock('../../exhibits/items_model', () => ({
-    get_item_record: jest.fn().mockResolvedValue({ status: 200, data: {} })
+    get_item_record: jest.fn().mockResolvedValue({ status: 200, data: {} }),
+    get_item_records: jest.fn().mockResolvedValue({ status: 200, data: [] })
 }));
 
 // Mock Grids Model
 jest.mock('../../exhibits/grid_model', () => ({
-    get_grid_record: jest.fn().mockResolvedValue({ status: 200, data: {} })
+    get_grid_record: jest.fn().mockResolvedValue({ status: 200, data: {} }),
+    get_grid_item_records: jest.fn().mockResolvedValue({ status: 200, data: [] }),
+    delete_grid_item_record: jest.fn().mockResolvedValue({ status: 204, data: { success: true } })
 }));
 
 // Mock Timelines Model
@@ -203,6 +206,48 @@ describe('Exhibits Model Integration Tests', () => {
 
     afterAll(async () => {
         await new Promise(resolve => setImmediate(resolve));
+    });
+
+    describe('delete_exhibit_record', () => {
+
+        test('deletes every grid item without the items-vs-columns check', async () => {
+            const ITEMS_MODEL = require('../../exhibits/items_model');
+            const GRIDS_MODEL = require('../../exhibits/grid_model');
+            const GRID_UUID = '770e8400-e29b-41d4-a716-446655440010';
+            const GRID_ITEM_UUIDS = [
+                '880e8400-e29b-41d4-a716-446655440011',
+                '880e8400-e29b-41d4-a716-446655440012'
+            ];
+
+            ITEMS_MODEL.get_item_records.mockResolvedValue({
+                status: 200,
+                data: [{ uuid: GRID_UUID, type: 'grid', is_member_of_exhibit: TEST_UUID }]
+            });
+            GRIDS_MODEL.get_grid_item_records.mockResolvedValue({
+                status: 200,
+                data: GRID_ITEM_UUIDS.map((uuid) => ({
+                    uuid,
+                    is_member_of_exhibit: TEST_UUID,
+                    is_member_of_grid: GRID_UUID
+                }))
+            });
+            GRIDS_MODEL.delete_grid_item_record.mockResolvedValue({ status: 204, data: { success: true } });
+            mockExhibitRecordTask.delete_exhibit_record.mockResolvedValue(true);
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(result.status).toBe(204);
+            expect(GRIDS_MODEL.delete_grid_item_record).toHaveBeenCalledTimes(2);
+
+            for (const grid_item_uuid of GRID_ITEM_UUIDS) {
+                expect(GRIDS_MODEL.delete_grid_item_record).toHaveBeenCalledWith(
+                    TEST_UUID,
+                    GRID_UUID,
+                    grid_item_uuid,
+                    { enforce_minimum_items: false }
+                );
+            }
+        });
     });
 
     // ==================== CREATE EXHIBIT RECORD ====================

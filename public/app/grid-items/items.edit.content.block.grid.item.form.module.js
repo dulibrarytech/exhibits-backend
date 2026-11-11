@@ -263,29 +263,10 @@ const itemsEditContentBlockGridItemFormModule = (function () {
             // Display metadata (creation/update info)
             display_metadata_info(record, dom_elements.created);
 
-            // Populate form fields
-            set_element_value(dom_elements.content_type_input, record.content_type);
-            set_rte_text('button-text-input', record.text);
-            set_rte_text('card-text-input', record.text);
-            set_rte_text('card-title-input', record.title);
-            set_rte_text('emphasis-text-input', record.text);
-            set_rte_text('quote-text-input', record.text);
-            set_element_value(dom_elements.button_size, record.size);
-            set_checkbox_state(dom_elements.button_transparent, !!record.transparent);
-            set_element_value(dom_elements.button_url_input, record.url);
-            set_element_value(dom_elements.divider_size, record.size);
-            set_element_value(dom_elements.quote_attribution_input, record.attribution);
-
             // Set published status
             set_published_status(record.is_published, dom_elements.is_published);
 
-            // Set saved style selection after dropdown is populated
-            // Style keys are simple strings like "accent1"; skip "{}" (prepare_styles default) and legacy JSON blobs
-            if (record.styles && typeof record.styles === 'string'
-                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
-                await itemsCommonContentBlockGridItemFormModule.wait_for_styles();
-                itemsCommonContentBlockGridItemFormModule.set_item_style(record.styles);
-            }
+            await itemsCommonContentBlockGridItemFormModule.fill(record);
 
             return false;
 
@@ -302,17 +283,11 @@ const itemsEditContentBlockGridItemFormModule = (function () {
     function cache_dom_elements() {
         return {
             created: document.querySelector('#created'),
-            content_type_input: document.querySelector('#content-type'),
             button_text_input: document.querySelector('#button-text-input'),
-            button_size: document.querySelector('#button-size'),
-            button_transparent: document.querySelector('#button-transparent'),
-            button_url_input: document.querySelector('#button-url-input'),
             card_text_input: document.querySelector('#card-text-input'),
             card_title_input: document.querySelector('#card-title-input'),
-            divider_size: document.querySelector('#divider-size'),
             emphasis_text_input: document.querySelector('#emphasis-text-input'),
             quote_text_input: document.querySelector('#quote-text-input'),
-            quote_attribution_input: document.querySelector('#quote-attribution-input'),
             is_published: document.querySelector('#is-published'),
         };
     }
@@ -362,33 +337,6 @@ const itemsEditContentBlockGridItemFormModule = (function () {
             created_element.appendChild(part);
         });
     }
-
-    /**
-     * Set content block text input value
-     */
-    function set_rte_text(id, text) {
-        rteModule.set_html(id, text ? helperModule.unescape(text) : '');
-    }
-
-    /**
-     * Set content block element value
-     */
-    function set_element_value(element, value) {
-        if (!element) {
-            return;
-        }
-
-        element.value = value;
-    }
-
-    /**
-     * Set content block checkbox value
-     */
-    const set_checkbox_state = (element, is_checked) => {
-        if (element) {
-            element.checked = Boolean(is_checked);
-        }
-    };
 
     /**
      * Set published status checkbox

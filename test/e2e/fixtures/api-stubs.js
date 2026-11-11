@@ -965,6 +965,7 @@ async function stubGridRecordApi(page, opts = {}) {
     const record = opts.record ?? gridRecordFixture();
     const createStatus = opts.createStatus ?? 201;
     const updateStatus = opts.updateStatus ?? 201;
+    const updateBody = opts.updateBody ?? { data: { uuid: record.uuid } };
     const newGridId = opts.newGridId ?? 'grid-uuid-new';
 
     const state = {
@@ -1008,7 +1009,7 @@ async function stubGridRecordApi(page, opts = {}) {
             return route.fulfill({
                 status: updateStatus,
                 contentType: 'application/json',
-                body: JSON.stringify({ data: { uuid: record.uuid } }),
+                body: JSON.stringify(updateBody),
             });
         }
 

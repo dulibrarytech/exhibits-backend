@@ -188,6 +188,18 @@ async function apiGet(request, url_path) {
     return { status: res.status(), body: await res.text() };
 }
 
+async function apiPost(request, url_path, data) {
+    const res = await request.post(`${API}${url_path}`, { headers: admin_headers(), data });
+    const body = await res.text();
+    let json = null;
+    try {
+        json = JSON.parse(body);
+    } catch {
+        json = null;
+    }
+    return { status: res.status(), json };
+}
+
 // ==================== MEDIA LIBRARY ====================
 
 /**
@@ -314,6 +326,7 @@ module.exports = {
     apiDeleteExhibit,
     apiSuppressExhibit,
     apiGet,
+    apiPost,
     apiCreateMediaRecord,
     apiFindMediaByName,
     apiDeleteMediaRecord,

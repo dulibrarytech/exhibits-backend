@@ -722,6 +722,13 @@ const itemsGridModule = (function () {
                 return false;
             }
 
+            if (response.status === 422) {
+                const error_text = response.data?.message ?? 'This grid item cannot be deleted.';
+                display_error_message(elements.message, error_text);
+                restore_delete_card(elements);
+                return false;
+            }
+
             if (response.status === 500) {
                 const error_text = response.data?.message ?? 'Internal server error';
                 display_error_message(elements.message, error_text);

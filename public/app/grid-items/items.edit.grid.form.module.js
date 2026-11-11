@@ -115,6 +115,18 @@ const itemsEditGridFormModule = (function () {
                         message_el.innerHTML = '';
                     }
                 }, 3000);
+
+            } else {
+
+                let error_text = 'Unable to update grid record. Please try again.';
+
+                if (response !== undefined && response.status === 403) {
+                    error_text = 'You do not have permission to update this grid.';
+                } else if (response !== undefined && typeof response.data?.message === 'string' && response.data.message.length > 0) {
+                    error_text = response.data.message;
+                }
+
+                domModule.set_alert(document.querySelector('#message'), 'danger', error_text);
             }
 
         } catch (error) {

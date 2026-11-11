@@ -56,6 +56,13 @@ module.exports = function (app) {
             async_handler(CONTROLLER.create_grid_record)
         );
 
+    app.route(endpoints.exhibits.grid_records.with_items.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.create_grid_with_items)
+        );
+
     // Update grid record
     app.route(endpoints.exhibits.grid_records.put.endpoint)
         .put(

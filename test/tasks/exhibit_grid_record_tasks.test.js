@@ -470,6 +470,211 @@ describe('Exhibit_grid_record_tasks', () => {
         });
     });
 
+    describe('create_grid_with_items', () => {
+
+        const ITEM_A = '770e8400-e29b-41d4-a716-446655440001';
+        const ITEM_B = '770e8400-e29b-41d4-a716-446655440002';
+        const ITEM_C = '770e8400-e29b-41d4-a716-446655440003';
+        const MEDIA_1 = '880e8400-e29b-41d4-a716-446655440001';
+        const MEDIA_2 = '880e8400-e29b-41d4-a716-446655440002';
+        const OTHER_EXHIBIT = '990e8400-e29b-41d4-a716-446655440000';
+
+        const TABLE = {
+            exhibit_records: 'tbl_exhibits',
+            grid_records: 'tbl_grids',
+            grid_item_records: 'tbl_grid_items'
+        };
+
+        const createRecordingDb = (options = {}) => {
+
+            const log = [];
+            const state = { transactions: 0, committed: 0, rolled_back: 0 };
+
+            const respond = (query) => {
+
+                if (options.fail_on && options.fail_on(query)) {
+                    throw new Error('Simulated database failure');
+                }
+
+                if (query.op === 'insert') {
+                    return [1];
+                }
+
+                return options.exhibit_found === false ? 0 : 1;
+            };
+
+            const makeBuilder = (table, in_transaction) => {
+                const query = { table, op: null, where: null, data: null, in_transaction };
+                const builder = {
+                    where(conditions) { query.where = conditions; return builder; },
+                    insert(data) { query.op = 'insert'; query.data = data; return builder; },
+                    update(data) { query.op = 'update'; query.data = data; return builder; },
+                    timeout() { return builder; },
+                    then(resolve, reject) {
+                        log.push(query);
+                        return new Promise((done) => done(respond(query))).then(resolve, reject);
+                    }
+                };
+                return builder;
+            };
+
+            const db = (table) => makeBuilder(table, false);
+            db.fn = { now: () => 'NOW()' };
+            db.transaction = async (callback) => {
+                state.transactions += 1;
+                const trx = (table) => makeBuilder(table, true);
+                trx.fn = { now: () => 'NOW()' };
+
+                try {
+                    const result = await callback(trx);
+                    state.committed += 1;
+                    return result;
+                } catch (error) {
+                    state.rolled_back += 1;
+                    throw error;
+                }
+            };
+
+            return { db, log, state };
+        };
+
+        const grid_data = () => ({
+            uuid: gridUUID,
+            is_member_of_exhibit: exhibitUUID,
+            internal_name: 'Staff grid name',
+            columns: 3,
+            order: 5,
+            styles: '{}',
+            text: '<p>Intro</p>'
+        });
+
+        const item_data = () => [
+            { uuid: ITEM_A, item_type: 'image', media_uuid: MEDIA_1, thumbnail_media_uuid: MEDIA_2, styles: '{}' },
+            { uuid: ITEM_B, item_type: 'text', text: '<p>Text</p>', styles: '{}' },
+            { uuid: ITEM_C, item_type: 'content_block', content_type: 'button', text: 'Go', url: 'https://www.du.edu', size: 'small', styles: '{}' }
+        ];
+
+        const writes_to = (log, table) => log.filter((query) => query.table === table);
+
+        test('writes the exhibit timestamp, the grid and every item in one transaction', async () => {
+            const { db, log, state } = createRecordingDb();
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+
+            const result = await tasks.create_grid_with_items(grid_data(), item_data());
+
+            expect(result).toEqual({ success: true, grid_uuid: gridUUID, item_uuids: [ITEM_A, ITEM_B, ITEM_C] });
+            expect(state).toEqual({ transactions: 1, committed: 1, rolled_back: 0 });
+            expect(log.every((query) => query.in_transaction)).toBe(true);
+            expect(log.map((query) => `${query.op} ${query.table}`)).toEqual([
+                'update tbl_exhibits',
+                'insert tbl_grids',
+                'insert tbl_grid_items'
+            ]);
+            expect(log[0].where).toEqual({ uuid: exhibitUUID, is_deleted: 0 });
+        });
+
+        test('numbers the items 1..N in the order given and binds them to the new grid', async () => {
+            const { db, log } = createRecordingDb();
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+            const items = item_data().map((item) => ({
+                ...item,
+                order: 99,
+                is_member_of_grid: OTHER_EXHIBIT,
+                is_member_of_exhibit: OTHER_EXHIBIT
+            }));
+
+            await tasks.create_grid_with_items(grid_data(), items);
+
+            const [item_insert] = writes_to(log, TABLE.grid_item_records);
+
+            expect(item_insert.data.map((row) => [row.uuid, row.order])).toEqual([[ITEM_A, 1], [ITEM_B, 2], [ITEM_C, 3]]);
+            for (const row of item_insert.data) {
+                expect(row.is_member_of_grid).toBe(gridUUID);
+                expect(row.is_member_of_exhibit).toBe(exhibitUUID);
+            }
+        });
+
+        test('keeps content block fields and applies the grid item defaults', async () => {
+            const { db, log } = createRecordingDb();
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+
+            await tasks.create_grid_with_items(grid_data(), item_data());
+
+            const [item_insert] = writes_to(log, TABLE.grid_item_records);
+
+            expect(item_insert.data[2]).toEqual(expect.objectContaining({
+                item_type: 'content_block',
+                content_type: 'button',
+                url: 'https://www.du.edu',
+                size: 'small',
+                is_published: 0,
+                is_deleted: 0
+            }));
+        });
+
+        test('drops fields outside the grid and grid item whitelists', async () => {
+            const { db, log } = createRecordingDb();
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+            const items = item_data();
+            items[1].not_a_column = 'x';
+
+            await tasks.create_grid_with_items({ ...grid_data(), not_a_column: 'x', title: 'x' }, items);
+
+            const [grid_insert] = writes_to(log, TABLE.grid_records);
+            const [item_insert] = writes_to(log, TABLE.grid_item_records);
+
+            expect(grid_insert.data).not.toHaveProperty('not_a_column');
+            expect(grid_insert.data).not.toHaveProperty('title');
+            expect(grid_insert.data).toEqual(expect.objectContaining({ uuid: gridUUID, columns: 3, order: 5, type: 'grid' }));
+            expect(item_insert.data[1]).not.toHaveProperty('not_a_column');
+        });
+
+        test('rolls back and rethrows when the item insert fails', async () => {
+            const { db, log, state } = createRecordingDb({
+                fail_on: (query) => query.op === 'insert' && query.table === TABLE.grid_item_records
+            });
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+
+            await expect(tasks.create_grid_with_items(grid_data(), item_data()))
+                .rejects.toThrow('Simulated database failure');
+
+            expect(state).toEqual({ transactions: 1, committed: 0, rolled_back: 1 });
+            expect(writes_to(log, TABLE.grid_item_records)).toHaveLength(1);
+        });
+
+        test('saves nothing when the exhibit is missing or deleted', async () => {
+            const { db, log } = createRecordingDb({ exhibit_found: false });
+            const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+
+            const result = await tasks.create_grid_with_items(grid_data(), item_data());
+
+            expect(result).toEqual({ success: false, exhibit_not_found: true });
+            expect(log.filter((query) => query.op === 'insert')).toEqual([]);
+        });
+
+        test('refuses bad input before opening a transaction', async () => {
+            const bad_calls = [
+                [grid_data(), []],
+                [grid_data(), null],
+                [{ ...grid_data(), columns: undefined }, item_data()],
+                [{ ...grid_data(), uuid: 'not-a-uuid' }, item_data()],
+                [{ ...grid_data(), is_member_of_exhibit: '' }, item_data()],
+                [grid_data(), [{ ...item_data()[0], uuid: 'not-a-uuid' }]],
+                [grid_data(), [null]]
+            ];
+
+            for (const [grid, items] of bad_calls) {
+                const { db, log, state } = createRecordingDb();
+                const tasks = new Exhibit_grid_record_tasks(db, TABLE);
+
+                await expect(tasks.create_grid_with_items(grid, items)).rejects.toThrow();
+
+                expect(state.transactions).toBe(0);
+                expect(log).toEqual([]);
+            }
+        });
+    });
+
     // ==================== UPDATE_GRID_RECORD TESTS ====================
     describe('update_grid_record', () => {
         test('should successfully update grid record', async () => {

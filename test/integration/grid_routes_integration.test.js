@@ -58,6 +58,7 @@ jest.mock('../../config/rate_limits_loader', () => ({
 
 const mockGridsModel = {
     create_grid_record: jest.fn(),
+    create_grid_with_items: jest.fn(),
     get_grid_record: jest.fn(),
     update_grid_record: jest.fn(),
     create_grid_item_record: jest.fn(),
@@ -133,6 +134,7 @@ describe('Grid Routes Integration (real router)', () => {
         const routes_under_test = [
             ['get', path_for(ENDPOINTS.grid_records.get.endpoint, IDS)],
             ['post', path_for(ENDPOINTS.grid_records.post.endpoint, IDS)],
+            ['post', path_for(ENDPOINTS.grid_records.with_items.post.endpoint, IDS)],
             ['put', path_for(ENDPOINTS.grid_records.put.endpoint, IDS)],
             ['post', path_for(ENDPOINTS.grid_item_records.post.endpoint, IDS)],
             ['get', path_for(ENDPOINTS.grid_item_records.get.endpoint, IDS)],
@@ -221,6 +223,104 @@ describe('Grid Routes Integration (real router)', () => {
                 expect.objectContaining({ columns: 3 })
             );
         });
+
+        test('PUT grid record passes a 422 refusal and its message through', async () => {
+            mockGridsModel.update_grid_record.mockResolvedValue({ status: 422, message: 'refused' });
+
+            const response = await request(app)
+                .put(path_for(ENDPOINTS.grid_records.put.endpoint, IDS))
+                .send({ columns: 4 });
+
+            expect(response.status).toBe(422);
+            expect(response.body.message).toBe('refused');
+        });
+    });
+
+    describe('Grid with items route', () => {
+
+        const WITH_ITEMS_PATH = path_for(ENDPOINTS.grid_records.with_items.post.endpoint, IDS);
+        const BODY = {
+            grid: { internal_name: 'x', columns: 2 },
+            items: [
+                { item_type: 'text', text: '<p>one</p>' },
+                { item_type: 'text', text: '<p>two</p>' }
+            ]
+        };
+
+        test('is mounted at /grids/with-items under the exhibit', () => {
+            expect(WITH_ITEMS_PATH).toBe(
+                `${process.env.APP_PATH}/api/v1/exhibits/${TEST_EXHIBIT_ID}/grids/with-items`
+            );
+        });
+
+        test('POST passes exhibit id and body to the model and returns its 201 data', async () => {
+            mockGridsModel.create_grid_with_items.mockResolvedValue({
+                status: 201,
+                message: 'Grid created',
+                data: { grid_uuid: TEST_GRID_ID, item_uuids: [TEST_ITEM_ID, TEST_USER_UID] }
+            });
+
+            const response = await request(app).post(WITH_ITEMS_PATH).send(BODY);
+
+            expect(response.status).toBe(201);
+            expect(response.body.data).toEqual({
+                grid_uuid: TEST_GRID_ID,
+                item_uuids: [TEST_ITEM_ID, TEST_USER_UID]
+            });
+            expect(mockGridsModel.create_grid_with_items).toHaveBeenCalledWith(TEST_EXHIBIT_ID, BODY);
+            expect(mockGridsModel.create_grid_record).not.toHaveBeenCalled();
+            expect(mockGridsModel.create_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('POST checks the add-item permissions against the exhibit', async () => {
+            mockGridsModel.create_grid_with_items.mockResolvedValue({ status: 201, message: 'Grid created', data: {} });
+
+            await request(app).post(WITH_ITEMS_PATH).send(BODY);
+
+            expect(AUTHORIZE.check_permission).toHaveBeenCalledWith(expect.objectContaining({
+                permissions: ['add_item', 'add_item_to_any_exhibit'],
+                record_type: 'grid',
+                parent_id: TEST_EXHIBIT_ID,
+                child_id: null
+            }));
+        });
+
+        test('POST returns 403 when authorization denies', async () => {
+            AUTHORIZE.check_permission.mockResolvedValue(false);
+
+            const response = await request(app).post(WITH_ITEMS_PATH).send(BODY);
+
+            expect(response.status).toBe(403);
+            expect(mockGridsModel.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('POST returns 400 on empty body before authorizing', async () => {
+            const response = await request(app).post(WITH_ITEMS_PATH).send({});
+
+            expect(response.status).toBe(400);
+            expect(AUTHORIZE.check_permission).not.toHaveBeenCalled();
+            expect(mockGridsModel.create_grid_with_items).not.toHaveBeenCalled();
+        });
+
+        test('POST passes a 400 refusal with its per-item errors through', async () => {
+            const errors = [{ index: 1, field: 'text', message: 'Please enter the text for this item' }];
+            mockGridsModel.create_grid_with_items.mockResolvedValue({ status: 400, message: 'refused', errors });
+
+            const response = await request(app).post(WITH_ITEMS_PATH).send(BODY);
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('refused');
+            expect(response.body.errors).toEqual(errors);
+        });
+
+        test('POST passes a 422 items-versus-columns refusal through', async () => {
+            mockGridsModel.create_grid_with_items.mockResolvedValue({ status: 422, message: 'refused' });
+
+            const response = await request(app).post(WITH_ITEMS_PATH).send(BODY);
+
+            expect(response.status).toBe(422);
+            expect(response.body.message).toBe('refused');
+        });
     });
 
     // ==================== GRID ITEM CRUD ====================
@@ -301,7 +401,7 @@ describe('Grid Routes Integration (real router)', () => {
             );
         });
 
-        test('DELETE grid item maps params and record type to the model', async () => {
+        test('DELETE grid item maps params to the model', async () => {
             mockGridsModel.delete_grid_item_record.mockResolvedValue({ status: 204, message: 'deleted' });
 
             const response = await request(app)
@@ -309,7 +409,18 @@ describe('Grid Routes Integration (real router)', () => {
                 .query({ type: 'grid_item' });
 
             expect(response.status).toBe(204);
-            expect(mockGridsModel.delete_grid_item_record).toHaveBeenCalledWith(TEST_EXHIBIT_ID, TEST_GRID_ID, TEST_ITEM_ID, 'grid_item');
+            expect(mockGridsModel.delete_grid_item_record).toHaveBeenCalledWith(TEST_EXHIBIT_ID, TEST_GRID_ID, TEST_ITEM_ID);
+        });
+
+        test('DELETE grid item passes a 422 refusal and its message through', async () => {
+            mockGridsModel.delete_grid_item_record.mockResolvedValue({ status: 422, message: 'refused' });
+
+            const response = await request(app)
+                .delete(path_for(ENDPOINTS.grid_item_records.delete.endpoint, IDS))
+                .query({ type: 'grid_item' });
+
+            expect(response.status).toBe(422);
+            expect(response.body.message).toBe('refused');
         });
 
         test('DELETE grid item rejects an unknown record type with 400', async () => {

@@ -171,11 +171,54 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
         return styles_promise || Promise.resolve();
     };
 
+    obj.fill = async function (record) {
+
+        if (!record) {
+            return;
+        }
+
+        const set_value = (selector, value) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.value = value;
+            }
+        };
+
+        const set_rte_text = (id, text) => {
+            rteModule.set_html(id, text ? helperModule.unescape(text) : '');
+        };
+
+        set_value('#content-type', record.content_type);
+        set_rte_text('button-text-input', record.text);
+        set_rte_text('card-text-input', record.text);
+        set_rte_text('card-title-input', record.title);
+        set_rte_text('emphasis-text-input', record.text);
+        set_rte_text('quote-text-input', record.text);
+        set_value('#button-size', record.size);
+
+        const transparent = document.querySelector('#button-transparent');
+        if (transparent) {
+            transparent.checked = Boolean(record.transparent);
+        }
+
+        set_value('#button-url-input', record.url);
+        set_value('#quote-attribution-input', record.attribution);
+
+        // Set saved style selection after dropdown is populated
+        // Style keys are simple strings like "accent1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+        if (record.styles && typeof record.styles === 'string'
+            && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+            await obj.wait_for_styles();
+            obj.set_item_style(record.styles);
+        }
+    };
+
     obj.get_common_content_block_item_form_fields = function () {
 
         try {
 
             const item_content_block = {};
+            const errors = [];
 
             // Helper function for safe DOM queries
             const get_element_value = (selector, default_value = '') => {
@@ -202,7 +245,12 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
                 }
             };
 
+            const add_error = (message, field_selector) => {
+                errors.push({ message, field_selector });
+            };
+
             [
+                '#content-type',
                 '#button-text-input',
                 '#button-size',
                 '#button-url-input',
@@ -219,6 +267,11 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
 
             item_content_block.content_type = get_element_value('#content-type');
 
+            if (!item_content_block.content_type || item_content_block.content_type.length === 0) {
+                show_error('Please select a content block type', '#content-type');
+                return false;
+            }
+
             // Set content block data
             if (item_content_block.content_type === 'button') {
                 item_content_block.text = rteModule.get_html('button-text-input');
@@ -229,19 +282,16 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
                 // Validate
                 for (const val of ['url', 'text']) {
                     if (!item_content_block[val] || item_content_block[val].length === 0) {
-                        show_error(`Please enter button ${val}`, `#button-${val}-input`);
-                        return false;
+                        add_error(`Please enter button ${val}`, `#button-${val}-input`);
                     }
                 }
 
-                if (!helperModule.is_valid_link_url(item_content_block.url)) {
-                    show_error('Please enter a web address, such as https://library.du.edu', '#button-url-input');
-                    return false;
+                if (item_content_block.url && !helperModule.is_valid_link_url(item_content_block.url)) {
+                    add_error('Please enter a web address, such as https://library.du.edu', '#button-url-input');
                 }
 
                 if (!item_content_block.size || item_content_block.size.length === 0) {
-                    show_error('Please select button size', '#button-size');
-                    return false;
+                    add_error('Please select button size', '#button-size');
                 }
             } else if (item_content_block.content_type === 'card') {
                 item_content_block.title = rteModule.get_html('card-title-input');
@@ -250,23 +300,20 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
                 // Validate
                 for (const val of ['title', 'text']) {
                     if (!item_content_block[val] || item_content_block[val].length === 0) {
-                        show_error(`Please enter card ${val}`, `#card-${val}-input`);
-                        return false;
+                        add_error(`Please enter card ${val}`, `#card-${val}-input`);
                     }
                 }
             } else if (item_content_block.content_type === 'divider') {
                 item_content_block.size = get_element_value('#divider-size');
 
                 if (!item_content_block.size || item_content_block.size.length === 0) {
-                    show_error('Please select divider size', '#divider-size');
-                    return false;
+                    add_error('Please select divider size', '#divider-size');
                 }
             } else if (item_content_block.content_type === 'emphasis') {
                 item_content_block.text = rteModule.get_html('emphasis-text-input');
 
                 if (!item_content_block.text || item_content_block.text.length === 0) {
-                    show_error('Please enter emphasis text', '#emphasis-text-input');
-                    return false;
+                    add_error('Please enter emphasis text', '#emphasis-text-input');
                 }
             } else if (item_content_block.content_type === 'quote') {
                 item_content_block.text = rteModule.get_html('quote-text-input');
@@ -274,9 +321,17 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
 
                 // Validate
                 if (!item_content_block.text || item_content_block.text.length === 0) {
-                    show_error(`Please enter quote text`, `#quote-text-input`);
-                    return false;
+                    add_error(`Please enter quote text`, `#quote-text-input`);
                 }
+            }
+
+            if (errors.length > 0) {
+                show_error(errors[0].message);
+                errors.forEach(error => {
+                    const error_id = error.field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(error.field_selector, error_id, error.message);
+                });
+                return false;
             }
 
             // Get optional published status

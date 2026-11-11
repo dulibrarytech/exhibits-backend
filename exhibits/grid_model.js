@@ -42,10 +42,13 @@ const CONSTANTS = {
         CREATED: 201,
         NO_CONTENT: 204,
         BAD_REQUEST: 400,
+        NOT_FOUND: 404,
+        UNPROCESSABLE_ENTITY: 422,
         INTERNAL_SERVER_ERROR: 500
     },
     ITEM_TYPES: {
-        TEXT: 'text'
+        TEXT: 'text',
+        CONTENT_BLOCK: 'content_block'
     },
     MIME_TYPES: {
         TEXT_PLAIN: 'text/plain'
@@ -136,6 +139,61 @@ const build_minimum_items_message = (violation) => {
         `Add at least ${minimum} grid items, or reduce the number of columns, before publishing.`;
 };
 
+const MINIMUM_ITEMS_SAVE_MESSAGE = 'Grids cannot have less items than there are columns. ' +
+    'Reduce the amount of columns or add more items before saving.';
+
+const MINIMUM_ITEMS_DELETE_MESSAGE = 'Grids cannot contain less items than there are columns. ' +
+    'Reduce the amount of columns to delete items.';
+
+const MINIMUM_ITEMS_DELETE_ADD_ITEMS_MESSAGE = 'Grids cannot contain less items than there are columns. ' +
+    'Add more items before deleting this one, or delete the whole grid.';
+
+const INVALID_FIELDS_MESSAGE = 'Some required information is missing or not valid. ' +
+    'Check the marked fields and try again.';
+
+const is_column_raise_blocked = async (exhibit_id, grid_id, columns) => {
+
+    const grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
+
+    if (!grid_record) {
+        return false;
+    }
+
+    if (columns <= get_minimum_grid_items(grid_record.columns)) {
+        return false;
+    }
+
+    const item_count = await grid_record_task.get_grid_item_count(exhibit_id, grid_id);
+
+    return columns > item_count;
+};
+
+const get_item_delete_refusal = async (exhibit_id, grid_id, grid_item_id) => {
+
+    const grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
+
+    if (!grid_record) {
+        return null;
+    }
+
+    const item_record = await grid_record_task.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
+
+    if (!item_record) {
+        return null;
+    }
+
+    const item_count = await grid_record_task.get_grid_item_count(exhibit_id, grid_id);
+    const items_left = item_count - 1;
+
+    if (items_left >= get_minimum_grid_items(grid_record.columns)) {
+        return null;
+    }
+
+    return items_left >= Math.min(...ALLOWED_COLUMNS)
+        ? MINIMUM_ITEMS_DELETE_MESSAGE
+        : MINIMUM_ITEMS_DELETE_ADD_ITEMS_MESSAGE;
+};
+
 /**
  * Returns grids in an exhibit that hold fewer items than their selected
  * column count. Used by the exhibit publish gate in exhibits_model.
@@ -181,6 +239,81 @@ const GRID_ITEM_RTE_PROFILES = {
     caption: 'linked_text',
     alt_text: 'plain',
     attribution: 'plain'
+};
+
+const GRID_CONTENT_BLOCK_REQUIRED_FIELDS = {
+    button: [
+        {field: 'text', message: 'Please enter the button text'},
+        {field: 'url', message: 'Please enter the button URL'},
+        {field: 'size', message: 'Please select a button size'}
+    ],
+    card: [
+        {field: 'title', message: 'Please enter the card heading'},
+        {field: 'text', message: 'Please enter the card body'}
+    ],
+    emphasis: [
+        {field: 'text', message: 'Please enter the emphasis text'}
+    ],
+    quote: [
+        {field: 'text', message: 'Please enter the quote text'}
+    ]
+};
+
+const is_blank = (value) => typeof value !== 'string' || value.trim() === '';
+
+const is_plain_object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const get_content_block_errors = (data) => {
+
+    if (is_blank(data.content_type)) {
+        return [{field: 'content_type', message: 'Please select a content block type'}];
+    }
+
+    if (!Object.hasOwn(GRID_CONTENT_BLOCK_REQUIRED_FIELDS, data.content_type)) {
+        return [{field: 'content_type', message: 'Content block type must be Button, Card, Emphasis or Quote'}];
+    }
+
+    return GRID_CONTENT_BLOCK_REQUIRED_FIELDS[data.content_type]
+        .filter((rule) => is_blank(data[rule.field]))
+        .map((rule) => ({field: rule.field, message: rule.message}));
+};
+
+const get_content_block_refusal = (data) => {
+
+    const [first_error] = get_content_block_errors(data);
+
+    if (first_error === undefined) {
+        return null;
+    }
+
+    return build_response(
+        CONSTANTS.STATUS_CODES.BAD_REQUEST,
+        first_error.message
+    );
+};
+
+const get_grid_item_errors = (data) => {
+
+    const errors = [];
+    const url_error = validate_link_field(data, 'url', 'Button URL');
+
+    if (url_error !== null) {
+        errors.push({field: 'url', message: url_error.message});
+    }
+
+    if (data.item_type === CONSTANTS.ITEM_TYPES.CONTENT_BLOCK) {
+        errors.push(...get_content_block_errors(data));
+    } else if (data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
+
+        if (is_blank(data.text)) {
+            errors.push({field: 'text', message: 'Please enter the text for this item'});
+        }
+
+    } else if (is_blank(data.media_uuid)) {
+        errors.push({field: 'media_uuid', message: 'Please select a media item'});
+    }
+
+    return errors;
 };
 
 exports.create_grid_record = async (is_member_of_exhibit, data) => {
@@ -269,6 +402,125 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
     }
 };
 
+exports.create_grid_with_items = async (is_member_of_exhibit, data) => {
+
+    try {
+
+        if (!is_valid_uuid(is_member_of_exhibit)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid exhibit UUID provided'
+            );
+        }
+
+        if (!is_plain_object(data) ||
+            !is_plain_object(data.grid) ||
+            !Array.isArray(data.items) ||
+            !data.items.every(is_plain_object)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid data provided'
+            );
+        }
+
+        const grid = {...data.grid};
+        const items = data.items.map((item) => ({...item}));
+        const errors = [];
+
+        RTE_VOCABULARY.apply(grid, GRID_RTE_PROFILES);
+
+        const internal_name_error = validate_internal_name(grid, true, 'Grid');
+
+        if (internal_name_error !== null) {
+            errors.push({index: null, field: 'internal_name', message: internal_name_error.message});
+        }
+
+        if (grid.columns === undefined || grid.columns === null || grid.columns === '') {
+            errors.push({index: null, field: 'columns', message: 'Please select the number of columns'});
+        } else {
+            grid.columns = safe_parse_int(grid.columns, 0);
+
+            if (!ALLOWED_COLUMNS.includes(grid.columns)) {
+                errors.push({index: null, field: 'columns', message: 'Grid columns must be 2, 3, or 4'});
+            }
+        }
+
+        items.forEach((item, index) => {
+
+            RTE_VOCABULARY.apply(item, GRID_ITEM_RTE_PROFILES);
+
+            for (const item_error of get_grid_item_errors(item)) {
+                errors.push({index, field: item_error.field, message: item_error.message});
+            }
+        });
+
+        if (errors.length > 0) {
+            return {
+                status: CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                message: INVALID_FIELDS_MESSAGE,
+                errors
+            };
+        }
+
+        if (items.length < grid.columns) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.UNPROCESSABLE_ENTITY,
+                MINIMUM_ITEMS_SAVE_MESSAGE
+            );
+        }
+
+        grid.uuid = helper_task.create_uuid();
+        grid.is_member_of_exhibit = is_member_of_exhibit;
+        grid.styles = prepare_styles(grid.styles);
+        grid.order = await helper_task.order_exhibit_items(is_member_of_exhibit, DB, TABLES);
+
+        const item_records = items.map((item) => ({
+            ...item,
+            uuid: helper_task.create_uuid(),
+            title: typeof item.title === 'string' ? item.title : '',
+            styles: prepare_styles(item.styles)
+        }));
+
+        const result = await grid_record_task.create_grid_with_items(grid, item_records);
+
+        if (result && result.exhibit_not_found === true) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.NOT_FOUND,
+                'Exhibit not found'
+            );
+        }
+
+        if (!result || result.success !== true) {
+            LOGGER.module().error('ERROR: [/exhibits/grid_model (create_grid_with_items)] Database operation failed');
+            return build_response(
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                'Unable to create grid. Nothing was saved.'
+            );
+        }
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.CREATED,
+            'Grid created',
+            {
+                grid_uuid: result.grid_uuid,
+                item_uuids: result.item_uuids
+            }
+        );
+
+    } catch (error) {
+
+        LOGGER.module().error(`ERROR: [/exhibits/grid_model (create_grid_with_items)] ${error.message}`, {
+            is_member_of_exhibit,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+            'Unable to create grid. Nothing was saved.'
+        );
+    }
+};
+
 /**
  * Updates grid record
  * @param {string} is_member_of_exhibit - Exhibit UUID
@@ -323,6 +575,17 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
 
         if (internal_name_error !== null) {
             return internal_name_error;
+        }
+
+        if (data.columns !== undefined && await is_column_raise_blocked(is_member_of_exhibit, grid_id, data.columns)) {
+            LOGGER.module().info(
+                `INFO: [/exhibits/grid_model (update_grid_record)] Grid ${grid_id} has fewer items than the ${data.columns} columns requested`
+            );
+
+            return build_response(
+                CONSTANTS.STATUS_CODES.UNPROCESSABLE_ENTITY,
+                MINIMUM_ITEMS_SAVE_MESSAGE
+            );
         }
 
         // Update record
@@ -431,6 +694,15 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
 
         if (url_error !== null) {
             return url_error;
+        }
+
+        if (data.item_type === CONSTANTS.ITEM_TYPES.CONTENT_BLOCK) {
+
+            const content_block_refusal = get_content_block_refusal(data);
+
+            if (content_block_refusal !== null) {
+                return content_block_refusal;
+            }
         }
 
         // Prepare data
@@ -737,6 +1009,15 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
             return url_error;
         }
 
+        if (typeof data.content_type === 'string') {
+
+            const content_block_refusal = get_content_block_refusal(data);
+
+            if (content_block_refusal !== null) {
+                return content_block_refusal;
+            }
+        }
+
         // Prepare data
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.is_member_of_grid = is_member_of_grid;
@@ -797,7 +1078,7 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
  * @param {string} grid_item_id - Grid item UUID
  * @returns {Promise<Object>} Response object
  */
-exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_item_id) => {
+exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_item_id, options = {}) => {
 
     try {
 
@@ -807,6 +1088,21 @@ exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_ite
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid UUID provided'
+            );
+        }
+
+        const delete_refusal = options?.enforce_minimum_items === false
+            ? null
+            : await get_item_delete_refusal(is_member_of_exhibit, grid_id, grid_item_id);
+
+        if (delete_refusal !== null) {
+            LOGGER.module().info(
+                `INFO: [/exhibits/grid_model (delete_grid_item_record)] Deleting item ${grid_item_id} would leave grid ${grid_id} with fewer items than columns`
+            );
+
+            return build_response(
+                CONSTANTS.STATUS_CODES.UNPROCESSABLE_ENTITY,
+                delete_refusal
             );
         }
 

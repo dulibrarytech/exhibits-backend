@@ -20,18 +20,6 @@ const itemsEditGridItemFormModule = (function () {
 
     'use strict';
 
-    /*
-     * Caption is plain text (no RTE) — write it into the textarea directly.
-     */
-    function set_caption_value(value) {
-
-        const caption = document.querySelector('#item-caption-input');
-
-        if (caption !== null) {
-            caption.value = value || '';
-        }
-    }
-
     // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
@@ -304,9 +292,7 @@ const itemsEditGridItemFormModule = (function () {
                 item_font_color: document.querySelector('#item-font-color'),
                 item_font_color_picker: document.querySelector('#item-font-color-picker'),
                 item_font: document.querySelector('#item-font'),
-                item_font_size: document.querySelector('#item-font-size'),
-                layouts: document.getElementsByName('layout'),
-                media_width: document.getElementsByName('media_width')
+                item_font_size: document.querySelector('#item-font-size')
             };
         };
 
@@ -365,55 +351,6 @@ const itemsEditGridItemFormModule = (function () {
 
             const published_values = [1, true, '1', 'true'];
             element.checked = published_values.includes(is_published);
-        };
-
-        /**
-         * Set basic form fields
-         */
-        const set_basic_fields = (record, elements) => {
-            // Set title
-            rteModule.set_html('item-title-input', record.title || '');
-
-            // Set text
-            rteModule.set_html('item-text-input', record.text || '');
-        };
-
-        /**
-         * Set layout radio buttons
-         */
-        const set_layout_selection = (layout_value, layouts) => {
-            if (!layouts || layouts.length === 0 || !layout_value) {
-                return;
-            }
-
-            for (let i = 0; i < layouts.length; i++) {
-                if (layouts[i].value === layout_value) {
-                    layouts[i].checked = true;
-                    break;
-                }
-            }
-        };
-
-        /**
-         * Set media width radio buttons
-         */
-        const set_media_width_selection = (width_value, media_width_elements) => {
-            if (!media_width_elements || media_width_elements.length === 0) {
-                return;
-            }
-
-            const target_width = parseInt(width_value, 10);
-            if (isNaN(target_width)) {
-                return;
-            }
-
-            for (let i = 0; i < media_width_elements.length; i++) {
-                const element_width = parseInt(media_width_elements[i].value, 10);
-                if (element_width === target_width) {
-                    media_width_elements[i].checked = true;
-                    break;
-                }
-            }
         };
 
         /**
@@ -582,31 +519,8 @@ const itemsEditGridItemFormModule = (function () {
             // Set published status
             set_published_status(record.is_published, elements.is_published);
 
-            // Set basic form fields
-            set_basic_fields(record, elements);
-
-            // Populate media previews from record (media picker integration)
             const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
-            if (is_media_path) {
-                itemsCommonGridItemFormModule.populate_media_previews(record);
-
-                // Populate optional Pop-up Window Description + Caption fields
-                rteModule.set_html('item-description-input', record.description);
-                set_caption_value(helperModule.unescape(record.caption));
-            }
-
-            // Set layout selection
-            set_layout_selection(record.layout, elements.layouts);
-
-            // Set media width selection
-            set_media_width_selection(record.media_width, elements.media_width);
-
-            // Set embed item checkbox from record
-            const embed_item_el = document.getElementById('embed-item');
-            if (embed_item_el) {
-                embed_item_el.checked = record.is_embedded === 1;
-                embed_item_el.dispatchEvent(new Event('change'));
-            }
+            itemsCommonGridItemFormModule.fill(record, is_media_path ? 'media' : 'text');
 
             // Apply style settings
             apply_style_settings(record.styles, elements);

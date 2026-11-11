@@ -477,7 +477,8 @@ const delete_grid_items = async (item) => {
                 const delete_result = await GRIDS_MODEL.delete_grid_item_record(
                     grid_item.is_member_of_exhibit,
                     grid_item.is_member_of_grid,
-                    grid_item.uuid
+                    grid_item.uuid,
+                    {enforce_minimum_items: false}
                 );
 
                 if (delete_result.data !== true) {

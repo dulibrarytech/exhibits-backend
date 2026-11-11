@@ -489,14 +489,131 @@ const itemsCommonGridItemFormModule = (function () {
         }
     };
 
+    function get_kind_from_path() {
+
+        const path_segments = window.location.pathname.split('/').filter(Boolean);
+
+        if (path_segments.includes('text')) {
+            return 'text';
+        }
+
+        if (path_segments.includes('media')) {
+            return 'media';
+        }
+
+        return null;
+    }
+
+    function set_media_only_fields_visible(is_visible) {
+        ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
+            const field = document.querySelector(selector);
+            if (field) field.style.display = is_visible ? '' : 'none';
+        });
+    }
+
+    function check_first_radio(radios, is_match) {
+
+        for (let i = 0; i < radios.length; i++) {
+            if (is_match(radios[i].value)) {
+                radios[i].checked = true;
+                break;
+            }
+        }
+    }
+
+    let is_media_wired = false;
+
+    obj.prepare = function (kind, options = {}) {
+
+        if (kind === 'text') {
+            domModule.html('#is-required-text', 'Exhibit Text <span class="badge badge-required">Required</span>');
+            set_media_only_fields_visible(false);
+            return;
+        }
+
+        if (kind !== 'media') {
+            return;
+        }
+
+        // Wire up media picker buttons on media paths. Details views are
+        // read-only — they hide the picker buttons and don't load
+        // mediaPickerModule — so skip the wiring there.
+        if (options.read_only !== true && is_media_wired === false) {
+            init_media_picker_buttons();
+            is_media_wired = true;
+        }
+
+        const created_meta = document.querySelector('#created');
+        const media_card_header = document.querySelector('#item-media-card .card-header');
+        if (created_meta && media_card_header) {
+            media_card_header.appendChild(created_meta.closest('.btn-group') || created_meta);
+        }
+
+        const exhibit_text_label = document.querySelector('#is-required-text');
+        if (exhibit_text_label) {
+            exhibit_text_label.innerHTML = 'Exhibit Text';
+        }
+
+        const title_label = document.querySelector('#item-title-input-label');
+        if (title_label) {
+            title_label.innerHTML = 'Title';
+        }
+
+        set_media_only_fields_visible(true);
+
+        // Embed Item governs the Pop-up Window Description: the checkbox moves
+        // above the field and disables it while checked (embedded items do not
+        // open the pop-up). The edit form dispatches 'change' after loading so
+        // the initial state stays in sync. Shared wiring — see helperModule.
+        helperModule.bind_embed_description('embed-item', 'item-description-input');
+    };
+
+    obj.fill = function (record, kind) {
+
+        if (!record) {
+            return;
+        }
+
+        rteModule.set_html('item-title-input', record.title || '');
+        rteModule.set_html('item-text-input', record.text || '');
+
+        if (kind === 'media') {
+            obj.populate_media_previews(record);
+            rteModule.set_html('item-description-input', record.description);
+
+            const caption = document.querySelector('#item-caption-input');
+            if (caption !== null) {
+                caption.value = helperModule.unescape(record.caption) || '';
+            }
+        }
+
+        if (record.layout) {
+            check_first_radio(document.getElementsByName('layout'), value => value === record.layout);
+        }
+
+        const media_width = parseInt(record.media_width, 10);
+        if (!isNaN(media_width)) {
+            check_first_radio(document.getElementsByName('media_width'), value => parseInt(value, 10) === media_width);
+        }
+
+        const embed_item_el = document.getElementById('embed-item');
+        if (embed_item_el) {
+            embed_item_el.checked = record.is_embedded === 1;
+            embed_item_el.dispatchEvent(new Event('change'));
+        }
+    };
+
     obj.get_common_grid_item_form_fields = function () {
+        return obj.collect(get_kind_from_path());
+    };
+
+    obj.collect = function (kind) {
 
         try {
 
             const item = { styles: {} };
-            const path_segments = window.location.pathname.split('/').filter(Boolean);
-            const is_text_path = path_segments.includes('text');
-            const is_media_path = path_segments.includes('media');
+            const is_text = kind === 'text';
+            const is_media = kind === 'media';
 
             // Helper function for safe DOM queries
             const get_element_value = (selector, default_value = '') => {
@@ -532,7 +649,7 @@ const itemsCommonGridItemFormModule = (function () {
             item.text = rteModule.get_html('item-text-input');
 
             // Validate text content for text paths
-            if (is_text_path && item.text.length === 0) {
+            if (is_text && item.text.length === 0) {
                 show_error('Please enter "Text" for this item', '#item-text-input');
                 return false;
             }
@@ -545,7 +662,7 @@ const itemsCommonGridItemFormModule = (function () {
             }
 
             // Handle media-specific logic
-            if (is_media_path) {
+            if (is_media) {
 
                 // Collect media picker values
                 item.media_uuid = get_element_value('#item-media-uuid');
@@ -595,8 +712,10 @@ const itemsCommonGridItemFormModule = (function () {
 
         try {
 
-            if (window.location.pathname.indexOf('text') !== -1) {
-                domModule.html('#is-required-text', 'Exhibit Text <span class="badge badge-required">Required</span>');
+            const kind = get_kind_from_path();
+
+            if (kind === 'text') {
+                obj.prepare('text');
             }
 
             const token = authModule.get_user_token();
@@ -621,41 +740,10 @@ const itemsCommonGridItemFormModule = (function () {
 
             helperModule.show_form();
 
-            // Wire up media picker buttons on media paths. Details views are
-            // read-only — they hide the picker buttons and don't load
-            // mediaPickerModule — so skip the wiring there.
-            if (window.location.pathname.indexOf('media') !== -1) {
-
-                if (window.location.pathname.indexOf('details') === -1) {
-                    init_media_picker_buttons();
-                }
-
-                const created_meta = document.querySelector('#created');
-                const media_card_header = document.querySelector('#item-media-card .card-header');
-                if (created_meta && media_card_header) {
-                    media_card_header.appendChild(created_meta.closest('.btn-group') || created_meta);
-                }
-
-                const exhibit_text_label = document.querySelector('#is-required-text');
-                if (exhibit_text_label) {
-                    exhibit_text_label.innerHTML = 'Exhibit Text';
-                }
-
-                const title_label = document.querySelector('#item-title-input-label');
-                if (title_label) {
-                    title_label.innerHTML = 'Title';
-                }
-
-                ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
-                    const field = document.querySelector(selector);
-                    if (field) field.style.display = '';
+            if (kind === 'media') {
+                obj.prepare('media', {
+                    read_only: window.location.pathname.indexOf('details') !== -1
                 });
-
-                // Embed Item governs the Pop-up Window Description: the checkbox moves
-                // above the field and disables it while checked (embedded items do not
-                // open the pop-up). The edit form dispatches 'change' after loading so
-                // the initial state stays in sync. Shared wiring — see helperModule.
-                helperModule.bind_embed_description('embed-item', 'item-description-input');
             }
 
         } catch (error) {

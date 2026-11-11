@@ -93,6 +93,25 @@ test.describe('Grid item delete confirmation page (items.grid.module.js — dele
         await expect(page.locator('#delete-card')).toBeVisible();
     });
 
+    test('a 422 refusal shows the server message, restores the card and does not redirect', async ({ page }) => {
+        const refusal = 'Grids cannot contain less items than there are columns. '
+            + 'Reduce the amount of columns to delete items.';
+
+        const state = await stubGridItemDelete(page, {
+            status: 422,
+            body: JSON.stringify({ status: 422, message: refusal }),
+        });
+
+        await page.goto(PAGE_URL);
+        await expect(page.locator('#delete-card')).toBeVisible();
+        await page.click('#delete-item-btn');
+
+        await expect(page.locator('#message')).toContainText(refusal);
+        await expect(page.locator('#delete-card')).toBeVisible();
+        await expect.poll(() => state.deleteUrl).not.toBeNull();
+        expect(new URL(page.url()).pathname).toBe(`${APP_PATH}/items/grid/item/delete`);
+    });
+
     test('rejects malformed identifiers without firing a DELETE', async ({ page }) => {
         const state = await stubGridItemDelete(page);
 

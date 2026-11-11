@@ -64,6 +64,42 @@ exports.create_grid_record = async function (req, res) {
     }
 };
 
+exports.create_grid_with_items = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const data = req.body;
+
+        if (!validate_id(res, exhibit_id, 'exhibit_id', 'create_grid_with_items')) return;
+        if (!validate_body(res, data, 'create_grid_with_items', {exhibit_id})) return;
+
+        const is_authorized = await check_authorization(
+            req, res,
+            ['add_item', 'add_item_to_any_exhibit'],
+            'grid', exhibit_id, null,
+            'create_grid_with_items', {exhibit_id}
+        );
+        if (!is_authorized) return;
+
+        const result = await GRIDS_MODEL.create_grid_with_items(exhibit_id, data);
+
+        if (!validate_model_result(res, result, 'create_grid_with_items', {exhibit_id})) return;
+
+        LOGGER.module().info('create_grid_with_items: Request completed', {
+            exhibit_id,
+            status: result.status
+        });
+
+        return res.status(result.status).send(result);
+
+    } catch (error) {
+        return handle_error(res, 'create_grid_with_items', error,
+            'Unable to create grid',
+            {exhibit_id: req.params.exhibit_id});
+    }
+};
+
 exports.update_grid_record = async function (req, res) {
 
     try {
@@ -358,7 +394,7 @@ exports.delete_grid_item_record = async function (req, res) {
         );
         if (!is_authorized) return;
 
-        const result = await GRIDS_MODEL.delete_grid_item_record(exhibit_id, grid_id, item_id, record_type);
+        const result = await GRIDS_MODEL.delete_grid_item_record(exhibit_id, grid_id, item_id);
 
         if (!validate_model_result(res, result, 'delete_grid_item_record', {exhibit_id, grid_id, item_id, record_type})) return;
 

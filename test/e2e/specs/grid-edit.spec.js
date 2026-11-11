@@ -140,6 +140,61 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await expect(page.locator('#message .alert-success')).toBeVisible();
     });
 
+    test('shows the server message when the save is refused with 422', async ({ page }) => {
+        const refusal = 'Grids cannot have less items than there are columns. '
+            + 'Reduce the amount of columns or add more items before saving.';
+
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        const state = await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({
+                uuid: GRID_UUID,
+                text: 'Two column grid',
+                columns: 2,
+            }),
+            updateStatus: 422,
+            updateBody: { status: 422, message: refusal },
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Two column grid');
+
+        await page.selectOption('#grid-columns', '4');
+        await page.click('#save-item-btn');
+
+        await expect(page.locator('#message .alert-danger')).toContainText(refusal);
+        await expect(page.locator('#message .alert-success')).toHaveCount(0);
+        await expect(page.locator('#message')).not.toContainText('Updating grid record');
+        expect(state.updateCount).toBe(1);
+    });
+
+    test('shows a fallback message when a failed save carries no message', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({
+                uuid: GRID_UUID,
+                text: 'Any grid',
+                columns: 3,
+            }),
+            updateStatus: 500,
+            updateBody: {},
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Any grid');
+
+        await page.click('#save-item-btn');
+
+        await expect(page.locator('#message .alert-danger')).toContainText(
+            'Unable to update grid record. Please try again.'
+        );
+    });
+
     test('applies a saved style preset to the styles chooser', async ({ page }) => {
         await stubDashboardDeps(page, {
             exhibit: {
