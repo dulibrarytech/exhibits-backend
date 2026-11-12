@@ -16,18 +16,21 @@ const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const GRID_UUID = '660e8400-e29b-41d4-a716-446655440100';
 const ITEM_UUID = '770e8400-e29b-41d4-a716-446655440200';
 
-const ITEM_TYPES = [
-    { item_type: 'image', path: 'media' },
-    { item_type: 'text', path: 'text' },
-    { item_type: 'content_block', path: 'content-block' },
-];
+const ITEM_TYPES = ['image', 'text', 'content_block'];
 
-const item_url = (path, page_name) => `${APP_PATH}/items/grid/item/${path}/${page_name}`
-    + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`;
-
-const menu_link = (page) => page.locator(`[id="${ITEM_UUID}-item-actions"] a.dropdown-item`).first();
+const actions_cell = (page) => page.locator(`[id="${ITEM_UUID}-item-actions"]`);
+const menu_link = (page) => actions_cell(page).locator('a.dropdown-item').first();
 
 async function open_grid_items(page, item_type, is_published) {
+    const items = [gridItemFixture({
+        uuid: ITEM_UUID,
+        item_type,
+        content_type: 'quote',
+        is_published,
+        is_member_of_exhibit: EXHIBIT_UUID,
+        is_member_of_grid: GRID_UUID,
+    })];
+
     await seedAuth(page);
     await stubDashboardDeps(page, {
         exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Grid host exhibit' }) },
@@ -35,14 +38,7 @@ async function open_grid_items(page, item_type, is_published) {
     await stubGridItemsApi(page, {
         exhibitId: EXHIBIT_UUID,
         gridId: GRID_UUID,
-        items: [gridItemFixture({
-            uuid: ITEM_UUID,
-            item_type,
-            content_type: 'quote',
-            is_published,
-            is_member_of_exhibit: EXHIBIT_UUID,
-            is_member_of_grid: GRID_UUID,
-        })],
+        items,
     });
     await stubGridRecordApi(page, {
         exhibitId: EXHIBIT_UUID,
@@ -58,30 +54,66 @@ async function open_grid_items(page, item_type, is_published) {
 
     await page.goto(`${APP_PATH}/items/grid/items?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}`);
     await expect(page.locator(`[id="${ITEM_UUID}"]`)).toBeVisible();
+
+    return items;
 }
 
-test.describe('Grid item links (items.list.displays.module.js, items.grid.module.js)', () => {
+test.describe('Grid item row actions (items.list.displays.module.js, items.grid.module.js)', () => {
 
-    for (const { item_type, path } of ITEM_TYPES) {
+    for (const item_type of ITEM_TYPES) {
 
-        test(`${item_type} row keeps its ${path} links through publish and unpublish`, async ({ page }) => {
-            await open_grid_items(page, item_type, 0);
+        test(`${item_type} row offers Edit until it is published and Details after`, async ({ page }) => {
+            const items = await open_grid_items(page, item_type, 0);
 
-            await expect(menu_link(page)).toHaveAttribute('href', item_url(path, 'edit'));
+            await expect(menu_link(page)).toHaveAttribute('data-action', 'edit-item');
+            await expect(menu_link(page)).toContainText('Edit');
 
+            items[0].is_published = 1;
             await page.locator(`[id="${ITEM_UUID}"].publish-item`).click();
             await expect(page.locator(`[id="${ITEM_UUID}"].suppress-item`)).toBeVisible();
-            await expect(menu_link(page)).toHaveAttribute('href', item_url(path, 'details'));
+            await expect(menu_link(page)).toHaveAttribute('data-action', 'details-item');
+            await expect(menu_link(page)).toContainText('Details');
+            await expect(actions_cell(page).locator('[data-action="move-up"], [data-action="move-down"]')).toHaveCount(2);
 
+            items[0].is_published = 0;
             await page.locator(`[id="${ITEM_UUID}"].suppress-item`).click();
             await expect(page.locator(`[id="${ITEM_UUID}"].publish-item`)).toBeVisible();
-            await expect(menu_link(page)).toHaveAttribute('href', item_url(path, 'edit'));
+            await expect(menu_link(page)).toHaveAttribute('data-action', 'edit-item');
+            await expect(actions_cell(page).locator('[data-action="delete-item"]')).toHaveCount(1);
         });
     }
 
-    test('a published image row opens the media details page', async ({ page }) => {
+    test('a published row offers Details and no Delete action', async ({ page }) => {
         await open_grid_items(page, 'image', 1);
 
-        await expect(menu_link(page)).toHaveAttribute('href', item_url('media', 'details'));
+        await expect(menu_link(page)).toHaveAttribute('data-action', 'details-item');
+        await expect(actions_cell(page).locator('[data-action="delete-item"]')).toHaveCount(0);
+        await expect(actions_cell(page).locator('a.dropdown-item.disabled')).toContainText('Delete');
+    });
+
+    test('a refused publish is explained above the list, which stays in view', async ({ page }) => {
+        await open_grid_items(page, 'text', 0);
+        await page.route(
+            `**${APP_PATH}/api/v1/exhibits/${EXHIBIT_UUID}/publish/${GRID_UUID}/item/${ITEM_UUID}**`,
+            (route) => route.fulfill({
+                status: 422,
+                contentType: 'application/json',
+                body: JSON.stringify({ message: 'Publish the grid before its items.' }),
+            })
+        );
+
+        await page.locator(`[id="${ITEM_UUID}"].publish-item`).click();
+
+        await expect(page.locator('#grid-items-message .alert-warning')).toContainText('Publish the grid before its items.');
+        await expect(page.locator('#grid-items-message .alert-warning')).toBeInViewport({ ratio: 1 });
+        await expect(page.locator(`[id="${ITEM_UUID}"].publish-item`)).toBeInViewport();
+        await expect(page.locator('#message')).toBeEmpty();
+    });
+
+    test('no row links to a separate item page', async ({ page }) => {
+        await open_grid_items(page, 'text', 0);
+
+        await expect(page.locator('#grid-items a[href*="/items/grid/item/"]')).toHaveCount(0);
+        await expect(page.locator(`#grid-items .item-title-link`)).toHaveAttribute('data-action', 'details-item');
     });
 });

@@ -1,4 +1,5 @@
-<div id="item-styles-card" class="card" style="display: none;">
+<% const _in_modal = typeof in_modal !== 'undefined' && in_modal; %>
+<div id="<%= _in_modal ? 'grid-item-content-block-styles-card' : 'item-styles-card' %>" class="card" style="display: none;">
     <div class="card-header">
         <strong class="card-title">Styles</strong>
     </div>
@@ -9,7 +10,7 @@
                 <%# Preset options are built by helperModule.build_item_style_swatch_options,
                     which default-checks the first preset — there is no "None" option;
                     every item carries a style preset. -%>
-                <div id="item-style-options" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
+                <div id="<%= _in_modal ? 'grid-item-content-block-style-options' : 'item-style-options' %>" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
                 </div>
             </div>
         </div>

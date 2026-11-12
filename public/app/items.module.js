@@ -900,9 +900,7 @@ const itemsModule = (function() {
 
             case 'grid':
                 item_category = 'grid';
-                edit_url = is_published
-                    ? `${APP_PATH}/items/grid/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
-                    : `${APP_PATH}/items/grid/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_url = `${APP_PATH}/items/grid/items?exhibit_id=${encoded_exhibit_id}&grid_id=${encoded_uuid}`;
                 edit_label = is_published ? 'Details' : 'Edit';
                 edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;

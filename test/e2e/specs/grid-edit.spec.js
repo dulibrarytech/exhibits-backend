@@ -5,18 +5,36 @@ const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
     stubGridRecordApi,
+    stubGridItemsApi,
     exhibitFixture,
     gridRecordFixture,
+    gridItemFixture,
 } = require('../fixtures/api-stubs');
 
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const GRID_UUID = '770e8400-e29b-41d4-a716-446655440100';
+const GRID_PAGE_URL = `${APP_PATH}/items/grid/items?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}`;
 
-test.describe('Edit grid form (items.edit.grid.form.module)', () => {
+function grid_items(count) {
+    const items = [];
+    for (let i = 1; i <= count; i++) {
+        items.push(gridItemFixture({
+            uuid: `g${i}`, order: i, title: `Item ${i}`,
+            is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID,
+        }));
+    }
+    return items;
+}
+
+test.describe('Grid page — grid form (grid.page.module)', () => {
+
+    let listed_items;
 
     test.beforeEach(async ({ page }) => {
         await seedAuth(page);
+        listed_items = grid_items(4);
+        await stubGridItemsApi(page, { exhibitId: EXHIBIT_UUID, gridId: GRID_UUID, items: listed_items });
     });
 
     test('populates form fields from the fetched record', async ({ page }) => {
@@ -34,7 +52,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             }),
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
 
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Existing grid text');
         await expect(page.locator('#grid-internal-name-input')).toHaveValue('Sample grid internal name');
@@ -55,7 +73,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             }),
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
 
         // Pre-internal_name rows populate the field empty; the required
         // validation blocks the save until a value is entered.
@@ -81,7 +99,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             }),
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Legacy grid');
 
         // 6 isn't offered by the dropdown — a disabled placeholder is
@@ -115,7 +133,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             }),
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Original');
 
         await page.fill('#grid-text-input .ql-editor', 'Edited grid');
@@ -158,13 +176,14 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             updateBody: { status: 422, message: refusal },
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Two column grid');
 
         await page.selectOption('#grid-columns', '4');
         await page.click('#save-item-btn');
 
         await expect(page.locator('#message .alert-danger')).toContainText(refusal);
+        await expect(page.locator('#grid-columns')).toHaveAttribute('aria-invalid', 'true');
         await expect(page.locator('#message .alert-success')).toHaveCount(0);
         await expect(page.locator('#message')).not.toContainText('Updating grid record');
         expect(state.updateCount).toBe(1);
@@ -185,7 +204,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             updateBody: {},
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Any grid');
 
         await page.click('#save-item-btn');
@@ -217,12 +236,106 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             }),
         });
 
-        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await page.goto(GRID_PAGE_URL);
 
         // The styles card is hidden until at least one preset is found; the saved
         // preset's radio is then checked in the swatch chooser that replaced the
         // old <select> (see helperModule.build_item_style_swatch_options).
         await expect(page.locator('#item-styles-card')).toBeVisible();
         await expect(page.locator('#item-style-item2')).toBeChecked();
+    });
+
+    test('lets columns be lowered on a grid that is short of items', async ({ page }) => {
+        listed_items.splice(1);
+
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        const state = await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, text: 'Short grid', columns: 4 }),
+        });
+
+        await page.goto(GRID_PAGE_URL);
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Short grid');
+        await expect(page.locator('table#grid-items tbody tr')).toHaveCount(1);
+
+        await page.selectOption('#grid-columns', '3');
+        await page.click('#save-item-btn');
+
+        await expect.poll(() => state.updateCount).toBe(1);
+        expect(state.lastUpdatePayload.columns).toBe('3');
+        await expect(page.locator('#message .alert-success')).toBeVisible();
+    });
+
+    test('opens from the old grid edit address', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, text: 'Old address grid', columns: 3 }),
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Old address grid');
+
+        const url = new URL(page.url());
+        expect(url.pathname).toBe(`${APP_PATH}/items/grid/items`);
+        expect(url.searchParams.get('exhibit_id')).toBe(EXHIBIT_UUID);
+        expect(url.searchParams.get('grid_id')).toBe(GRID_UUID);
+        await expect(page.locator('table#grid-items tbody tr')).toHaveCount(4);
+    });
+
+    test('Cancel returns to the exhibit items without asking when nothing changed', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, text: 'Unchanged grid', columns: 3 }),
+        });
+
+        let dialogs = 0;
+        page.on('dialog', async (dialog) => {
+            dialogs += 1;
+            await dialog.accept();
+        });
+
+        await page.goto(GRID_PAGE_URL);
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Unchanged grid');
+
+        await page.click('#cancel-exhibit-btn');
+
+        await page.waitForURL(new RegExp(`${APP_PATH}/items\\?exhibit_id=${EXHIBIT_UUID}`), { waitUntil: 'commit' });
+        expect(dialogs).toBe(0);
+    });
+
+    test('Cancel asks before discarding a change and stays when refused', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, text: 'Changed grid', columns: 3 }),
+        });
+
+        const messages = [];
+        page.on('dialog', async (dialog) => {
+            messages.push(dialog.message());
+            await dialog.dismiss();
+        });
+
+        await page.goto(GRID_PAGE_URL);
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Changed grid');
+
+        await page.fill('#grid-internal-name-input', 'A different name');
+        await page.click('#cancel-exhibit-btn');
+
+        await expect.poll(() => messages.length).toBe(1);
+        expect(messages[0]).toBe('Discard unsaved changes and return to the exhibit item list?');
+        expect(new URL(page.url()).pathname).toBe(`${APP_PATH}/items/grid/items`);
+        await expect(page.locator('#grid-internal-name-input')).toHaveValue('A different name');
     });
 });

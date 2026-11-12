@@ -195,7 +195,7 @@ const NAV_CONFIGS = {
         ]
     },
 
-    grid_items_list: {
+    grid_page: {
         show_preview: true,
         back: {
             id: 'back-to-items',
@@ -203,9 +203,7 @@ const NAV_CONFIGS = {
             nav_path: '/items?exhibit_id={exhibit_id}'
         },
         links: [
-            { id: 'grid-media-item-link', label: 'Add Media Grid Item', icon: 'ti-image', nav_path: '/items/grid/item/media?exhibit_id={exhibit_id}&grid_id={grid_id}' },
-            { id: 'grid-text-item-link', label: 'Add Text Grid Item', icon: 'ti-align-center', nav_path: '/items/grid/item/text?exhibit_id={exhibit_id}&grid_id={grid_id}' },
-            { id: 'grid-content-block-item-link', label: 'Add Content Block', icon: 'ti-widget', nav_path: '/items/grid/item/content-block?exhibit_id={exhibit_id}&grid_id={grid_id}' }
+            { id: 'add-grid-item-link', label: 'Add grid item', icon: 'fa fa-plus' }
         ]
     },
 
@@ -504,18 +502,19 @@ exports.get_dashboard_grid_add_form = function (req, res) {
     });
 };
 
-exports.get_dashboard_grid_details = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_details
-    });
-};
+exports.redirect_to_grid_page = function (req, res) {
 
-exports.get_dashboard_grid_edit_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_edit_form
-    });
+    const params = new URLSearchParams();
+
+    if (typeof req.query.exhibit_id === 'string') {
+        params.set('exhibit_id', req.query.exhibit_id);
+    }
+
+    if (typeof req.query.item_id === 'string') {
+        params.set('grid_id', req.query.item_id);
+    }
+
+    res.redirect(302, `${APP_PATH}/items/grid/items?${params.toString()}`);
 };
 
 exports.get_dashboard_grid_add_media_item_form = function (req, res) {
@@ -584,7 +583,7 @@ exports.get_dashboard_grid_item_content_block_details = function (req, res) {
 exports.get_dashboard_item_grid_items = function (req, res) {
     res.render('dist/grid-items/dashboard-grid-items', {
         ...template_config,
-        nav: NAV_CONFIGS.grid_items_list
+        nav: NAV_CONFIGS.grid_page
     });
 };
 

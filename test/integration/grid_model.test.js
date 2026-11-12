@@ -115,6 +115,7 @@ jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => {
 // Mock Indexer Model
 jest.mock('../../indexer/model', () => ({
     index_grid_record: jest.fn().mockResolvedValue(true),
+    reindex_grid_record: jest.fn().mockResolvedValue(true),
     index_grid_item_record: jest.fn().mockResolvedValue(true),
     index_record: jest.fn().mockResolvedValue(true),
     get_indexed_record: jest.fn().mockResolvedValue({
@@ -768,6 +769,171 @@ describe('Grid Model Integration Tests', () => {
         });
     });
 
+    describe('update_grid_record on a published grid', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+
+        const SAVE_MESSAGE = 'Grids cannot have less items than there are columns. ' +
+            'Reduce the amount of columns or add more items before saving.';
+
+        const arrange = ({ is_published, stored_columns = 3, item_count = 4, published_count = 4 }) => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: stored_columns,
+                internal_name: 'Staff grid name',
+                is_published
+            });
+            mockGridRecordTask.get_grid_item_count.mockImplementation(async (exhibit_id, grid_id, options = {}) => {
+                return options.published_only === true ? published_count : item_count;
+            });
+        };
+
+        const save = (data) => GRID_MODEL.update_grid_record(
+            TEST_EXHIBIT_UUID,
+            TEST_GRID_UUID,
+            { internal_name: 'Staff grid name', ...data }
+        );
+
+        beforeEach(() => {
+            jest.useFakeTimers();
+        });
+
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        test('re-indexes the grid\'s settings shortly after the save, without re-publishing its items', async () => {
+            arrange({ is_published: 1 });
+
+            const result = await save({ text: '<p>Changed</p>' });
+
+            expect(result.status).toBe(201);
+            expect(INDEXER_MODEL.reindex_grid_record).not.toHaveBeenCalled();
+
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledTimes(1);
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+            expect(INDEXER_MODEL.index_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('re-indexes once for several saves in quick succession', async () => {
+            arrange({ is_published: 1 });
+
+            await save({ text: '<p>One</p>' });
+            await jest.advanceTimersByTimeAsync(300);
+            await save({ text: '<p>Two</p>' });
+            await jest.advanceTimersByTimeAsync(300);
+            await save({ text: '<p>Three</p>' });
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledTimes(1);
+        });
+
+        test('a save and a reorder of the same grid in the same second share one re-index', async () => {
+            const ITEMS_MODEL = require('../../exhibits/items_model');
+
+            arrange({ is_published: 1 });
+            ITEMS_MODEL.schedule_reorder_reindex(TEST_EXHIBIT_UUID, [
+                { type: 'griditem', uuid: TEST_GRID_ITEM_UUID, order: 1, grid_id: TEST_GRID_UUID }
+            ]);
+
+            await save({ text: '<p>Changed</p>' });
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledTimes(1);
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+            expect(INDEXER_MODEL.index_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('a save still re-indexes when the reorder came second', async () => {
+            const ITEMS_MODEL = require('../../exhibits/items_model');
+
+            arrange({ is_published: 1 });
+
+            await save({ text: '<p>Changed</p>' });
+            await jest.advanceTimersByTimeAsync(300);
+            ITEMS_MODEL.schedule_reorder_reindex(TEST_EXHIBIT_UUID, [
+                { type: 'grid', uuid: TEST_GRID_UUID, order: 2 }
+            ]);
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledTimes(1);
+            expect(INDEXER_MODEL.reindex_grid_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+        });
+
+        test('leaves the index alone when the grid is not published', async () => {
+            arrange({ is_published: 0 });
+
+            const result = await save({ text: '<p>Changed</p>' });
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(result.status).toBe(201);
+            expect(INDEXER_MODEL.reindex_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('leaves the index alone when the save fails', async () => {
+            arrange({ is_published: 1 });
+            mockGridRecordTask.update_grid_record.mockResolvedValue(false);
+
+            const result = await save({ text: '<p>Changed</p>' });
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(result.status).toBe(500);
+            expect(INDEXER_MODEL.reindex_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('refuses a raise above the number of published items and says to publish more', async () => {
+            arrange({ is_published: 1, stored_columns: 3, item_count: 4, published_count: 3 });
+
+            const result = await save({ columns: 4 });
+            await jest.advanceTimersByTimeAsync(1500);
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(
+                'This grid is published and has 3 published items. ' +
+                'Publish more of its items before changing it to 4 columns.'
+            );
+            expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
+            expect(INDEXER_MODEL.reindex_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('allows the raise once enough items are published', async () => {
+            arrange({ is_published: 1, stored_columns: 3, item_count: 4, published_count: 4 });
+
+            const result = await save({ columns: 4 });
+
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.update_grid_record).toHaveBeenCalledWith(
+                expect.objectContaining({ columns: 4 })
+            );
+        });
+
+        test('keeps the usual sentence when there are too few items of any kind', async () => {
+            arrange({ is_published: 1, stored_columns: 3, item_count: 3, published_count: 3 });
+
+            const result = await save({ columns: 4 });
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(SAVE_MESSAGE);
+        });
+
+        test('counts every item, published or not, when the grid is not published', async () => {
+            arrange({ is_published: 0, stored_columns: 3, item_count: 4, published_count: 0 });
+
+            const result = await save({ columns: 4 });
+
+            expect(result.status).toBe(201);
+        });
+
+        test('lets a published grid be lowered or left as it is whatever is published', async () => {
+            arrange({ is_published: 1, stored_columns: 4, item_count: 4, published_count: 2 });
+
+            expect((await save({ columns: 3 })).status).toBe(201);
+            expect((await save({ columns: 4 })).status).toBe(201);
+        });
+    });
+
     // ==================== GET GRID RECORD ====================
 
     describe('get_grid_record', () => {
@@ -1379,6 +1545,50 @@ describe('Grid Model Integration Tests', () => {
             mockGridRecordTask.get_grid_item_count.mockResolvedValue(2);
             const allowed = await GRID_MODEL.publish_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
             expect(allowed.status).toBe(true);
+        });
+    });
+
+    describe('suppress_grid_record', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+        const OTHER_GRID_UUID = '660e8400-e29b-41d4-a716-446655440099';
+
+        beforeEach(() => {
+            INDEXER_MODEL.delete_record.mockResolvedValue({ status: 204 });
+            mockGridRecordTask.set_grid_to_suppress = jest.fn().mockResolvedValue(true);
+            mockGridRecordTask.set_to_suppressed_grid_items = jest.fn().mockResolvedValue(true);
+            mockGridRecordTask.get_grid_records = jest.fn().mockResolvedValue([
+                { uuid: OTHER_GRID_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID },
+                { uuid: TEST_GRID_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID }
+            ]);
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                is_member_of_exhibit: TEST_EXHIBIT_UUID
+            });
+            mockGridRecordTask.get_grid_item_records.mockImplementation(async (exhibit_id, grid_id) => [
+                { uuid: TEST_GRID_ITEM_UUID, is_member_of_grid: grid_id }
+            ]);
+        });
+
+        test('unpublishes the items of this grid and of no other grid in the exhibit', async () => {
+            const result = await GRID_MODEL.suppress_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(true);
+            expect(INDEXER_MODEL.delete_record).toHaveBeenCalledWith(TEST_GRID_UUID);
+            expect(mockGridRecordTask.set_grid_to_suppress).toHaveBeenCalledWith(TEST_GRID_UUID);
+            expect(mockGridRecordTask.get_grid_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+            expect(mockGridRecordTask.set_to_suppressed_grid_items).toHaveBeenCalledWith(TEST_GRID_UUID);
+            expect(mockGridRecordTask.set_to_suppressed_grid_items).not.toHaveBeenCalledWith(OTHER_GRID_UUID);
+            expect(mockGridRecordTask.get_grid_item_records).not.toHaveBeenCalledWith(TEST_EXHIBIT_UUID, OTHER_GRID_UUID);
+        });
+
+        test('still reports the grid unpublished when its record cannot be read back', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue(null);
+
+            const result = await GRID_MODEL.suppress_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(true);
+            expect(mockGridRecordTask.set_to_suppressed_grid_items).not.toHaveBeenCalled();
         });
     });
 

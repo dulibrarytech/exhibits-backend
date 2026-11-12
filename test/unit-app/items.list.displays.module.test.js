@@ -280,6 +280,19 @@ describe('itemsListDisplayModule', () => {
             );
         });
 
+        it('points the title, the items link and the menu at the Grid page, published or not', async () => {
+            const grid_page = `${APP_PATH}/items/grid/items?exhibit_id=exhibit-uuid-1&amp;grid_id=grid-uuid-1`;
+
+            for (const is_published of [0, 1]) {
+                const html = await itemsListDisplayModule.display_grids(
+                    grid_item({ internal_name: 'My grid', is_published })
+                );
+                expect(html.split(grid_page).length - 1).toBe(4);
+                expect(html).not.toContain('/items/grid/edit');
+                expect(html).not.toContain('/items/grid/details');
+            }
+        });
+
         it('uses internal_name (not title) for the row title', async () => {
             // tbl_grids lost `title` in the titles-to-subheadings migration;
             // the staff-facing internal_name fills the title slot.
@@ -301,45 +314,40 @@ describe('itemsListDisplayModule', () => {
 
     describe('display_grid_items', () => {
 
-        it('renders a text grid member with the grid/item routing and griditem type id', async () => {
+        it('renders a text grid member with row actions and the griditem type id', async () => {
             const html = await itemsListDisplayModule.display_grid_items(
                 grid_member_item({ title: 'Grid text' })
             );
             // Sets item.type='griditem' as a side effect — the row id
             // reflects that.
             expect(html).toContain('grid-item-uuid-1_griditem_text');
-            expect(html).toContain(
-                `${APP_PATH}/items/grid/item/text/details?exhibit_id=exhibit-uuid-1&amp;grid_id=grid-uuid-1&amp;item_id=grid-item-uuid-1`
-            );
-            // Delete URL is the grid-item-specific path (not /items/delete).
-            expect(html).toContain(
-                `${APP_PATH}/items/grid/item/delete?exhibit_id=exhibit-uuid-1&amp;grid_id=grid-uuid-1&amp;item_id=grid-item-uuid-1`
-            );
+            expect(html).toContain('data-action="details-item"');
+            expect(html).toContain('data-action="edit-item"');
+            expect(html).toContain('data-action="delete-item"');
+            expect(html).not.toContain('/items/grid/item/');
         });
 
         it.each([
-            ['image', 'media'],
-            ['pdf', 'media'],
-            ['video', 'media'],
-            ['audio', 'media'],
-            ['text', 'text'],
-            ['content_block', 'content-block'],
-        ])('links a %s grid item to the %s pages', async (item_type, path) => {
-            const item_query = 'exhibit_id=exhibit-uuid-1&amp;grid_id=grid-uuid-1&amp;item_id=grid-item-uuid-1';
-            const details_url = `${APP_PATH}/items/grid/item/${path}/details?${item_query}`;
-            const edit_url = `${APP_PATH}/items/grid/item/${path}/edit?${item_query}`;
-
+            ['image'],
+            ['pdf'],
+            ['video'],
+            ['audio'],
+            ['text'],
+            ['content_block'],
+        ])('gives a %s grid item row Edit and Delete until it is published', async (item_type) => {
             const unpublished = await itemsListDisplayModule.display_grid_items(
                 grid_member_item({ item_type, content_type: 'quote' })
             );
-            expect(unpublished).toContain(details_url);
-            expect(unpublished).toContain(edit_url);
+            expect(unpublished).toContain(`grid-item-uuid-1_griditem_${item_type}`);
+            expect(unpublished).toContain('data-action="edit-item"');
+            expect(unpublished).toContain('data-action="delete-item"');
 
             const published = await itemsListDisplayModule.display_grid_items(
                 grid_member_item({ item_type, content_type: 'quote', is_published: 1 })
             );
-            expect(published).toContain(details_url);
-            expect(published).not.toContain(edit_url);
+            expect(published).toContain('data-action="details-item"');
+            expect(published).not.toContain('data-action="edit-item"');
+            expect(published).not.toContain('data-action="delete-item"');
         });
 
         it('returns an empty string and writes an alert when grid item is invalid', async () => {

@@ -1074,8 +1074,14 @@ async function stubGridItemRecordApi(page, opts = {}) {
     const exhibitId = opts.exhibitId ?? 'exhibit-uuid-1';
     const gridId = opts.gridId ?? 'grid-uuid-1';
     const record = opts.record ?? gridItemRecordFixture();
+    const records = opts.records ?? {};
     const createStatus = opts.createStatus ?? 201;
+    const createBody = opts.createBody ?? null;
     const updateStatus = opts.updateStatus ?? 201;
+    const updateBody = opts.updateBody ?? null;
+    const deleteStatus = opts.deleteStatus ?? 204;
+    const deleteBody = opts.deleteBody ?? null;
+    const unlockStatus = opts.unlockStatus ?? 200;
     const newItemId = opts.newItemId ?? 'grid-item-uuid-new';
 
     const state = {
@@ -1083,6 +1089,11 @@ async function stubGridItemRecordApi(page, opts = {}) {
         lastUpdatePayload: null,
         createCount: 0,
         updateCount: 0,
+        deleteCount: 0,
+        lastDeletedId: null,
+        unlockCount: 0,
+        lastUnlockUrl: null,
+        getTypes: [],
     };
 
     await page.route(
@@ -1094,6 +1105,16 @@ async function stubGridItemRecordApi(page, opts = {}) {
             const tail = path_tail_after(req.url(), '/items');
             const segments = (tail || '').split('/').filter(Boolean);
 
+            if (method === 'POST' && segments.length === 2 && segments[1] === 'unlock') {
+                state.unlockCount += 1;
+                state.lastUnlockUrl = req.url();
+                return route.fulfill({
+                    status: unlockStatus,
+                    contentType: 'application/json',
+                    body: '{}',
+                });
+            }
+
             if (segments.length > 1) {
                 return route.fallback();
             }
@@ -1104,15 +1125,16 @@ async function stubGridItemRecordApi(page, opts = {}) {
                 return route.fulfill({
                     status: createStatus,
                     contentType: 'application/json',
-                    body: JSON.stringify({ data: newItemId }),
+                    body: JSON.stringify(createBody ?? { data: newItemId }),
                 });
             }
 
             if (method === 'GET' && segments.length === 1) {
+                state.getTypes.push(new URL(req.url()).searchParams.get('type'));
                 return route.fulfill({
                     status: 200,
                     contentType: 'application/json',
-                    body: JSON.stringify({ data: record }),
+                    body: JSON.stringify({ data: records[segments[0]] ?? record }),
                 });
             }
 
@@ -1122,7 +1144,17 @@ async function stubGridItemRecordApi(page, opts = {}) {
                 return route.fulfill({
                     status: updateStatus,
                     contentType: 'application/json',
-                    body: JSON.stringify({ data: { uuid: record.uuid } }),
+                    body: JSON.stringify(updateBody ?? { data: { uuid: record.uuid } }),
+                });
+            }
+
+            if (method === 'DELETE' && segments.length === 1) {
+                state.deleteCount += 1;
+                state.lastDeletedId = segments[0];
+                return route.fulfill({
+                    status: deleteStatus,
+                    contentType: 'application/json',
+                    body: deleteBody === null ? '' : JSON.stringify(deleteBody),
                 });
             }
 

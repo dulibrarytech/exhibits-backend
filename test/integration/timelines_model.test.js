@@ -836,6 +836,30 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.status).toBe(false);
             expect(result.message).toBe('Unable to suppress timeline');
         });
+
+        test('unpublishes the items of this timeline and of no other timeline in the exhibit', async () => {
+            const OTHER_TIMELINE_UUID = '660e8400-e29b-41d4-a716-446655440098';
+
+            mockTimelineRecordTask.get_timeline_records.mockResolvedValue([
+                { uuid: OTHER_TIMELINE_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID },
+                { uuid: TEST_TIMELINE_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID }
+            ]);
+            mockTimelineRecordTask.get_timeline_record.mockResolvedValue({
+                uuid: TEST_TIMELINE_UUID,
+                is_member_of_exhibit: TEST_EXHIBIT_UUID
+            });
+            mockTimelineRecordTask.get_timeline_item_records.mockImplementation(async (exhibit_id, timeline_id) => [
+                { uuid: TEST_TIMELINE_ITEM_UUID, is_member_of_timeline: timeline_id }
+            ]);
+
+            const result = await TIMELINES_MODEL.suppress_timeline_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID);
+
+            expect(result.status).toBe(true);
+            expect(mockTimelineRecordTask.get_timeline_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID);
+            expect(mockTimelineRecordTask.set_to_suppressed_timeline_items).toHaveBeenCalledWith(TEST_TIMELINE_UUID);
+            expect(mockTimelineRecordTask.set_to_suppressed_timeline_items).not.toHaveBeenCalledWith(OTHER_TIMELINE_UUID);
+            expect(mockTimelineRecordTask.get_timeline_item_records).not.toHaveBeenCalledWith(TEST_EXHIBIT_UUID, OTHER_TIMELINE_UUID);
+        });
     });
 
     // ==================== PUBLISH TIMELINE ITEM RECORD ====================

@@ -151,21 +151,62 @@ const MINIMUM_ITEMS_DELETE_ADD_ITEMS_MESSAGE = 'Grids cannot contain less items 
 const INVALID_FIELDS_MESSAGE = 'Some required information is missing or not valid. ' +
     'Check the marked fields and try again.';
 
-const is_column_raise_blocked = async (exhibit_id, grid_id, columns) => {
+const build_published_columns_message = (columns, published_count) => {
+    return `This grid is published and has ${published_count} published item${published_count === 1 ? '' : 's'}. ` +
+        `Publish more of its items before changing it to ${columns} columns.`;
+};
+
+const get_column_raise_refusal = async (exhibit_id, grid_id, columns) => {
 
     const grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
 
-    if (!grid_record) {
-        return false;
-    }
-
-    if (columns <= get_minimum_grid_items(grid_record.columns)) {
-        return false;
+    if (!grid_record || columns <= get_minimum_grid_items(grid_record.columns)) {
+        return null;
     }
 
     const item_count = await grid_record_task.get_grid_item_count(exhibit_id, grid_id);
 
-    return columns > item_count;
+    if (columns > item_count) {
+        return MINIMUM_ITEMS_SAVE_MESSAGE;
+    }
+
+    if (grid_record.is_published !== CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+        return null;
+    }
+
+    const published_count = await grid_record_task.get_grid_item_count(exhibit_id, grid_id, {published_only: true});
+
+    return columns > published_count
+        ? build_published_columns_message(columns, published_count)
+        : null;
+};
+
+const handle_grid_republish = async (is_member_of_exhibit, grid_id) => {
+
+    try {
+
+        const grid_record = await grid_record_task.get_grid_record(is_member_of_exhibit, grid_id);
+
+        if (!grid_record || grid_record.is_published !== CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+            return;
+        }
+
+        REINDEX_COALESCER.schedule_reindex(`grid:${grid_id}`, async () => {
+            const is_indexed = await INDEXER_MODEL.reindex_grid_record(is_member_of_exhibit, grid_id);
+
+            if (is_indexed === true) {
+                LOGGER.module().info('INFO: [/exhibits/grid_model (handle_grid_republish)] Grid re-indexed after edit.');
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/grid_model (handle_grid_republish)] Failed to re-index grid');
+            }
+        });
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/grid_model (handle_grid_republish)] ${error.message}`, {
+            is_member_of_exhibit,
+            grid_id,
+            stack: error.stack
+        });
+    }
 };
 
 const get_item_delete_refusal = async (exhibit_id, grid_id, grid_item_id) => {
@@ -577,14 +618,18 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
             return internal_name_error;
         }
 
-        if (data.columns !== undefined && await is_column_raise_blocked(is_member_of_exhibit, grid_id, data.columns)) {
+        const column_refusal = data.columns === undefined
+            ? null
+            : await get_column_raise_refusal(is_member_of_exhibit, grid_id, data.columns);
+
+        if (column_refusal !== null) {
             LOGGER.module().info(
-                `INFO: [/exhibits/grid_model (update_grid_record)] Grid ${grid_id} has fewer items than the ${data.columns} columns requested`
+                `INFO: [/exhibits/grid_model (update_grid_record)] Change to ${data.columns} columns refused for grid ${grid_id}: ${column_refusal}`
             );
 
             return build_response(
                 CONSTANTS.STATUS_CODES.UNPROCESSABLE_ENTITY,
-                MINIMUM_ITEMS_SAVE_MESSAGE
+                column_refusal
             );
         }
 
@@ -597,6 +642,8 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
                 'Unable to update grid record'
             );
         }
+
+        setImmediate(() => handle_grid_republish(is_member_of_exhibit, grid_id));
 
         const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
@@ -1309,8 +1356,8 @@ const suppress_grid_record = async (exhibit_id, item_id) => {
         const is_grid_suppressed = await grid_record_task.set_grid_to_suppress(item_id);
 
         // Get and suppress grid items
-        const grid_records = await grid_record_task.get_grid_records(exhibit_id, item_id);
-        await suppress_grid_items_parallel(grid_records);
+        const grid_record = await grid_record_task.get_grid_record(exhibit_id, item_id);
+        await suppress_grid_items_parallel(grid_record ? [grid_record] : []);
 
         if (is_grid_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/grid_model (suppress_grid_record)] Unable to set grid to suppressed');

@@ -15,6 +15,7 @@ const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
     stubGridItemsApi,
+    stubGridItemRecordApi,
     stubGridRecordApi,
     exhibitFixture,
     gridItemFixture,
@@ -78,11 +79,33 @@ test.describe('Grid items — minimum-items advisory', () => {
         await expect(page.locator('#grid-min-items-status .alert-warning')).toHaveCount(0);
     });
 
-    test('warns on an empty grid alongside the "Grid is empty." message', async ({ page }) => {
+    test('warns on an empty grid and keeps its form, heading and list', async ({ page }) => {
         await open_grid_items_page(page, { columns: 3, items: [] });
 
-        await expect(page.locator('#message')).toContainText('Grid is empty.');
         await expect(page.locator('#grid-min-items-status .alert-warning')).toContainText('0 of 3 added');
         await expect(page.locator('#grid-min-items-status .alert-warning')).toContainText('Add 3 more grid items');
+        await expect(page.locator('table#grid-items tbody')).toContainText('No grid items found');
+        await expect(page.locator('h1')).toContainText('Grid host exhibit - Grid');
+        await expect(page.locator('#grid-columns')).toHaveValue('3');
+        await expect(page.locator('#item-card .card-title')).toHaveText('Grid Items');
+    });
+
+    test('clears in place once an added item completes the row', async ({ page }) => {
+        const items = grid_items(1);
+
+        await stubGridItemRecordApi(page, { exhibitId: EXHIBIT_UUID, gridId: GRID_UUID });
+        await open_grid_items_page(page, { columns: 2, items });
+
+        await expect(page.locator('#grid-min-items-status .alert-warning')).toContainText('1 of 2 added');
+
+        await page.click('#add-grid-item-link');
+        await page.click('#grid-item-tab-text');
+        await page.fill('#item-text-input .ql-editor', 'Second item');
+
+        items.push(...grid_items(2).slice(1));
+        await page.click('#grid-item-save-btn');
+
+        await expect(page.locator('table#grid-items tbody tr')).toHaveCount(2);
+        await expect(page.locator('#grid-min-items-status .alert-warning')).toHaveCount(0);
     });
 });

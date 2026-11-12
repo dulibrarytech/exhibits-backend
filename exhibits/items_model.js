@@ -928,11 +928,11 @@ exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
         } else if ((row.type === 'content-block') && is_valid_uuid(row.uuid)) {
             ops.set(`content-block:${row.uuid}`, () => INDEXER_MODEL.index_content_block_record(exhibit_id, row.uuid));
         } else if (row.type === 'grid' && is_valid_uuid(row.uuid)) {
-            ops.set(`grid:${row.uuid}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.uuid));
+            ops.set(`grid:${row.uuid}`, () => INDEXER_MODEL.reindex_grid_record(exhibit_id, row.uuid));
         } else if (row.type === 'timeline' && is_valid_uuid(row.uuid)) {
-            ops.set(`timeline:${row.uuid}`, () => INDEXER_MODEL.index_timeline_record(exhibit_id, row.uuid));
+            ops.set(`timeline:${row.uuid}`, () => INDEXER_MODEL.reindex_timeline_record(exhibit_id, row.uuid));
         } else if (row.type === 'griditem' && is_valid_uuid(row.grid_id)) {
-            ops.set(`grid:${row.grid_id}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.grid_id));
+            ops.set(`grid:${row.grid_id}`, () => INDEXER_MODEL.reindex_grid_record(exhibit_id, row.grid_id));
         }
     }
 

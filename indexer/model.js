@@ -45,6 +45,7 @@ const {
     batch_index_records,
     process_container_records,
     index_container_child_record,
+    reindex_container_parent_record,
     index_standalone_record,
     index_container_records
 } = require('../indexer/indexer_helper');
@@ -504,6 +505,21 @@ exports.index_grid_item_record = async (grid_id, grid_item_id, grid_item_record)
     });
 };
 
+exports.reindex_grid_record = async (exhibit_id, grid_id) => {
+
+    return reindex_container_parent_record({
+        exhibit_id,
+        parent_id: grid_id,
+        record_task: grid_record_task,
+        get_record_method: 'get_grid_record',
+        get_items_method: 'get_grid_item_records',
+        construct_parent: construct_grid_index_record,
+        label: 'Grid',
+        get_indexed_record: exports.get_indexed_record,
+        index_record: exports.index_record
+    });
+};
+
 /**
  * Indexes timeline records with their items
  * @param {string} exhibit_id - Exhibit UUID
@@ -538,6 +554,20 @@ exports.index_timeline_item_record = async (timeline_id, timeline_item_id, timel
         parent_id: timeline_id,
         child_id: timeline_item_id,
         child_record: timeline_item_record,
+        label: 'Timeline',
+        get_indexed_record: exports.get_indexed_record,
+        index_record: exports.index_record
+    });
+};
+
+exports.reindex_timeline_record = async (exhibit_id, timeline_id) => {
+
+    return reindex_container_parent_record({
+        exhibit_id,
+        parent_id: timeline_id,
+        record_task: timeline_record_task,
+        get_record_method: 'get_timeline_record',
+        construct_parent: construct_timeline_index_record,
         label: 'Timeline',
         get_indexed_record: exports.get_indexed_record,
         index_record: exports.index_record

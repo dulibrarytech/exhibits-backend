@@ -23,6 +23,53 @@ const itemsGridModule = (function () {
     const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
+    let grid_item_table = null;
+    let is_list_wired = false;
+    let item_count = 0;
+    let saved_columns = null;
+    const message_serials = new WeakMap();
+
+    obj.get_item_count = function () {
+        return item_count;
+    };
+
+    obj.get_columns = function () {
+        return saved_columns;
+    };
+
+    function reveal(target) {
+
+        const header = document.querySelector('nav.fixed-top');
+        const top_edge = header === null ? 0 : Math.max(0, header.getBoundingClientRect().bottom);
+        const rect = target.getBoundingClientRect();
+
+        if (rect.top < top_edge || rect.bottom > window.innerHeight) {
+            target.scrollIntoView({ block: 'center' });
+        }
+    }
+
+    obj.show_message = function (type, text, dismiss_after = 0, selector = '#grid-items-message') {
+
+        const target = document.querySelector(selector);
+
+        if (target === null) {
+            return;
+        }
+
+        const serial = (message_serials.get(target) || 0) + 1;
+
+        message_serials.set(target, serial);
+        domModule.set_alert(target, type, text);
+        reveal(target);
+
+        if (dismiss_after > 0) {
+            setTimeout(() => {
+                if (message_serials.get(target) === serial) {
+                    domModule.empty(target);
+                }
+            }, dismiss_after);
+        }
+    };
 
     /**
      * Fetches grid items for a specific exhibit and grid
@@ -242,60 +289,55 @@ const itemsGridModule = (function () {
 
         // Hide table and show loading indicator before fetching data
         const grid_items_table = document.querySelector('#grid-items');
-        const card_element = document.querySelector('.card');
+        const card_element = document.querySelector('#item-card');
+        const is_first_draw = grid_item_table === null;
 
-        if (grid_items_table !== null) {
-            grid_items_table.style.visibility = 'hidden';
+        if (is_first_draw) {
+
+            if (grid_items_table !== null) {
+                grid_items_table.style.visibility = 'hidden';
+            }
+
+            if (card_element !== null) {
+                card_element.style.minHeight = '200px';
+            }
+
+            domModule.set_loading('#message', 'Loading grid items...');
+
+            await exhibitsModule.set_exhibit_title(exhibit_id);
         }
 
-        if (card_element !== null) {
-            card_element.style.minHeight = '200px';
-        }
-
-        domModule.set_loading('#message', 'Loading grid items...');
-
-        await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_grid_items(exhibit_id, grid_id);
 
-        // Clear loading message
-        domModule.empty('#message');
-
         if (items === null) {
-            domModule.empty('#item-card');
             if (grid_items_table !== null) {
                 grid_items_table.style.visibility = 'visible';
             }
             return false;
         }
 
+        if (is_first_draw) {
+            // Clear loading message
+            domModule.empty('#message');
+        }
+
         // Advisory: warn while the grid holds fewer items than its column
         // count — publishing is refused server-side until the minimum is met.
         const grid_record = await get_grid_record(exhibit_id, grid_id);
+        item_count = items.length;
+        saved_columns = grid_record === null ? null : grid_record.columns;
         render_min_items_notice(grid_record, items.length);
 
-        if (items.length === 0) {
-            const item_card = document.querySelector('#item-card');
-            const exhibit_title = document.querySelector('#exhibit-title');
-
-            if (item_card !== null) {
-                item_card.remove();
-            }
-
-            if (exhibit_title !== null && exhibit_title.parentElement !== null) {
-                exhibit_title.parentElement.style.display = 'none';
-            }
-
-            domModule.set_alert('#message', 'info', 'Grid is empty.');
-            return false;
-        }
-
         let item_data = '';
-        let item_order = [];
 
         // Build all item HTML before inserting into DOM
         for (let i = 0; i < items.length; i++) {
-            item_order.push(items[i].order);
             item_data += await itemsListDisplayModule.display_grid_items(items[i]);
+        }
+
+        if (grid_item_table !== null) {
+            grid_item_table.destroy();
+            grid_item_table = null;
         }
 
         // Insert all rows at once via a DocumentFragment.
@@ -306,7 +348,7 @@ const itemsGridModule = (function () {
         grid_item_list.appendChild(grid_template.content);
 
         // Initialize DataTable.
-        const GRID_ITEM_LIST = new DataTable('#grid-items', {
+        grid_item_table = new DataTable('#grid-items', {
             paging: false,
             rowReorder: {
                 excludedChildren: 'a, .reorder-btn, .reorder-btn *'
@@ -321,25 +363,29 @@ const itemsGridModule = (function () {
             }
         });
 
-        GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
+        grid_item_table.on('row-reordered', async (e, reordered_items) => {
             await reorderModule.reorder_grid_items(e, reordered_items);
         });
 
         // Wire keyboard reorder buttons (Move up / Move down).
-        const grid_id_for_reorder = helperModule.get_parameter_by_name('grid_id');
         if (typeof reorderModule.attach_keyboard_reorder_handlers === 'function') {
-            reorderModule.attach_keyboard_reorder_handlers('#grid-items', { grid_id: grid_id_for_reorder });
+            reorderModule.attach_keyboard_reorder_handlers('#grid-items', { grid_id: grid_id });
         }
-        GRID_ITEM_LIST.on('draw', () => {
+        grid_item_table.on('draw', () => {
             if (typeof reorderModule.update_reorder_button_states === 'function') {
                 reorderModule.update_reorder_button_states('#grid-items');
             }
         });
 
+        if (typeof reorderModule.update_reorder_button_states === 'function') {
+            reorderModule.update_reorder_button_states('#grid-items');
+        }
+
         // Use delegated events on table body for publish/suppress actions
         const table_body = document.querySelector('#grid-items tbody');
 
-        if (table_body !== null) {
+        if (table_body !== null && is_list_wired === false) {
+            is_list_wired = true;
             table_body.addEventListener('click', async function (event) {
                 const target = event.target.closest('.publish-item, .suppress-item');
 
@@ -370,6 +416,8 @@ const itemsGridModule = (function () {
         if (card_element !== null) {
             card_element.style.minHeight = '';
         }
+
+        return true;
     };
 
     async function publish_grid_item(uuid) {
@@ -400,96 +448,28 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
-                let elem = document.getElementById(uuid);
-                elem.classList.remove('publish-item');
-                elem.classList.add('suppress-item');
-                elem.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
-
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
-
-                    let uuid_arr = arr_result.split('_');
-
-                    if (uuid === uuid_arr[0]) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-
-                const item_type = uuid_found.split('_').slice(2).join('_');
-                const item_path = itemsListDisplayModule.get_grid_item_path(item_type);
-                const details_path = `${APP_PATH}/items/grid/item/${item_path}/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                actions_elem.className = 'text-center';
-                actions_elem.innerHTML = `
-                    <div class="dropdown" style="display: inline-block; position: relative;">
-                        <button type="button"
-                                class="btn btn-link p-0 border-0 item-actions-toggle"
-                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                data-toggle="dropdown"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                title="Actions">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                        </button>
-                        <div class="dropdown-menu item-actions-menu">
-                            <a class="dropdown-item"
-                               href="${details_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Details
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-muted disabled"
-                               href="#"
-                       aria-disabled="true"
-                       tabindex="-1"
-                               style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
-                               title="Can only delete if unpublished">
-                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Delete
-                            </a>
-                        </div>
-                    </div>
-                `;
+                await obj.display_grid_items();
 
             } else if (response.status === 403) {
-                scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to publish this record.');
-
-                setTimeout(() => {
-                    domModule.empty('#message');
-                }, 5000);
+                obj.show_message('danger', 'You do not have permission to publish this record.', 5000);
             }
 
             // 422: publish refused by a server-side rule (e.g. the parent
             // grid is not published). Show the server's message and leave it
             // on screen — it is actionable, not a passing notice.
             if (response.status === 422) {
-                scrollTo(0, 0);
                 const server_message = response.data?.message ?? 'Unable to publish grid item';
-                domModule.set_alert(document.querySelector('#message'), 'warning', server_message);
+                obj.show_message('warning', server_message);
             }
 
             if (response.status === 500) {
-                scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', response.data.message);
-
-                setTimeout(() => {
-                    // domModule.empty('#message');
-                }, 5000);
+                obj.show_message('danger', response.data.message);
             }
 
             return false;
 
         } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
+            obj.show_message('danger', error.message);
         }
     }
 
@@ -521,13 +501,7 @@ const itemsGridModule = (function () {
             });
 
             if (response !== undefined && response.status === 403) {
-                scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
-
-                setTimeout(() => {
-                    domModule.empty('#message');
-                }, 5000);
-
+                obj.show_message('danger', 'You do not have permission to unpublish this record.', 5000);
                 return false;
             }
 
@@ -536,92 +510,27 @@ const itemsGridModule = (function () {
             // server's message — it names the rule and the remedy — and keep
             // it on screen: it is actionable, not a passing notice.
             if (response !== undefined && response.status === 422) {
-                scrollTo(0, 0);
                 const server_message = response.data?.message ?? 'Unable to unpublish grid item';
-                domModule.set_alert(document.querySelector('#message'), 'warning', server_message);
+                obj.show_message('warning', server_message);
                 return false;
             }
 
             if (response !== undefined && response.status === 200) {
 
-                let elem = document.getElementById(uuid);
-                elem.classList.remove('suppress-item');
-                elem.classList.add('publish-item');
-                elem.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
-
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
-
-                    let uuid_arr = arr_result.split('_');
-
-                    if (uuid === uuid_arr[0]) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-
-                const item_type = uuid_found.split('_').slice(2).join('_');
-                const item_path = itemsListDisplayModule.get_grid_item_path(item_type);
-                const edit_path = `${APP_PATH}/items/grid/item/${item_path}/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                const delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                actions_elem.className = 'text-center';
-                actions_elem.innerHTML = `
-                    <div class="dropdown" style="display: inline-block; position: relative;">
-                        <button type="button"
-                                class="btn btn-link p-0 border-0 item-actions-toggle"
-                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                data-toggle="dropdown"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                title="Actions">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                        </button>
-                        <div class="dropdown-menu item-actions-menu">
-                            <a class="dropdown-item"
-                               href="${edit_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Edit
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-danger"
-                               href="${delete_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Delete
-                            </a>
-                        </div>
-                    </div>
-                `;
+                await obj.display_grid_items();
 
             } else if (response === undefined) {
-                scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
-
-                setTimeout(() => {
-                    domModule.empty('#message');
-                }, 5000);
+                obj.show_message('danger', 'You do not have permission to unpublish this record.', 5000);
             }
 
             if (response !== undefined && response.status === 204) {
-                scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to unpublish grid item');
-
-                setTimeout(() => {
-                    domModule.empty('#message');
-                }, 5000);
+                obj.show_message('warning', 'Unable to unpublish grid item', 5000);
             }
 
             return false;
 
         } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
+            obj.show_message('danger', error.message);
         }
     }
 
@@ -779,36 +688,6 @@ const itemsGridModule = (function () {
             window.location.replace(redirect_url);
         }, 900);
     }
-
-    obj.init = async function () {
-
-        try {
-
-            const status = helperModule.get_parameter_by_name('status');
-
-            if (status !== null && status === '403') {
-
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const grid_id = helperModule.get_parameter_by_name('grid_id');
-
-                setTimeout(() => {
-                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
-                }, 0);
-
-                setTimeout(() => {
-                    domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to add item.');
-                }, 50);
-            }
-
-            const token = authModule.get_user_token();
-            await authModule.check_auth(token);
-
-            helperModule.show_form();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
 
     return obj;
 

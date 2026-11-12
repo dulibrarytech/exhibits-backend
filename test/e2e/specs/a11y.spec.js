@@ -149,6 +149,52 @@ test.describe('axe-core a11y scans (WCAG 2.0/2.1/2.2 AA)', () => {
         await expectNoAxeViolations(page);
     });
 
+    test('Grid page item pop-up has no axe violations on any tab', async ({ page }) => {
+        await seedAuth(page);
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID, title: 'Grid host exhibit' }) },
+        });
+        await stubGridItemsApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            gridId: GRID_UUID,
+            items: [
+                gridItemFixture({ uuid: 'g1', order: 1, title: 'First',  is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID }),
+                gridItemFixture({ uuid: 'g2', order: 2, title: 'Second', is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID }),
+            ],
+        });
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, columns: 2 }),
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/items?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}`);
+        await expect(page.locator('table#grid-items tbody tr')).toHaveCount(2);
+
+        const settled = () => page.waitForFunction(() => {
+            const modal = document.getElementById('grid-item-modal');
+            const pane = modal.querySelector('.tab-pane.active');
+            return modal.classList.contains('show')
+                && getComputedStyle(modal).opacity === '1'
+                && pane !== null
+                && getComputedStyle(pane).opacity === '1';
+        });
+
+        await page.click('#add-grid-item-link');
+        await settled();
+        await expectNoAxeViolations(page, { include: '#grid-item-modal' });
+
+        await page.click('#grid-item-tab-text');
+        await expect(page.locator('#item-text-input')).toBeVisible();
+        await settled();
+        await expectNoAxeViolations(page, { include: '#grid-item-modal' });
+
+        await page.click('#grid-item-tab-content-block');
+        await page.selectOption('#content-type', 'button');
+        await expect(page.locator('#button-url-input')).toBeVisible();
+        await settled();
+        await expectNoAxeViolations(page, { include: '#grid-item-modal' });
+    });
+
     test('Exhibits list page has no axe violations', async ({ page }) => {
         await seedAuth(page);
         await stubDashboardDeps(page);

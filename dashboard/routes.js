@@ -85,10 +85,10 @@ module.exports = function (app) {
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_form);
 
     app.route(APP_PATH + '/items/grid/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_details);
+        .get(PAGE_AUTH, CONTROLLER.redirect_to_grid_page);
 
     app.route(APP_PATH + '/items/grid/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_form);
+        .get(PAGE_AUTH, CONTROLLER.redirect_to_grid_page);
 
     app.route(APP_PATH + '/items/grid/item/media')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_media_item_form);

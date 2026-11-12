@@ -505,7 +505,7 @@ const itemsCommonGridItemFormModule = (function () {
     }
 
     function set_media_only_fields_visible(is_visible) {
-        ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
+        ['#is-media-only-description', '#is-media-only-caption', '#embed-item-group'].forEach(selector => {
             const field = document.querySelector(selector);
             if (field) field.style.display = is_visible ? '' : 'none';
         });
@@ -522,6 +522,67 @@ const itemsCommonGridItemFormModule = (function () {
     }
 
     let is_media_wired = false;
+    let message_selector = '#message';
+
+    obj.set_message_selector = function (selector) {
+        message_selector = selector || '#message';
+    };
+
+    obj.reset = function () {
+
+        ['item-title-input', 'item-text-input', 'item-description-input'].forEach(id => {
+            rteModule.set_html(id, '');
+        });
+
+        [
+            '#item-caption-input',
+            '#item-media-uuid',
+            '#item-media-uuid-prev',
+            '#item-media-type',
+            '#item-mime-type',
+            '#thumbnail-media-uuid',
+            '#thumbnail-media-uuid-prev'
+        ].forEach(selector => {
+            const field = document.querySelector(selector);
+            if (field) field.value = '';
+        });
+
+        reset_media_preview(
+            '#item-media-display',
+            '#item-media-filename-display',
+            '#item-media-trash',
+            'fa-file-o',
+            'No media selected'
+        );
+
+        reset_media_preview(
+            '#thumbnail-image-display',
+            '#thumbnail-filename-display',
+            '#thumbnail-trash',
+            'fa-picture-o',
+            'No image selected'
+        );
+
+        toggle_media_name_display(null);
+
+        ['layout', 'media_width'].forEach(name => {
+            document.getElementsByName(name).forEach(radio => {
+                radio.checked = radio.defaultChecked;
+            });
+        });
+
+        const embed_item_el = document.getElementById('embed-item');
+        if (embed_item_el) {
+            embed_item_el.checked = false;
+            embed_item_el.dispatchEvent(new Event('change'));
+        }
+
+        ['#item-text-input', '#item-media-uuid'].forEach(selector => {
+            domModule.clear_field_error(selector, selector.replace('#', '') + '-error');
+        });
+
+        _caption_user_edited = false;
+    };
 
     obj.prepare = function (kind, options = {}) {
 
@@ -543,7 +604,7 @@ const itemsCommonGridItemFormModule = (function () {
             is_media_wired = true;
         }
 
-        const created_meta = document.querySelector('#created');
+        const created_meta = document.querySelector('#item-data-card #created');
         const media_card_header = document.querySelector('#item-media-card .card-header');
         if (created_meta && media_card_header) {
             media_card_header.appendChild(created_meta.closest('.btn-group') || created_meta);
@@ -622,7 +683,7 @@ const itemsCommonGridItemFormModule = (function () {
             };
 
             const show_error = (message, field_selector) => {
-                const message_el = document.querySelector('#message');
+                const message_el = document.querySelector(message_selector);
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
                 }
@@ -700,7 +761,7 @@ const itemsCommonGridItemFormModule = (function () {
 
         } catch (error) {
             console.error('Error in get_common_grid_item_form_fields:', error.message);
-            const message_el = document.querySelector('#message');
+            const message_el = document.querySelector(message_selector);
             if (message_el) {
                 domModule.set_alert(message_el, 'danger', error.message);
             }

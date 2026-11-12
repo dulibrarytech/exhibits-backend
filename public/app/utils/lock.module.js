@@ -454,6 +454,62 @@ const lockModule = (function () {
         }
     };
 
+    obj.release_grid_item = async function (ids, options = {}) {
+
+        try {
+
+            const endpoints = endpointsModule.get_exhibits_endpoints();
+            const template = endpoints?.exhibits?.grid_item_unlock_record?.post?.endpoint;
+            const profile = authModule.get_user_profile_data();
+            const token = authModule.get_user_token();
+
+            if (!template || !ids || !ids.exhibit_id || !ids.grid_id || !ids.item_id || !profile || !profile.uid || !token) {
+                return false;
+            }
+
+            const endpoint = template
+                .replace(':exhibit_id', encodeURIComponent(ids.exhibit_id))
+                .replace(':grid_id', encodeURIComponent(ids.grid_id))
+                .replace(':item_id', encodeURIComponent(ids.item_id));
+
+            const query_params = new URLSearchParams({ uid: profile.uid });
+
+            if (options.force === true) {
+                query_params.append('force', 'true');
+            }
+
+            const url = `${endpoint}?${query_params.toString()}`;
+
+            if (options.keepalive === true) {
+                fetch(url, {
+                    method: 'POST',
+                    headers: { 'x-access-token': token },
+                    keepalive: true
+                }).catch(() => {});
+                return true;
+            }
+
+            const response = await httpModule.req({
+                method: 'POST',
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600;
+                }
+            });
+
+            return response !== undefined && response !== null && response.status === 200;
+
+        } catch (error) {
+            console.error('Error releasing grid item:', error.message);
+            return false;
+        }
+    };
+
     // Setup automatic unlock on page unload
     obj.setup_auto_unlock = function (record) {
 

@@ -55,6 +55,7 @@ test.describe('Grid items — row reorder', () => {
         // DataTables init runs after the GET resolves. Wait for the rendered
         // rows before attempting to drag.
         await expect(page.locator('table#grid-items tbody tr')).toHaveCount(3);
+        await page.locator('table#grid-items tbody tr:nth-child(3)').scrollIntoViewIfNeeded();
 
         // Drag the first row's order-cell down past the third row's
         // order-cell. dragRow does a multi-step mouse.move so DataTables

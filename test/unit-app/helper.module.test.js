@@ -332,3 +332,64 @@ describe('helperModule.bind_embed_description (Embed item ↔ Pop-up Window Desc
         expect(document.getElementById('item-description-input-embed-note').hidden).toBe(true);
     });
 });
+
+describe('helperModule item style choices in a named group', () => {
+
+    const PRESETS = {
+        accent1: { backgroundColor: '#111111', color: '#ffffff' },
+        accent2: { backgroundColor: '#222222', color: '#eeeeee' },
+    };
+    const LABELS = { accent1: 'Accent Style 1', accent2: 'Accent Style 2' };
+
+    const checked_in = (selector) => {
+        const checked = document.querySelector(`${selector} input:checked`);
+        return checked === null ? null : checked.value;
+    };
+
+    beforeAll(() => {
+        const createDOMPurify = require('dompurify');
+        globalThis.DOMPurify = createDOMPurify(window);
+        const src = readFileSync(MODULE_PATH, 'utf8');
+        (0, eval)(src.replace(/^const\s+helperModule\s*=/m, 'globalThis.helperModule ='));
+    });
+
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="item-style-options"></div>
+            <div id="popup-style-options"></div>`;
+        globalThis.helperModule.build_item_style_swatch_options(
+            '#item-style-options', ['item1', 'item2'], {}, { item1: 'Item Style 1', item2: 'Item Style 2' },
+        );
+        globalThis.helperModule.build_item_style_swatch_options(
+            '#popup-style-options', ['accent1', 'accent2'], PRESETS, LABELS, 'popup_styles',
+        );
+    });
+
+    it('builds each chooser as its own radio group with its first preset checked', () => {
+        const names = (selector) => Array.from(document.querySelectorAll(`${selector} input`)).map((radio) => radio.name);
+
+        expect(names('#item-style-options')).toEqual(['styles', 'styles']);
+        expect(names('#popup-style-options')).toEqual(['popup_styles', 'popup_styles']);
+        expect(checked_in('#item-style-options')).toBe('item1');
+        expect(checked_in('#popup-style-options')).toBe('accent1');
+    });
+
+    it('checks a saved preset in the named group and leaves the other group alone', () => {
+        document.getElementById('item-style-item2').checked = true;
+
+        globalThis.helperModule.check_item_style_option('accent2', 'popup_styles');
+
+        expect(checked_in('#popup-style-options')).toBe('accent2');
+        expect(checked_in('#item-style-options')).toBe('item2');
+    });
+
+    it('falls back to the first preset of the named group only', () => {
+        document.getElementById('item-style-item2').checked = true;
+        document.getElementById('item-style-accent2').checked = true;
+
+        globalThis.helperModule.check_item_style_option('', 'popup_styles');
+
+        expect(checked_in('#popup-style-options')).toBe('accent1');
+        expect(checked_in('#item-style-options')).toBe('item2');
+    });
+});

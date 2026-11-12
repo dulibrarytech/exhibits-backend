@@ -820,8 +820,8 @@ exports.suppress_timeline_record = async (exhibit_id, item_id) => {
         const is_timeline_suppressed = await timeline_record_task.set_timeline_to_suppress(item_id);
 
         // Get and suppress timeline items
-        const timeline_records = await timeline_record_task.get_timeline_records(exhibit_id, item_id);
-        await suppress_timeline_items_parallel(timeline_records);
+        const timeline_record = await timeline_record_task.get_timeline_record(exhibit_id, item_id);
+        await suppress_timeline_items_parallel(timeline_record ? [timeline_record] : []);
 
         if (is_timeline_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_record)] Unable to set timeline to suppressed');

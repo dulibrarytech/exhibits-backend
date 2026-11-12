@@ -178,6 +178,8 @@ const mockIndexerModel = {
     index_heading_record: jest.fn().mockResolvedValue(true),
     index_grid_record: jest.fn().mockResolvedValue(true),
     index_timeline_record: jest.fn().mockResolvedValue(true),
+    reindex_grid_record: jest.fn().mockResolvedValue(true),
+    reindex_timeline_record: jest.fn().mockResolvedValue(true),
     delete_record: jest.fn().mockResolvedValue({ status: 204 }),
     get_indexed_record: jest.fn().mockResolvedValue({ status: 404 })
 };
@@ -806,6 +808,8 @@ describe('Items Model Integration Tests', () => {
             mockIndexerModel.index_heading_record.mockResolvedValue(true);
             mockIndexerModel.index_grid_record.mockResolvedValue(true);
             mockIndexerModel.index_timeline_record.mockResolvedValue(true);
+            mockIndexerModel.reindex_grid_record.mockResolvedValue(true);
+            mockIndexerModel.reindex_timeline_record.mockResolvedValue(true);
         });
 
         test('maps each top-level component type to its own targeted index function', async () => {
@@ -821,8 +825,20 @@ describe('Items Model Integration Tests', () => {
             expect(mockIndexerModel.index_item_record).toHaveBeenCalledWith(EXHIBIT, u(1));
             expect(mockIndexerModel.index_heading_record).toHaveBeenCalledWith(EXHIBIT, u(2));
             expect(mockIndexerModel.index_heading_record).toHaveBeenCalledWith(EXHIBIT, u(3)); // subheading -> heading doc
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
-            expect(mockIndexerModel.index_timeline_record).toHaveBeenCalledWith(EXHIBIT, u(5));
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+            expect(mockIndexerModel.reindex_timeline_record).toHaveBeenCalledWith(EXHIBIT, u(5));
+        });
+
+        test('never runs the publish routine for a grid or a timeline', async () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'grid', uuid: u(4), order: 1 },
+                { type: 'timeline', uuid: u(5), order: 2 },
+                { type: 'griditem', grid_id: u(6), uuid: u(7), order: 1 }
+            ]);
+            await Promise.resolve();
+
+            expect(mockIndexerModel.index_grid_record).not.toHaveBeenCalled();
+            expect(mockIndexerModel.index_timeline_record).not.toHaveBeenCalled();
         });
 
         test('grid items re-index their parent grid doc, deduped to one call per grid', async () => {
@@ -833,9 +849,9 @@ describe('Items Model Integration Tests', () => {
             ]);
             await Promise.resolve();
 
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledTimes(2);   // per distinct grid, not per item
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(5));
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledTimes(2);   // per distinct grid, not per item
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledWith(EXHIBIT, u(5));
         });
 
         test('a moved grid and grid items within it collapse to a single grid re-index', async () => {
@@ -845,8 +861,8 @@ describe('Items Model Integration Tests', () => {
             ]);
             await Promise.resolve();
 
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledTimes(1);
-            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledTimes(1);
+            expect(mockIndexerModel.reindex_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
         });
 
         test('schedules one coalesced re-index per distinct component', () => {
@@ -877,7 +893,7 @@ describe('Items Model Integration Tests', () => {
 
             expect(mockIndexerModel.index_item_record).toHaveBeenCalledTimes(1);
             expect(mockIndexerModel.index_item_record).toHaveBeenCalledWith(EXHIBIT, u(1));
-            expect(mockIndexerModel.index_grid_record).not.toHaveBeenCalled();
+            expect(mockIndexerModel.reindex_grid_record).not.toHaveBeenCalled();
         });
     });
 

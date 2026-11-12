@@ -1032,7 +1032,17 @@ const index_container_records = async (config) => {
             return false;
         }
 
-        const records = await record_task[get_records_method](exhibit_id, container_id);
+        const exhibit_records = await record_task[get_records_method](exhibit_id);
+        const records = container_id
+            ? (exhibit_records || []).filter((record) => record.uuid === container_id)
+            : exhibit_records;
+
+        if (container_id && records.length === 0) {
+            LOGGER.module().error(
+                `ERROR: [/indexer/indexer_helper (index_container_records)] ${label} ${container_id} not found`
+            );
+            return false;
+        }
 
         if (!records || records.length === 0) {
             LOGGER.module().info(`INFO: [/indexer/indexer_helper (index_container_records)] No ${label} records found`);
@@ -1057,6 +1067,94 @@ const index_container_records = async (config) => {
         LOGGER.module().error(`ERROR: [/indexer/indexer_helper (index_container_records)] ${error.message}`, {
             exhibit_id,
             container_id,
+            label,
+            stack: error.stack
+        });
+        return false;
+    }
+};
+
+const apply_stored_order = (indexed_items, stored_items) => {
+
+    const stored_order = new Map((stored_items || []).map((item) => [item.uuid, item.order]));
+
+    return indexed_items
+        .map((item) => {
+            return stored_order.has(item.uuid) ? {...item, order: stored_order.get(item.uuid)} : item;
+        })
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+};
+
+const reindex_container_parent_record = async (config) => {
+
+    const {
+        exhibit_id,
+        parent_id,
+        record_task,
+        get_record_method,
+        get_items_method,
+        construct_parent,
+        label,
+        get_indexed_record,
+        index_record
+    } = config;
+
+    try {
+        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(parent_id)) {
+            LOGGER.module().error(`ERROR: [/indexer/indexer_helper (reindex_container_parent_record)] Invalid UUID provided (${label})`);
+            return false;
+        }
+
+        const parent_record = await record_task[get_record_method](exhibit_id, parent_id);
+
+        if (!parent_record || parent_record.uuid !== parent_id) {
+            LOGGER.module().error(
+                `ERROR: [/indexer/indexer_helper (reindex_container_parent_record)] ${label} ${parent_id} not found`
+            );
+            return false;
+        }
+
+        if (Number(parent_record.is_published) !== 1) {
+            LOGGER.module().info(
+                `INFO: [/indexer/indexer_helper (reindex_container_parent_record)] ${label} ${parent_id} is not published; index left as it is.`
+            );
+            return true;
+        }
+
+        const indexed_record = await get_indexed_record(parent_id);
+
+        if (!indexed_record.data || !indexed_record.data.source) {
+            LOGGER.module().error(
+                `ERROR: [/indexer/indexer_helper (reindex_container_parent_record)] ${label} ${parent_id} not found in index`
+            );
+            return false;
+        }
+
+        const indexed_items = indexed_record.data.source.items || [];
+        const items = get_items_method
+            ? apply_stored_order(indexed_items, await record_task[get_items_method](exhibit_id, parent_id))
+            : indexed_items;
+
+        const parent_index_record = construct_parent({
+            ...parent_record,
+            items
+        });
+
+        const is_indexed = await index_record(parent_index_record);
+
+        if (is_indexed === true) {
+            LOGGER.module().info(
+                `INFO: [/indexer/indexer_helper (reindex_container_parent_record)] ${label} ${parent_id} re-indexed with its indexed items.`
+            );
+            return true;
+        }
+
+        return false;
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/indexer/indexer_helper (reindex_container_parent_record)] ${error.message}`, {
+            exhibit_id,
+            parent_id,
             label,
             stack: error.stack
         });
@@ -1090,6 +1188,7 @@ module.exports = {
     batch_index_records,
     process_container_records,
     index_container_child_record,
+    reindex_container_parent_record,
     index_standalone_record,
     index_container_records
 };

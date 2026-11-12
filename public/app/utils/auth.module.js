@@ -1048,6 +1048,43 @@ const authModule = (function () {
         }
     };
 
+    obj.has_permissions = async function (permissions, record_type, parent_id, child_id) {
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (typeof token !== 'string' || token === '') {
+                return false;
+            }
+
+            const response = await httpModule.req({
+                method: 'POST',
+                url: `${APP_PATH}/auth/permissions`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                data: {
+                    permissions: permissions,
+                    record_type: record_type,
+                    parent_id: parent_id || null,
+                    child_id: child_id || null
+                },
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600;
+                }
+            });
+
+            return response !== undefined && response !== null && response.status === 200;
+
+        } catch (error) {
+            console.error('Error in has_permissions:', error.message);
+            return false;
+        }
+    };
+
     // Helper function to safely redirect to a path (access-denied)
     function redirect_to_path(path) {
         try {

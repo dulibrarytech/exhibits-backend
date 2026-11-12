@@ -875,7 +875,7 @@ const helperModule = (function () {
      * @param {Object} style_map - key → { backgroundColor, color, ... }
      * @param {Object} labels - key → human label (e.g. 'Item Style 1')
      */
-    obj.build_item_style_swatch_options = function (container_selector, sorted_keys, style_map, labels) {
+    obj.build_item_style_swatch_options = function (container_selector, sorted_keys, style_map, labels, group_name = 'styles') {
 
         const container = document.querySelector(container_selector);
 
@@ -898,7 +898,7 @@ const helperModule = (function () {
 
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = 'styles';
+            radio.name = group_name;
             radio.value = key;
             radio.id = 'item-style-' + key;
 
@@ -939,9 +939,9 @@ const helperModule = (function () {
         // There is no "None" option — default-check the first preset (e.g.
         // "Item Style 1") so the radiogroup always has a selection. Edit forms
         // re-check the saved preset afterwards via check_item_style_option.
-        const preset_radios = container.querySelectorAll('input[name="styles"]');
+        const preset_radios = container.querySelectorAll(`input[name="${group_name}"]`);
 
-        if (preset_radios.length && !container.querySelector('input[name="styles"]:checked')) {
+        if (preset_radios.length && !container.querySelector(`input[name="${group_name}"]:checked`)) {
             preset_radios[0].checked = true;
         }
     };
@@ -953,9 +953,9 @@ const helperModule = (function () {
      * "None" option. Replaces the old <select>.value assignment.
      * @param {string|null} value - saved style key (e.g. 'item1') or null
      */
-    obj.check_item_style_option = function (value) {
+    obj.check_item_style_option = function (value, group_name = 'styles') {
 
-        const radios = document.getElementsByName('styles');
+        const radios = document.getElementsByName(group_name);
 
         if (!radios || !radios.length) {
             return;

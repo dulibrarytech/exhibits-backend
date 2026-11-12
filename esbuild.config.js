@@ -37,6 +37,8 @@ const sources = [
     'public/app/exhibits/exhibits.styles.form.module.js',
 
     // grid-items
+    'public/app/grid-items/grid.item.modal.module.js',
+    'public/app/grid-items/grid.page.module.js',
     'public/app/grid-items/items.add.grid.form.module.js',
     'public/app/grid-items/items.add.grid.item.form.module.js',
     'public/app/grid-items/items.add.content.block.grid.item.form.module.js',

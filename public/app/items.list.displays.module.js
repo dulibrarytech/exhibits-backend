@@ -661,7 +661,7 @@ const itemsListDisplayModule = (function() {
             const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
-            const details_url = `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            const grid_page_url = `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}`;
 
             tr.appendChild(build_compact_item_cell({
                 title: title,
@@ -669,12 +669,12 @@ const itemsListDisplayModule = (function() {
                 type_icon_class: 'fa fa-th',
                 thumbnail_img: null,
                 is_locked: item.is_locked,
-                details_url: details_url
+                details_url: grid_page_url
             }));
 
             // Child items cell (link to grid items)
             tr.appendChild(build_child_items_cell({
-                url: `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}`,
+                url: grid_page_url,
                 title: `View grid items for ${title}`
             }));
 
@@ -687,14 +687,11 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(status_td);
 
             // Actions dropdown
-            const edit_url = item.is_published === 1
-                ? `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
-                : `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=grid`;
 
             tr.appendChild(build_actions_cell({
                 actions_id: `${item.uuid}-item-actions`,
-                edit_url: edit_url,
+                edit_url: grid_page_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
@@ -711,14 +708,6 @@ const itemsListDisplayModule = (function() {
             display_error_message(error.message || 'Unable to display grid');
             return '';
         }
-    };
-
-    obj.get_grid_item_path = function(item_type) {
-        if (item_type === 'text') {
-            return 'text';
-        }
-
-        return item_type === 'content_block' ? 'content-block' : 'media';
     };
 
     /**
@@ -847,14 +836,6 @@ const itemsListDisplayModule = (function() {
             };
             const type_icon_class = icon_map[item.item_type] || 'fa fa-file-o';
 
-            // Compute detail URL (always details page regardless of publish status)
-            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-            const grid_id = encodeURIComponent(item.is_member_of_grid);
-            const item_id = encodeURIComponent(item.uuid);
-            const item_path = `${APP_PATH}/items/grid/item/${obj.get_grid_item_path(item.item_type)}`;
-            const item_params = `exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-            const details_url = `${item_path}/details?${item_params}`;
-
             // Compact item cell
             tr.appendChild(build_compact_item_cell({
                 title: title,
@@ -862,7 +843,8 @@ const itemsListDisplayModule = (function() {
                 type_icon_class: type_icon_class,
                 thumbnail_img: thumbnail_img,
                 is_locked: item.is_locked,
-                details_url: details_url
+                details_url: '#',
+                details_action: 'details-item'
             }));
 
             // Status cell
@@ -874,16 +856,14 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(status_td);
 
             // Actions dropdown
-            const edit_url = item.is_published === 1 ? details_url : `${item_path}/edit?${item_params}`;
-
-            const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-
             tr.appendChild(build_actions_cell({
                 actions_id: `${item.uuid}-item-actions`,
-                edit_url: edit_url,
+                edit_url: '#',
+                edit_action: item.is_published === 1 ? 'details-item' : 'edit-item',
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
-                delete_url: delete_url,
+                delete_url: '#',
+                delete_action: 'delete-item',
                 is_published: item.is_published,
                 item_title: title
             }));
@@ -1236,7 +1216,7 @@ const itemsListDisplayModule = (function() {
         } else {
             delete_html = `
                     <a class="dropdown-item text-danger"
-                       href="${opts.delete_url}"
+                       href="${opts.delete_url}"${opts.delete_action ? ` data-action="${opts.delete_action}"` : ''}
                        style="font-size: 0.875rem;">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Delete
@@ -1279,7 +1259,7 @@ const itemsListDisplayModule = (function() {
                 </button>
                 <div class="dropdown-menu item-actions-menu">
                     <a class="dropdown-item"
-                       href="${opts.edit_url}"
+                       href="${opts.edit_url}"${opts.edit_action ? ` data-action="${opts.edit_action}"` : ''}
                        style="font-size: 0.875rem;">
                         <i class="fa ${opts.edit_icon} mr-2" aria-hidden="true" style="width: 16px;"></i>
                         ${opts.edit_label}
@@ -1343,6 +1323,9 @@ const itemsListDisplayModule = (function() {
             thumb_link.className = 'item-thumbnail-link';
             thumb_link.setAttribute('aria-hidden', 'true');
             thumb_link.setAttribute('tabindex', '-1');
+            if (opts.details_action) {
+                thumb_link.dataset.action = opts.details_action;
+            }
             thumb_link.appendChild(thumbnail_element);
             flex_div.appendChild(thumb_link);
         } else {
@@ -1359,6 +1342,9 @@ const itemsListDisplayModule = (function() {
                 title_link.href = opts.details_url;
                 title_link.className = 'item-title-link';
                 title_link.setAttribute('title', opts.title);
+                if (opts.details_action) {
+                    title_link.dataset.action = opts.details_action;
+                }
 
                 const title_span = document.createElement('small');
                 title_span.className = 'item-title';

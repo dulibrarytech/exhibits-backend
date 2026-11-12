@@ -23,6 +23,12 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
 
     let obj = {};
     let styles_promise = null;
+    let message_selector = '#message';
+    let style_target = {
+        card: '#item-styles-card',
+        container: '#item-style-options',
+        name: 'styles'
+    };
 
     // ==================== STYLES DROPDOWN ====================
 
@@ -142,10 +148,10 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
 
             // Render the style presets as a radio swatch chooser.
             const sorted_keys = Object.keys(exhibit_style_map).sort();
-            helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
+            helperModule.build_item_style_swatch_options(style_target.container, sorted_keys, exhibit_style_map, STYLE_KEY_LABELS, style_target.name);
 
             // Show the styles card
-            const card_el = document.querySelector('#item-styles-card');
+            const card_el = document.querySelector(style_target.card);
             if (card_el) card_el.style.display = '';
 
         } catch (error) {
@@ -153,13 +159,76 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
         }
     }
 
+    const CHECKED_FIELDS = [
+        '#content-type',
+        '#button-text-input',
+        '#button-size',
+        '#button-url-input',
+        '#button-transparent',
+        '#card-title-input',
+        '#card-text-input',
+        '#divider-size',
+        '#emphasis-text-input',
+        '#quote-text-input',
+        '#quote-attribution-input',
+    ];
+
     // ==================== PUBLIC API ====================
     /**
      * Sets the Styles dropdown to a previously saved value (called by edit module)
      * @param {string|null} styles_value - Saved style key (e.g. "item1") or null
      */
     obj.set_item_style = function (styles_value) {
-        helperModule.check_item_style_option(styles_value);
+        helperModule.check_item_style_option(styles_value, style_target.name);
+    };
+
+    obj.set_message_selector = function (selector) {
+        message_selector = selector || '#message';
+    };
+
+    obj.load_styles = function (options = {}) {
+        style_target = { ...style_target, ...options };
+        styles_promise = fetch_and_populate_styles();
+        return styles_promise;
+    };
+
+    obj.reset = function () {
+
+        const content_type = document.querySelector('#content-type');
+        if (content_type) {
+            content_type.selectedIndex = 0;
+        }
+
+        [
+            'button-text-input',
+            'card-title-input',
+            'card-text-input',
+            'emphasis-text-input',
+            'quote-text-input'
+        ].forEach(id => {
+            rteModule.set_html(id, '');
+        });
+
+        ['#button-url-input', '#quote-attribution-input'].forEach(selector => {
+            const field = document.querySelector(selector);
+            if (field) field.value = '';
+        });
+
+        const button_size = document.querySelector('#button-size');
+        if (button_size) {
+            button_size.selectedIndex = 0;
+        }
+
+        const transparent = document.querySelector('#button-transparent');
+        if (transparent) {
+            transparent.checked = false;
+        }
+
+        obj.set_item_style('');
+
+        CHECKED_FIELDS.forEach(selector => {
+            domModule.clear_field_error(selector, selector.replace('#', '') + '-error');
+        });
     };
 
     /**
@@ -233,7 +302,7 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
 
             const show_error = (message, field_selector) => {
 
-                const message_el = document.querySelector('#message');
+                const message_el = document.querySelector(message_selector);
 
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
@@ -249,19 +318,7 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
                 errors.push({ message, field_selector });
             };
 
-            [
-                '#content-type',
-                '#button-text-input',
-                '#button-size',
-                '#button-url-input',
-                '#button-transparent',
-                '#card-title-input',
-                '#card-text-input',
-                '#divider-size',
-                '#emphasis-text-input',
-                '#quote-text-input',
-                '#quote-attribution-input',
-            ].forEach(s => {
+            CHECKED_FIELDS.forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
@@ -342,13 +399,13 @@ const itemsCommonContentBlockGridItemFormModule = (function () {
             }
 
             // Collect the selected style preset (radio "swatch chooser"); None → null.
-            item_content_block.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
+            item_content_block.styles = helperModule.get_checked_radio_button(document.getElementsByName(style_target.name));
 
             return item_content_block;
 
         } catch (error) {
             console.error('Error in get_common_content_block_item_form_fields:', error.message);
-            const message_el = document.querySelector('#message');
+            const message_el = document.querySelector(message_selector);
             if (message_el) {
                 domModule.set_alert(message_el, 'danger', error.message);
             }

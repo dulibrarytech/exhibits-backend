@@ -205,7 +205,7 @@ describe('itemsCommonContentBlockGridItemFormModule', () => {
 
             await form.fill({ content_type: 'emphasis', text: 'Words', styles: 'accent2' });
 
-            expect(check_style).toHaveBeenCalledWith('accent2');
+            expect(check_style).toHaveBeenCalledWith('accent2', 'styles');
         });
 
         it('ignores a saved style that is not a style name', async () => {
@@ -223,6 +223,112 @@ describe('itemsCommonContentBlockGridItemFormModule', () => {
             await form.fill(null);
 
             expect(value_of('#content-type')).toBe('');
+        });
+    });
+
+    describe('reset', () => {
+
+        it('empties a filled form back to no type chosen', async () => {
+            await form.fill({
+                content_type: 'button',
+                text: 'Visit',
+                url: 'https://library.du.edu',
+                size: 'large',
+                transparent: 1,
+                attribution: 'A. Person',
+            });
+
+            form.reset();
+
+            expect(value_of('#content-type')).toBe('');
+            expect(value_of('#button-text-input')).toBe('');
+            expect(value_of('#card-title-input')).toBe('');
+            expect(value_of('#quote-text-input')).toBe('');
+            expect(value_of('#button-url-input')).toBe('');
+            expect(value_of('#button-size')).toBe('');
+            expect(value_of('#quote-attribution-input')).toBe('');
+            expect(document.querySelector('#button-transparent').checked).toBe(false);
+            expect(globalThis.domModule.clear_field_error).toHaveBeenCalledWith('#content-type', 'content-type-error');
+            expect(form.get_common_content_block_item_form_fields()).toBe(false);
+        });
+    });
+
+    describe('set_message_selector', () => {
+
+        it('sends the form message to the place it is given', () => {
+            const popup_message = document.createElement('div');
+            popup_message.id = 'popup-message';
+            document.body.appendChild(popup_message);
+
+            form.set_message_selector('#popup-message');
+            form.get_common_content_block_item_form_fields();
+
+            expect(globalThis.domModule.set_alert).toHaveBeenLastCalledWith(
+                popup_message, 'danger', 'Please select a content block type',
+            );
+
+            form.set_message_selector();
+        });
+    });
+
+    describe('load_styles', () => {
+
+        afterEach(() => {
+            delete globalThis.authModule;
+            delete globalThis.endpointsModule;
+            delete globalThis.httpModule;
+        });
+
+        it('builds the style choices where it is told and reads only that group', async () => {
+            window.history.pushState({}, '', '/exhibits-dashboard/items/grid/items?exhibit_id=exhibit-1');
+            document.body.insertAdjacentHTML('beforeend', `
+                <input type="radio" name="styles" value="item2" checked />
+                <div id="popup-styles-card" style="display: none;">
+                    <div id="popup-style-options"></div>
+                </div>`);
+
+            globalThis.authModule = { get_user_token: () => 'secret-token' };
+            globalThis.endpointsModule = {
+                get_exhibits_endpoints: () => ({
+                    exhibits: { exhibit_records: { endpoints: { get: { endpoint: '/api/exhibits/:exhibit_id' } } } },
+                }),
+            };
+            globalThis.httpModule = {
+                req: vi.fn(async () => ({
+                    status: 200,
+                    data: { data: { styles: { exhibit: {
+                        accent1: { backgroundColor: '#111111', color: '#ffffff' },
+                        accent2: { backgroundColor: '#222222', color: '#eeeeee' },
+                        item1: { color: '#333333' },
+                    } } } },
+                })),
+            };
+
+            await form.load_styles({
+                card: '#popup-styles-card',
+                container: '#popup-style-options',
+                name: 'popup_styles',
+            });
+
+            const radios = Array.from(document.querySelectorAll('#popup-style-options input[type="radio"]'));
+
+            expect(radios.map((radio) => radio.value)).toEqual(['accent1', 'accent2']);
+            expect(radios.every((radio) => radio.name === 'popup_styles')).toBe(true);
+            expect(document.querySelector('#popup-styles-card').style.display).toBe('');
+            expect(document.querySelector('input[name="styles"][value="item2"]').checked).toBe(true);
+
+            await form.fill({ content_type: 'emphasis', text: 'Words', styles: 'accent2' });
+
+            expect(form.get_common_content_block_item_form_fields()).toMatchObject({
+                content_type: 'emphasis',
+                styles: 'accent2',
+            });
+            expect(document.querySelector('input[name="styles"][value="item2"]').checked).toBe(true);
+
+            form.reset();
+
+            expect(document.querySelector('#popup-style-options input:checked').value).toBe('accent1');
+            expect(document.querySelector('input[name="styles"][value="item2"]').checked).toBe(true);
         });
     });
 });

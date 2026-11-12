@@ -146,6 +146,7 @@ describe('itemsCommonGridItemFormModule by item kind', () => {
             expect(document.querySelector('#is-required-text').innerHTML).toBe(REQUIRED_LABEL);
             expect(display_of('#is-media-only-description')).toBe('none');
             expect(display_of('#is-media-only-caption')).toBe('none');
+            expect(display_of('#embed-item-group')).toBe('none');
         });
 
         it('shows the media-only fields and drops the required badge for a media item', () => {
@@ -154,6 +155,7 @@ describe('itemsCommonGridItemFormModule by item kind', () => {
             expect(document.querySelector('#is-required-text').innerHTML).toBe('Exhibit Text');
             expect(display_of('#is-media-only-description')).toBe('');
             expect(display_of('#is-media-only-caption')).toBe('');
+            expect(display_of('#embed-item-group')).toBe('');
             expect(document.querySelector('#item-media-card .card-header #created')).not.toBeNull();
             expect(globalThis.helperModule.bind_embed_description)
                 .toHaveBeenCalledWith('embed-item', 'item-description-input');
@@ -250,6 +252,76 @@ describe('itemsCommonGridItemFormModule by item kind', () => {
 
             expect(value_of('#item-title-input')).toBe('');
             expect(value_of('#item-media-uuid')).toBe('');
+        });
+    });
+
+    describe('reset', () => {
+
+        it('empties a filled media form and restores the default choices', () => {
+            form.fill(MEDIA_RECORD, 'media');
+
+            form.reset();
+
+            expect(value_of('#item-title-input')).toBe('');
+            expect(value_of('#item-text-input')).toBe('');
+            expect(value_of('#item-description-input')).toBe('');
+            expect(value_of('#item-caption-input')).toBe('');
+            expect(value_of('#item-media-uuid')).toBe('');
+            expect(value_of('#item-media-uuid-prev')).toBe('');
+            expect(value_of('#item-media-type')).toBe('');
+            expect(value_of('#thumbnail-media-uuid')).toBe('');
+            expect(document.querySelector('#item-media-display img')).toBeNull();
+            expect(document.querySelector('#item-media-display .media-placeholder')).not.toBeNull();
+            expect(display_of('#item-media-trash')).toBe('none');
+            expect(checked_value('layout')).toBe('media_top');
+            expect(checked_value('media_width')).toBe('50');
+            expect(document.querySelector('#embed-item').checked).toBe(false);
+        });
+
+        it('leaves the media where it is linked', () => {
+            form.fill(MEDIA_RECORD, 'media');
+
+            form.reset();
+
+            expect(globalThis.mediaPickerModule.remove_exhibit_association).not.toHaveBeenCalled();
+        });
+
+        it('lets the next item take its caption from its media again', () => {
+            form.prepare('media');
+            document.querySelector('#pick-item-media-btn').click();
+            const pick = globalThis.mediaPickerModule.open.mock.calls[0][0].on_select;
+            const caption = document.querySelector('#item-caption-input');
+
+            caption.value = 'Typed by hand';
+            caption.dispatchEvent(new Event('input'));
+            pick({ uuid: 'media-2', description: 'From the first media' });
+            expect(caption.value).toBe('Typed by hand');
+
+            form.reset();
+            pick({ uuid: 'media-3', description: 'From the next media' });
+
+            expect(caption.value).toBe('From the next media');
+        });
+    });
+
+    describe('set_message_selector', () => {
+
+        it('sends the form message to the place it is given, and back to the page by default', () => {
+            const popup_message = document.createElement('div');
+            popup_message.id = 'popup-message';
+            document.body.appendChild(popup_message);
+
+            form.set_message_selector('#popup-message');
+            form.collect('text');
+            expect(globalThis.domModule.set_alert).toHaveBeenLastCalledWith(
+                popup_message, 'danger', 'Please enter "Text" for this item',
+            );
+
+            form.set_message_selector();
+            form.collect('text');
+            expect(globalThis.domModule.set_alert).toHaveBeenLastCalledWith(
+                document.querySelector('#message'), 'danger', 'Please enter "Text" for this item',
+            );
         });
     });
 

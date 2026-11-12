@@ -77,12 +77,12 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         // Module redirects to /items/grid/edit?... after success. Use
         // 'commit' to avoid a CDN-stall flake on the destination page.
         await page.waitForURL(
-            new RegExp(`${APP_PATH}/items/grid/edit`),
+            new RegExp(`${APP_PATH}/items/grid/items`),
             { waitUntil: 'commit' }
         );
         const url = new URL(page.url());
         expect(url.searchParams.get('exhibit_id')).toBe(EXHIBIT_UUID);
-        expect(url.searchParams.get('item_id')).toBe('grid-uuid-new');
+        expect(url.searchParams.get('grid_id')).toBe('grid-uuid-new');
     });
 
     test('blocks the save and shows an alert when internal name is empty', async ({ page }) => {

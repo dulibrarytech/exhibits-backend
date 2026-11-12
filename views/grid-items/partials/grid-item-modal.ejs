@@ -1,0 +1,166 @@
+<div class="modal fade" id="grid-item-modal" tabindex="-1" role="dialog"
+     aria-labelledby="grid-item-modal-label" aria-hidden="true"
+     data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="display: flex; align-items: center;">
+                <h2 class="modal-title h5" id="grid-item-modal-label" style="margin-bottom: 0;">Add grid item</h2>
+                <button type="button" class="close" id="grid-item-modal-close-btn" aria-label="Close" style="margin: 0; padding: 0.75rem;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="grid-item-modal-message"></div>
+                <p id="grid-item-modal-meta" class="text-muted mb-2" style="font-size: x-small"></p>
+                <ul class="nav nav-tabs" id="grid-item-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active"
+                                id="grid-item-tab-media"
+                                data-toggle="tab"
+                                data-target="#grid-item-pane-media"
+                                data-kind="media"
+                                type="button"
+                                role="tab"
+                                aria-controls="grid-item-pane-media"
+                                aria-selected="true">
+                            Media
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="grid-item-tab-text"
+                                data-toggle="tab"
+                                data-target="#grid-item-pane-text"
+                                data-kind="text"
+                                type="button"
+                                role="tab"
+                                aria-controls="grid-item-pane-text"
+                                aria-selected="false">
+                            Text
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link"
+                                id="grid-item-tab-content-block"
+                                data-toggle="tab"
+                                data-target="#grid-item-pane-content-block"
+                                data-kind="content_block"
+                                type="button"
+                                role="tab"
+                                aria-controls="grid-item-pane-content-block"
+                                aria-selected="false">
+                            Content block
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="grid-item-tab-content">
+                    <div class="tab-pane fade show active pt-4"
+                         id="grid-item-pane-media"
+                         role="tabpanel"
+                         aria-labelledby="grid-item-tab-media"
+                         tabindex="0">
+                        <div id="grid-item-form">
+                            <div id="item-media-card" class="card">
+                                <div class="card-header">
+                                    <strong class="card-title mb-3">Item Media</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6 col-md-6">
+                                            <div id="item-media-display" class="media-preview-area">
+                                                <div class="media-placeholder">
+                                                    <i class="fa fa-file-o" aria-hidden="true"></i>
+                                                    <span>No media selected</span>
+                                                </div>
+                                            </div>
+                                            <p>
+                                                <span id="item-media-filename-display"></span>&nbsp;&nbsp;
+                                                <span><a id="item-media-trash" title="Remove media" href="#"
+                                                         style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
+                                            </p>
+                                            <input type="hidden" id="item-media-uuid" name="item_media_uuid">
+                                            <input type="hidden" id="item-media-uuid-prev" name="item_media_uuid_prev">
+                                            <input type="hidden" id="item-media-type" name="item_media_type">
+                                            <input type="hidden" id="item-mime-type" name="item_mime_type">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                    id="pick-item-media-btn">
+                                                <i class="fa fa-file-o" aria-hidden="true"></i>&nbsp;Select Media
+                                            </button>
+                                            <%- include('../../partials/media-name-display.ejs', { input_id: 'item-media-name-display' }); %>
+                                        </div>
+                                        <div class="col-6 col-md-6">
+                                            <div id="thumbnail-image-display" class="media-preview-area">
+                                                <div class="media-placeholder">
+                                                    <i class="fa fa-picture-o" aria-hidden="true"></i>
+                                                    <span>No image selected</span>
+                                                </div>
+                                            </div>
+                                            <p>
+                                                <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
+                                                <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
+                                                         style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
+                                            </p>
+                                            <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                                            <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
+                                            <button type="button" class="btn btn-outline-primary"
+                                                    id="pick-thumbnail-btn"
+                                                    data-media-type-filter="image">
+                                                <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <%- include('../../partials/item-caption.ejs'); %>
+                                    <%- include('../../partials/embed-item.ejs'); %>
+                                </div>
+                            </div>
+
+                            <%- include('item-grid-item-data-card.ejs', { in_modal: true }); %>
+
+                            <%- include('item-layout-card.ejs') %>
+                            <input type="radio" name="layout" id="item-layout-text-only" value="text_only" hidden>
+
+                            <div id="item-media-widths-card" class="card">
+                                <div class="card-header">
+                                    <strong class="card-title mb-3">Item Media Widths</strong>
+                                </div>
+                                <div class="card-body">
+                                    <%- include('../../standard-items/partials/item-media-widths.ejs'); %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade pt-4"
+                         id="grid-item-pane-text"
+                         role="tabpanel"
+                         aria-labelledby="grid-item-tab-text"
+                         tabindex="0">
+                    </div>
+                    <div class="tab-pane fade pt-4"
+                         id="grid-item-pane-content-block"
+                         role="tabpanel"
+                         aria-labelledby="grid-item-tab-content-block"
+                         tabindex="0">
+                        <%- include('item-grid-item-content-block-data-card.ejs', { in_modal: true }); %>
+                        <%- include('content-block-styles.ejs', { in_modal: true }); %>
+                    </div>
+                </div>
+                <input type="hidden" id="is-published" name="is_published">
+            </div>
+            <div class="modal-footer">
+                <span id="grid-item-modal-published-note" class="alert alert-warning mr-auto mb-0 py-1" hidden><i class="fa fa-warning" aria-hidden="true"></i> Changes made to published exhibit grid items are immediately visible to the public</span>
+                <button type="button" class="btn btn-secondary" id="grid-item-unlock-btn" hidden>
+                    <i class="fa fa-unlock-alt" aria-hidden="true"></i>&nbsp;&nbsp;Unlock
+                </button>
+                <button type="button" class="btn btn-primary" id="grid-item-edit-btn" hidden>
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+                </button>
+                <button type="button" class="btn btn-primary" id="grid-item-save-btn">
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save item
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="grid-item-cancel-btn">
+                    <i class="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;<span class="btn-label">Cancel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

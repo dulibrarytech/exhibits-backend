@@ -15,12 +15,34 @@
              ("Moved <title> to position <n> of <total>"). Visually hidden;
              populated by reorderModule on each successful keyboard move. -->
         <div id="reorder-status" class="visually-hidden" role="status" aria-live="polite"></div>
-        <h1><span id="exhibit-title"></span></h1>
+        <h1><span id="exhibit-title"></span> - Grid</h1>
+
+        <%- include('partials/item-grid-data-card.ejs'); %>
+        <%- include('../partials/item-styles-card.ejs'); %>
+
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="edit-grid-btn" hidden>
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+                </button>
+                <button class="btn btn-primary" type="button" id="save-item-btn">
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
+                </button>
+                <button class="btn btn-outline-secondary ms-2" type="button" id="cancel-exhibit-btn">
+                    <i class="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;Cancel
+                </button>
+                <span id="grid-published-note" class="alert alert-warning" hidden><i class="fa fa-warning" aria-hidden="true"></i> Changes made to published exhibit grids are immediately visible to the public</span>
+                <span id="grid-no-permission-note" class="alert alert-info" hidden><i class="fa fa-info-circle" aria-hidden="true"></i> You do not have permission to update this grid.</span>
+            </div>
+            <div class="card-footer text-muted"><small>Grid</small></div>
+        </div>
+
         <div id="item-card" class="card">
             <div class="card-header">
-                <strong class="card-title mb-3">Item List</strong>
+                <strong class="card-title mb-3">Grid Items</strong>
             </div>
             <div class="card-body">
+                <div id="grid-items-message" style="position: sticky; top: 65px; z-index: 2"></div>
                 <table id="grid-items" class="display">
                     <thead>
                     <tr>
@@ -37,6 +59,9 @@
     </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
+    <%- include('partials/grid-item-modal.ejs'); %>
+    <%- include('partials/grid-item-delete-modal.ejs'); %>
+    <%- include('../partials/media-picker-modal.ejs'); %>
 </div>
 <!-- DataTables Styles - Match Exhibits List -->
 <style>
@@ -57,13 +82,18 @@
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.grid.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.grid.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.list.displays.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.content.block.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/grid.item.modal.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/grid.page.module.min.js?<%=build_version%>"></script>
 <script>
     (async function () {
-    navModule.wire_nav_links();
-        await itemsGridModule.init();
-        await itemsGridModule.display_grid_items();
+        navModule.wire_nav_links();
+        await gridPageModule.init();
     })();
 </script>
 </body>
