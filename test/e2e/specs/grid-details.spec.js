@@ -69,7 +69,6 @@ test.describe('Grid page — published grid (grid.page.module)', () => {
 
         await expect(page.locator('#edit-grid-btn')).toBeVisible();
         await expect(page.locator('#save-item-btn')).toBeHidden();
-        await expect(page.locator('#cancel-exhibit-btn')).toBeHidden();
         await expect(page.locator('#grid-published-note')).toContainText(
             'Changes made to published exhibit grids are immediately visible to the public'
         );
@@ -87,7 +86,7 @@ test.describe('Grid page — published grid (grid.page.module)', () => {
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Draft grid');
         await expect(page.locator('#grid-internal-name-input')).toBeEnabled();
         await expect(page.locator('#save-item-btn')).toBeVisible();
-        await expect(page.locator('#cancel-exhibit-btn')).toBeVisible();
+        await expect(page.locator('#cancel-exhibit-btn')).toHaveCount(0);
         await expect(page.locator('#edit-grid-btn')).toBeHidden();
         await expect(page.locator('#grid-published-note')).toBeHidden();
         await expect(page.locator('#grid-no-permission-note')).toBeHidden();
@@ -120,6 +119,7 @@ test.describe('Grid page — published grid (grid.page.module)', () => {
         await expect(page.locator('#grid-columns')).toBeEnabled();
         await expect(page.locator('#grid-text-input .ql-editor')).toHaveAttribute('contenteditable', 'true');
         await expect(page.locator('#save-item-btn')).toBeVisible();
+        await expect(page.locator('#cancel-exhibit-btn')).toHaveCount(0);
         await expect(page.locator('#edit-grid-btn')).toBeHidden();
         await expect(page.locator('#grid-published-note')).toBeVisible();
         expect(new URL(page.url()).pathname).toBe(`${APP_PATH}/items/grid/items`);
@@ -161,7 +161,6 @@ test.describe('Grid page — published grid (grid.page.module)', () => {
         await expect(page.locator('#grid-internal-name-input')).toBeDisabled();
         await expect(page.locator('#grid-columns')).toBeDisabled();
         await expect(page.locator('#save-item-btn')).toBeHidden();
-        await expect(page.locator('#cancel-exhibit-btn')).toBeHidden();
         await expect(page.locator('#edit-grid-btn')).toBeHidden();
         await expect(page.locator('table#grid-items tbody tr')).toHaveCount(3);
     });

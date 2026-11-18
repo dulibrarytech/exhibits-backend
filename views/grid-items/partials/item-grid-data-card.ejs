@@ -1,4 +1,5 @@
-<div id="grid-data-card" class="card">
+<% const _compact = typeof compact !== 'undefined' && compact; %>
+<div id="grid-data-card" class="card<%= _compact ? ' flex-fill' : '' %>">
     <div class="card-header">
         <strong class="card-title mb-3">Item Data</strong>
         <div class="btn-group float-right">
@@ -7,26 +8,23 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-8 col-md-8">
+            <div class="<%= _compact ? 'col-md-6' : 'col-8 col-md-8' %>">
                 <div class="row form-group">
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px"><span id="grid-text-input-label">Text</span>
 
                         </div>
-                        <div id="grid-text-input" aria-labelledby="grid-text-input-label" class="rte-container" data-rte="full"></div>
+                        <div id="grid-text-input" aria-labelledby="grid-text-input-label" class="rte-container<%= _compact ? ' rte-modal' : '' %>" data-rte="full"></div>
                     </div>
                 </div>
-                <div class="row form-group">
-                    <div class="col-12">
-                        <label for="grid-internal-name-input" class="form-text text-muted" style="font-size: 17px">Internal Name <span class="badge badge-required">Required</span>
-                        </label>
-                        <small id="grid-internal-name-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Does not display on the exhibit; for internal use only.</em></small>
-                        <input type="text" id="grid-internal-name-input" name="grid_internal_name" class="form-control"
-                               required maxlength="255" aria-describedby="grid-internal-name-hint">
-                    </div>
-                </div>
+                <% if (!_compact) { %>
+                <%- include('grid-internal-name-field.ejs'); %>
+                <% } %>
             </div>
-            <div class="col-4 col-md-4">
+            <div class="<%= _compact ? 'col-md-6' : 'col-4 col-md-4' %>">
+                <% if (_compact) { %>
+                <%- include('grid-internal-name-field.ejs'); %>
+                <% } %>
                 <div class="row form-group">
                     <div class="col-12">
                         <label for="grid-columns" class="form-text text-muted" style="font-size: 17px">Grid Columns <span class="badge badge-required">Required</span>

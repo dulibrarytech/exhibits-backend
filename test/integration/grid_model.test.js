@@ -891,11 +891,27 @@ describe('Grid Model Integration Tests', () => {
 
             expect(result.status).toBe(422);
             expect(result.message).toBe(
-                'This grid is published and has 3 published items. ' +
-                'Publish more of its items before changing it to 4 columns.'
+                'This grid is published and currently contains 3 published items. ' +
+                'Publish additional items before changing the grid to 4 columns.'
             );
             expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
             expect(INDEXER_MODEL.reindex_grid_record).not.toHaveBeenCalled();
+        });
+
+        test.each([
+            [2, 3, '2 published items', '3 columns'],
+            [1, 4, '1 published item', '4 columns'],
+            [0, 3, '0 published items', '3 columns']
+        ])('names %i published and a raise to %i columns', async (published_count, columns, items_text, columns_text) => {
+            arrange({ is_published: 1, stored_columns: 2, item_count: 4, published_count });
+
+            const result = await save({ columns });
+
+            expect(result.status).toBe(422);
+            expect(result.message).toBe(
+                `This grid is published and currently contains ${items_text}. ` +
+                `Publish additional items before changing the grid to ${columns_text}.`
+            );
         });
 
         test('allows the raise once enough items are published', async () => {

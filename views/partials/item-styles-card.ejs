@@ -1,10 +1,11 @@
-<div id="item-styles-card" class="card" style="display: none;">
+<% const _compact = typeof compact !== 'undefined' && compact; %>
+<div id="item-styles-card" class="card<%= _compact ? ' flex-fill' : '' %>" style="display: none;">
     <div class="card-header">
         <strong class="card-title">Styles</strong>
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="<%= _compact ? 'col-sm-6 col-xl-12' : 'col-sm-6' %>">
                 <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Applies an exhibit style preset to this item</em></small>
                 <%# Preset options are built by helperModule.build_item_style_swatch_options,
                     which default-checks the first preset — there is no "None" option;
@@ -13,7 +14,7 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-3<%= _compact ? ' align-items-end' : '' %>">
             <div class="col-md-6 style-field mb-3">
                 <label for="margins">Margins</label>
                 <select class="form-control"

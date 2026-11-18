@@ -20,7 +20,6 @@ const gridPageModule = (function () {
 
     'use strict';
 
-    const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     const ALLOWED_COLUMNS = [2, 3, 4];
     const MINIMUM_ITEMS_DELETE_MESSAGE = 'Grids cannot contain less items than there are columns. Reduce the amount of columns to delete items.';
@@ -34,7 +33,6 @@ const gridPageModule = (function () {
     let obj = {};
     let ids = { exhibit_id: null, grid_id: null };
     let can_edit = null;
-    let form_snapshot = '';
     let pending_delete = null;
     let is_saving = false;
     let is_deleting = false;
@@ -149,20 +147,6 @@ const gridPageModule = (function () {
         domModule.set_value('#text-align', record.text_alignment ?? 'left');
     }
 
-    function read_form_state() {
-
-        const style = document.querySelector('#item-style-options input:checked');
-
-        return JSON.stringify([
-            rteModule.get_html('grid-text-input'),
-            domModule.get_value('#grid-internal-name-input'),
-            domModule.get_value('#grid-columns'),
-            style === null ? '' : style.value,
-            domModule.get_value('#margins'),
-            domModule.get_value('#text-align')
-        ]);
-    }
-
     function set_form_read_only(is_read_only) {
 
         document.querySelectorAll('#grid-data-card input, #grid-data-card select, #item-styles-card input, #item-styles-card select').forEach(field => {
@@ -172,7 +156,6 @@ const gridPageModule = (function () {
         rteModule.set_enabled('grid-text-input', !is_read_only);
 
         set_hidden('#save-item-btn', is_read_only);
-        set_hidden('#cancel-exhibit-btn', is_read_only);
     }
 
     async function load_form() {
@@ -197,7 +180,6 @@ const gridPageModule = (function () {
         set_hidden('#edit-grid-btn', !offers_edit);
         set_hidden('#grid-published-note', !offers_edit);
         set_hidden('#grid-no-permission-note', can_edit);
-        form_snapshot = read_form_state();
 
         return true;
     }
@@ -268,18 +250,6 @@ const gridPageModule = (function () {
         } finally {
             is_saving = false;
         }
-    }
-
-    function cancel() {
-
-        if (read_form_state() !== form_snapshot
-            && window.confirm('Discard unsaved changes and return to the exhibit item list?') === false) {
-            return false;
-        }
-
-        window.location.href = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(ids.exhibit_id)}`;
-
-        return true;
     }
 
     async function add_item(event) {
@@ -471,7 +441,6 @@ const gridPageModule = (function () {
         });
 
         domModule.on('#save-item-btn', 'click', save_grid);
-        domModule.on('#cancel-exhibit-btn', 'click', cancel);
         domModule.on('#edit-grid-btn', 'click', edit_published_grid);
         domModule.on('#add-grid-item-link', 'click', add_item);
         domModule.on('#grid-item-list', 'click', on_row_action);

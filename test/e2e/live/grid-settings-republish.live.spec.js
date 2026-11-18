@@ -132,8 +132,8 @@ test.describe('Published grid settings (live)', () => {
 
         expect(await save_and_wait(page)).toBe(422);
         await expect(page.locator('#message')).toContainText(
-            'This grid is published and has 3 published items. '
-            + 'Publish more of its items before changing it to 4 columns.'
+            'This grid is published and currently contains 3 published items. '
+            + 'Publish additional items before changing the grid to 4 columns.'
         );
         await expect(page.locator('#grid-columns')).toHaveAttribute('aria-invalid', 'true');
         expect((await saved_grid(request)).columns).toBe(3);

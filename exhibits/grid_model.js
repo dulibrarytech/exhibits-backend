@@ -152,8 +152,8 @@ const INVALID_FIELDS_MESSAGE = 'Some required information is missing or not vali
     'Check the marked fields and try again.';
 
 const build_published_columns_message = (columns, published_count) => {
-    return `This grid is published and has ${published_count} published item${published_count === 1 ? '' : 's'}. ` +
-        `Publish more of its items before changing it to ${columns} columns.`;
+    return `This grid is published and currently contains ${published_count} published item${published_count === 1 ? '' : 's'}. ` +
+        `Publish additional items before changing the grid to ${columns} columns.`;
 };
 
 const get_column_raise_refusal = async (exhibit_id, grid_id, columns) => {
