@@ -1,0 +1,33 @@
+<% const _compact = typeof compact !== 'undefined' && compact; %>
+<div class="row">
+    <div class="<%= _compact ? 'col-sm-6 col-xl-12' : 'col-sm-6' %>">
+        <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Applies an exhibit style preset to this item</em></small>
+        <%# Preset options are built by helperModule.build_item_style_swatch_options,
+            which default-checks the first preset — there is no "None" option;
+            every item carries a style preset. -%>
+        <div id="item-style-options" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
+        </div>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-6 style-field mb-3">
+        <label for="margins">Margins</label>
+        <select class="form-control"
+                id="margins"
+                name="margins">
+            <option value="small">Small</option>
+            <option value="medium" selected>Medium</option>
+            <option value="large">Large</option>
+        </select>
+    </div>
+    <div class="col-md-6 style-field mb-3">
+        <label for="text-align">Text Alignment</label>
+        <select class="form-control"
+                id="text-align"
+                name="text_align">
+            <option value="left" selected>Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
+    </div>
+</div>

@@ -25,13 +25,10 @@ const THREE_PRESETS = {
     },
 };
 
-const ONE_PRESET = {
-    exhibit: {
-        item1: THREE_PRESETS.exhibit.item1,
-    },
-};
-
 const LONG_TEXT = `<p>${'The club kept careful records of every outing. '.repeat(40).trim()}</p>`;
+
+const REFUSAL = 'This grid is published and currently contains 3 published items. '
+    + 'Publish additional items before changing the grid to 4 columns.';
 
 function grid_items(count) {
     const items = [];
@@ -50,7 +47,20 @@ async function box(page, selector) {
     return found;
 }
 
-async function open_grid_page(page, { width, height, text = 'Short grid text', presets = THREE_PRESETS }) {
+const bottom = (found) => found.y + found.height;
+const middle = (found) => found.y + found.height / 2;
+
+async function open_grid_page(page, options) {
+    const {
+        width,
+        height,
+        text = 'Short grid text',
+        presets = THREE_PRESETS,
+        is_published = 0,
+        update_status = 201,
+        update_body,
+    } = options;
+
     await page.setViewportSize({ width, height });
     await seedAuth(page);
     await stubDashboardDeps(page, {
@@ -59,89 +69,205 @@ async function open_grid_page(page, { width, height, text = 'Short grid text', p
     await stubGridItemsApi(page, { exhibitId: EXHIBIT_UUID, gridId: GRID_UUID, items: grid_items(3) });
     await stubGridRecordApi(page, {
         exhibitId: EXHIBIT_UUID,
-        record: gridRecordFixture({ uuid: GRID_UUID, text, columns: 3 }),
+        record: gridRecordFixture({ uuid: GRID_UUID, text, columns: 3, is_published }),
+        updateStatus: update_status,
+        updateBody: update_body,
     });
 
     await page.goto(GRID_PAGE_URL);
 
     await expect(page.locator('table#grid-items tbody tr')).toHaveCount(3);
-    await expect(page.locator('#item-style-options .item-style-option')).toHaveCount(Object.keys(presets.exhibit).length);
+    await expect(page.locator('#item-style-options .item-style-option')).toHaveCount(presets === null ? 0 : Object.keys(presets.exhibit).length);
     await expect(page.locator('#grid-text-input .ql-editor')).not.toBeEmpty();
 }
 
-test.describe('Grid page — compact grid form', () => {
+test.describe('Grid page — one Item Data card', () => {
 
-    test('on a 1366 by 768 screen the two cards share a row and the list starts on the first screen', async ({ page }) => {
+    test('the whole grid form is one card, with Styles and Save inside it', async ({ page }) => {
         await open_grid_page(page, { width: 1366, height: 768 });
 
-        const data_card = await box(page, '#grid-data-card');
-        const styles_card = await box(page, '#item-styles-card');
-        const save_bar = await box(page, '#item-submit-card');
-
-        expect(styles_card.y).toBeCloseTo(data_card.y, 0);
-        expect(styles_card.height).toBeCloseTo(data_card.height, 0);
-        expect(styles_card.x).toBeGreaterThanOrEqual(data_card.x + data_card.width);
-        expect(save_bar.y).toBeGreaterThanOrEqual(data_card.y + data_card.height);
-        expect(data_card.x).toBeCloseTo(save_bar.x, 0);
-        expect(styles_card.x + styles_card.width).toBeCloseTo(save_bar.x + save_bar.width, 0);
-
-        const chooser = await box(page, '#item-style-options');
-        expect(chooser.width).toBeGreaterThan(styles_card.width / 2);
-
+        await expect(page.locator('main .card')).toHaveCount(2);
+        await expect(page.locator('#item-submit-card')).toHaveCount(0);
+        await expect(page.locator('#grid-data-card #item-styles-card')).toBeVisible();
+        await expect(page.locator('#grid-data-card #save-item-btn')).toBeVisible();
         await expect(page.locator('#item-card .card-title')).toBeInViewport({ ratio: 1 });
-        await expect(page.locator('table#grid-items thead')).toBeInViewport({ ratio: 1 });
 
         const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(sideways).toBeLessThanOrEqual(0);
     });
 
-    test('with a single style preset the Styles card is stretched to the height of Item Data', async ({ page }) => {
-        await open_grid_page(page, { width: 1366, height: 768, presets: ONE_PRESET });
-
-        const data_card = await box(page, '#grid-data-card');
-        const styles_card = await box(page, '#item-styles-card');
-        const last_styles_field = await box(page, '#margins');
-        const styles_content_bottom = last_styles_field.y + last_styles_field.height;
-        const item_data_bottom = data_card.y + data_card.height;
-
-        expect(styles_content_bottom).toBeLessThan(item_data_bottom - 60);
-        expect(styles_card.height).toBeCloseTo(data_card.height, 0);
-    });
-
-    test('Internal Name sits beside the text, above Grid Columns', async ({ page }) => {
+    test('the Text box spans Internal Name and Grid Columns, with Styles to its right', async ({ page }) => {
         await open_grid_page(page, { width: 1366, height: 768 });
 
         const text = await box(page, '#grid-text-input');
         const internal_name = await box(page, '#grid-internal-name-input');
         const columns = await box(page, '#grid-columns');
+        const styles = await box(page, '#item-styles-card');
 
-        expect(internal_name.x).toBeGreaterThanOrEqual(text.x + text.width);
-        expect(internal_name.y + internal_name.height).toBeLessThanOrEqual(columns.y);
-        expect(columns.x).toBeCloseTo(internal_name.x, 0);
+        expect(internal_name.x).toBeCloseTo(text.x, 0);
+        expect(columns.x + columns.width).toBeCloseTo(text.x + text.width, 0);
+        expect(internal_name.y).toBeGreaterThan(bottom(text));
+        expect(text.width).toBeGreaterThan(internal_name.width + columns.width);
+        expect(styles.x).toBeGreaterThanOrEqual(text.x + text.width);
+        expect(styles.y).toBeLessThan(text.y);
+
+        const chooser = await box(page, '#item-style-options');
+        expect(chooser.width).toBeGreaterThan(styles.width / 2);
+
+        const text_label = await box(page, 'div.form-text:has(#grid-text-input-label)');
+        const styles_label = await box(page, '#item-styles-card > .form-text');
+        expect(styles_label.y).toBeCloseTo(text_label.y, 0);
+        expect(styles_label.height).toBeCloseTo(text_label.height, 0);
     });
 
-    test('below 1200 wide the Styles card drops under Item Data', async ({ page }) => {
-        await open_grid_page(page, { width: 1199, height: 800 });
+    test('Internal Name and Grid Columns line up, each with its hint above the field', async ({ page }) => {
+        await open_grid_page(page, { width: 1366, height: 768 });
 
-        const data_card = await box(page, '#grid-data-card');
-        const styles_card = await box(page, '#item-styles-card');
+        const name_label = await box(page, 'label[for="grid-internal-name-input"]');
+        const name_hint = await box(page, '#grid-internal-name-hint');
+        const internal_name = await box(page, '#grid-internal-name-input');
+        const columns_label = await box(page, 'label[for="grid-columns"]');
+        const columns_hint = await box(page, '#grid-columns-hint');
+        const columns = await box(page, '#grid-columns');
 
-        expect(styles_card.x).toBeCloseTo(data_card.x, 0);
-        expect(styles_card.width).toBeCloseTo(data_card.width, 0);
-        expect(styles_card.y).toBeGreaterThanOrEqual(data_card.y + data_card.height);
+        expect(bottom(name_hint)).toBeLessThanOrEqual(internal_name.y);
+        expect(bottom(columns_hint)).toBeLessThanOrEqual(columns.y);
+        expect(columns_hint.y).toBeGreaterThanOrEqual(bottom(columns_label));
+        expect(columns_label.y).toBeCloseTo(name_label.y, 0);
+        expect(columns.y).toBeCloseTo(internal_name.y, 0);
+        expect(columns.x).toBeGreaterThan(internal_name.x + internal_name.width);
+        expect(columns.width).toBeLessThan(internal_name.width);
+
+        await expect(page.locator('#grid-columns-hint .fa-exclamation-circle')).toHaveCount(1);
+        await expect(page.locator('#grid-columns-hint em')).toHaveText('Select the number of columns to display (2–4).');
     });
 
-    test('the two style dropdowns stay level when the open side menu squeezes the form', async ({ page }) => {
-        await page.addInitScript(() => {
-            window.localStorage.setItem('exhibits_sidebar_collapsed', '0');
-        });
+    test('at 1,270 wide both hints fit on one line, so labels and fields line up', async ({ page }) => {
+        await open_grid_page(page, { width: 1270, height: 800 });
+
+        const name_label = await box(page, 'label[for="grid-internal-name-input"]');
+        const name_hint = await box(page, '#grid-internal-name-hint');
+        const internal_name = await box(page, '#grid-internal-name-input');
+        const columns_label = await box(page, 'label[for="grid-columns"]');
+        const columns_hint = await box(page, '#grid-columns-hint');
+        const columns = await box(page, '#grid-columns');
+
+        expect(name_hint.height).toBeCloseTo(columns_hint.height, 0);
+        expect(columns_label.y).toBeCloseTo(name_label.y, 0);
+        expect(columns.y).toBeCloseTo(internal_name.y, 0);
+    });
+
+    test('where Internal Name\'s hint wraps, the two fields still line up', async ({ page }) => {
         await open_grid_page(page, { width: 1200, height: 800 });
 
-        const margins = await box(page, '#margins');
-        const text_align = await box(page, '#text-align');
+        const name_hint = await box(page, '#grid-internal-name-hint');
+        const columns_hint = await box(page, '#grid-columns-hint');
+        const internal_name = await box(page, '#grid-internal-name-input');
+        const columns = await box(page, '#grid-columns');
 
-        expect(text_align.x).toBeGreaterThan(margins.x);
-        expect(text_align.y).toBeCloseTo(margins.y, 0);
+        expect(name_hint.height).toBeGreaterThan(columns_hint.height);
+        expect(columns.y).toBeCloseTo(internal_name.y, 0);
+        expect(bottom(columns_hint)).toBeLessThanOrEqual(columns.y);
+    });
+
+    test('a refusal shows under Grid Columns, below the drop-down', async ({ page }) => {
+        await open_grid_page(page, {
+            width: 1366,
+            height: 768,
+            update_status: 422,
+            update_body: { message: REFUSAL },
+        });
+
+        const columns_before = await box(page, '#grid-columns');
+
+        await page.selectOption('#grid-columns', '4');
+        await page.click('#save-item-btn');
+
+        await expect(page.locator('#grid-columns-error')).toHaveText(REFUSAL);
+
+        const columns_hint = await box(page, '#grid-columns-hint');
+        const columns = await box(page, '#grid-columns');
+        const error = await box(page, '#grid-columns-error');
+        const internal_name = await box(page, '#grid-internal-name-input');
+
+        expect(bottom(columns_hint)).toBeLessThanOrEqual(columns.y);
+        expect(error.y).toBeGreaterThanOrEqual(bottom(columns));
+        expect(columns.width).toBeCloseTo(columns_before.width, 0);
+        expect(columns.x).toBeGreaterThan(internal_name.x + internal_name.width);
+    });
+
+    test('on a phone the Grid Columns field fits inside the card', async ({ page }) => {
+        await open_grid_page(page, { width: 375, height: 812 });
+
+        const card = await box(page, '#grid-data-card');
+        const columns = await box(page, '#grid-columns');
+
+        expect(columns.x + columns.width).toBeLessThanOrEqual(card.x + card.width);
+
+        const sideways = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        expect(sideways).toBeLessThanOrEqual(0);
+    });
+
+    test('Save sits at the bottom of the card and keeps its button look', async ({ page }) => {
+        await open_grid_page(page, { width: 1366, height: 768 });
+
+        const card = await box(page, '#grid-data-card');
+        const save = await box(page, '#save-item-btn');
+        const internal_name = await box(page, '#grid-internal-name-input');
+        const styles = await box(page, '#item-styles-card');
+
+        expect(save.y).toBeGreaterThan(bottom(internal_name));
+        expect(save.y).toBeGreaterThanOrEqual(bottom(styles));
+        expect(bottom(save)).toBeLessThan(bottom(card));
+        expect(save.x).toBeCloseTo(internal_name.x, 0);
+
+        const background = await page.locator('#save-item-btn').evaluate((el) => getComputedStyle(el).backgroundColor);
+        expect(background).not.toBe('rgba(0, 0, 0, 0)');
+    });
+
+    test('on a published grid Edit and the public warning sit level in the same row', async ({ page }) => {
+        await open_grid_page(page, { width: 1366, height: 768, is_published: 1 });
+
+        await expect(page.locator('#grid-published-note')).toBeVisible();
+
+        const edit = await box(page, '#edit-grid-btn');
+        const note = await box(page, '#grid-published-note');
+
+        expect(middle(note)).toBeCloseTo(middle(edit), 0);
+        expect(note.x).toBeGreaterThan(edit.x + edit.width);
+    });
+
+    test('on a narrow screen the public warning wraps under Edit, lined up with it and not touching', async ({ page }) => {
+        await open_grid_page(page, { width: 768, height: 1024, is_published: 1 });
+
+        await expect(page.locator('#grid-published-note')).toBeVisible();
+
+        const edit = await box(page, '#edit-grid-btn');
+        const note = await box(page, '#grid-published-note');
+
+        expect(note.y).toBeGreaterThan(bottom(edit));
+        expect(note.x).toBeCloseTo(edit.x, 0);
+    });
+
+    test('with no style presets Margins and Text Alignment still show in Styles', async ({ page }) => {
+        await open_grid_page(page, { width: 1366, height: 768, presets: null });
+
+        await expect(page.locator('#item-styles-card')).toBeVisible();
+        await expect(page.locator('#item-styles-card #margins')).toBeVisible();
+        await expect(page.locator('#item-styles-card #text-align')).toBeVisible();
+    });
+
+    test('below 1200 wide Styles drops under the fields, inside the card', async ({ page }) => {
+        await open_grid_page(page, { width: 1199, height: 800 });
+
+        const text = await box(page, '#grid-text-input');
+        const internal_name = await box(page, '#grid-internal-name-input');
+        const styles = await box(page, '#item-styles-card');
+        const save = await box(page, '#save-item-btn');
+
+        expect(styles.y).toBeGreaterThan(bottom(internal_name));
+        expect(styles.x).toBeLessThanOrEqual(text.x);
+        expect(bottom(styles)).toBeLessThanOrEqual(save.y);
     });
 
     test('a long text scrolls inside a short editor instead of stretching the form', async ({ page }) => {
@@ -156,7 +282,7 @@ test.describe('Grid page — compact grid form', () => {
         expect(editor.full).toBeGreaterThan(editor.shown);
     });
 
-    test('the Add Grid page keeps its stacked form', async ({ page }) => {
+    test('the Add Grid page keeps its stacked form, with the Grid Columns hint above the field', async ({ page }) => {
         await page.setViewportSize({ width: 1366, height: 768 });
         await seedAuth(page);
         await stubDashboardDeps(page, {
@@ -172,10 +298,12 @@ test.describe('Grid page — compact grid form', () => {
         const text = await box(page, '#grid-text-input');
         const internal_name = await box(page, '#grid-internal-name-input');
         const columns = await box(page, '#grid-columns');
+        const columns_hint = await box(page, '#grid-columns-hint');
 
-        expect(styles_card.y).toBeGreaterThanOrEqual(data_card.y + data_card.height);
+        expect(styles_card.y).toBeGreaterThanOrEqual(bottom(data_card));
         expect(internal_name.x).toBeCloseTo(text.x, 0);
-        expect(internal_name.y).toBeGreaterThanOrEqual(text.y + text.height);
+        expect(internal_name.y).toBeGreaterThanOrEqual(bottom(text));
         expect(columns.x).toBeGreaterThanOrEqual(text.x + text.width);
+        expect(bottom(columns_hint)).toBeLessThanOrEqual(columns.y);
     });
 });

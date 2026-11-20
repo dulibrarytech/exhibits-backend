@@ -1,5 +1,4 @@
-<% const _compact = typeof compact !== 'undefined' && compact; %>
-<div id="grid-data-card" class="card<%= _compact ? ' flex-fill' : '' %>">
+<div id="grid-data-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Item Data</strong>
         <div class="btn-group float-right">
@@ -8,37 +7,12 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="<%= _compact ? 'col-md-6' : 'col-8 col-md-8' %>">
-                <div class="row form-group">
-                    <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px"><span id="grid-text-input-label">Text</span>
-
-                        </div>
-                        <div id="grid-text-input" aria-labelledby="grid-text-input-label" class="rte-container<%= _compact ? ' rte-modal' : '' %>" data-rte="full"></div>
-                    </div>
-                </div>
-                <% if (!_compact) { %>
+            <div class="col-8 col-md-8">
+                <%- include('grid-text-field.ejs'); %>
                 <%- include('grid-internal-name-field.ejs'); %>
-                <% } %>
             </div>
-            <div class="<%= _compact ? 'col-md-6' : 'col-4 col-md-4' %>">
-                <% if (_compact) { %>
-                <%- include('grid-internal-name-field.ejs'); %>
-                <% } %>
-                <div class="row form-group">
-                    <div class="col-12">
-                        <label for="grid-columns" class="form-text text-muted" style="font-size: 17px">Grid Columns <span class="badge badge-required">Required</span>
-                        </label>
-                        <select id="grid-columns" name="grid_columns"
-                                class="form-control" required
-                                aria-describedby="grid-columns-hint">
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4" selected>4</option>
-                        </select>
-                        <small id="grid-columns-hint" class="form-text text-muted">Select the number of columns to display (2&ndash;4).</small>
-                    </div>
-                </div>
+            <div class="col-4 col-md-4">
+                <%- include('grid-columns-field.ejs'); %>
             </div>
         </div>
     </div>
